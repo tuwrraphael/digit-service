@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using DigitService.Hubs;
 using FileStore;
 using Impl;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -38,6 +39,7 @@ namespace DigitService
             services.AddTransient<IDeviceRepository, FileDeviceRepository>();
 
             services.AddMvc();
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -47,7 +49,13 @@ namespace DigitService
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseCors(p => p.AllowAnyOrigin());
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<LogHub>("log");
+            });
             app.UseMvc();
+            
         }
     }
 }

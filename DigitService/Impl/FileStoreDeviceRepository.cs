@@ -59,7 +59,7 @@ namespace Impl
             return logEntryList.ToArray();
         }
 
-        public async Task LogAsync(string deviceId, LogEntry entry)
+        public async Task<LogEntry> LogAsync(string deviceId, LogEntry entry)
         {
             entry.LogTime = DateTime.Now;
             entry.Id = Guid.NewGuid().ToString();
@@ -85,6 +85,7 @@ namespace Impl
             await synchro.SemaphoreSlim.WaitAsync();
             synchro.SemaphoreSlim.Release();
             synchro.AutoResetEvent.Set();
+            return entry;
         }
 
         public async Task ChangeDeviceConfigAsync(string deviceId, Func<DeviceConfig, DeviceConfig> configureAction)
