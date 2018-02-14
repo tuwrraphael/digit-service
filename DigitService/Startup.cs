@@ -1,10 +1,13 @@
-﻿using System.IO;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using DigitService.Hubs;
 using FileStore;
 using Impl;
+using Kontokorrent.Impl.EF;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -40,6 +43,42 @@ namespace DigitService
 
             services.AddMvc();
             services.AddSignalR();
+            services.AddCors(options =>
+            {
+                options.AddPolicy("CorsPolicy",
+                    builder => builder.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials());
+            });
+
+            services.AddDbContext<DigitServiceContext>(options =>
+                options.UseSqlite($"Data Source={HostingEnvironment.WebRootPath}\\App_Data\\digitService.db")
+            );
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = Configuration["ServiceIdentityUrl"];
+                    options.Audience = "digit";
+                    options.RequireHttpsMetadata = false;
+                });
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("User", builder =>
+                {
+                    builder.RequireClaim("scope", "digit.user");
+                });
+            });
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("Service", builder =>
+                {
+                    builder.RequireClaim("scope", "digit.user");
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -49,13 +88,16 @@ namespace DigitService
             {
                 app.UseDeveloperExceptionPage();
             }
-            app.UseCors(p => p.AllowAnyOrigin());
+
+            app.UseAuthentication();
+
+            app.UseCors("CorsPolicy");
             app.UseSignalR(routes =>
             {
                 routes.MapHub<LogHub>("log");
             });
             app.UseMvc();
-            
+
         }
     }
 }

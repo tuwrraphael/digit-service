@@ -1,4 +1,5 @@
 ﻿using DigitService.Hubs;
+using DigitService.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -9,23 +10,23 @@ using System.Threading.Tasks;
 namespace DigitService.Controllers
 {
     [Route("api/[controller]")]
-    public class DeviceController : Controller
+    public class PushController : Controller
     {
         private readonly IDeviceRepository deviceRepository;
         private readonly IHubContext<LogHub> context;
 
-        public DeviceController(IDeviceRepository deviceRepository, IHubContext<LogHub> context)
+        public PushController(IDeviceRepository deviceRepository, IHubContext<LogHub> context)
         {
             this.deviceRepository = deviceRepository;
             this.context = context;
         }
 
-        
-        [HttpPost("{id}/log")]
-        public async void PostLog(string id, [FromBody]LogEntry entry)
+
+        [HttpPost("channel")]
+        public async void Register([FromBody]PushChannelRegistration registration)
         {
-            await deviceRepository.LogAsync(id, entry);
-            await context.Clients.All.InvokeAsync("log", entry);
+            //await deviceRepository.LogAsync(id, entry);
+            //await context.Clients.All.InvokeAsync("log", entry);
         }
 
         [HttpGet("{id}/log")]

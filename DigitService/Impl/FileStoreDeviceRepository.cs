@@ -87,12 +87,5 @@ namespace Impl
             synchro.AutoResetEvent.Set();
             return entry;
         }
-
-        public async Task ChangeDeviceConfigAsync(string deviceId, Func<DeviceConfig, DeviceConfig> configureAction)
-        {
-            //var config = await store.GetAsync<DeviceConfig>(deviceId, DeviceConfigCollection) ?? new DeviceConfig();
-            //var updated = configureAction(config);
-            //await store.SaveAsync(deviceId, DeviceConfigCollection, updated);
-        }
     }
 }
