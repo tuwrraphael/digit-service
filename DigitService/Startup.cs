@@ -1,6 +1,8 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using DigitService.Hubs;
+using DigitService.Impl.EF;
+using DigitService.Service;
 using FileStore;
 using Impl;
 using Kontokorrent.Impl.EF;
@@ -55,6 +57,7 @@ namespace DigitService
             services.AddDbContext<DigitServiceContext>(options =>
                 options.UseSqlite($"Data Source={HostingEnvironment.WebRootPath}\\App_Data\\digitService.db")
             );
+            services.AddTransient<IUserRepository, UserRepository>();
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -68,6 +71,7 @@ namespace DigitService
             {
                 options.AddPolicy("User", builder =>
                 {
+                    builder.RequireAuthenticatedUser();
                     builder.RequireClaim("scope", "digit.user");
                 });
             });

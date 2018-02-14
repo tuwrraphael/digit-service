@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 
-namespace Kontokorrent.Impl.EF
+namespace DigitService.Impl.EF
 {
     public class DigitServiceContext : DbContext
     {

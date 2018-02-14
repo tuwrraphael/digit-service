@@ -1,10 +1,8 @@
-﻿using DigitService.Hubs;
-using DigitService.Models;
+﻿using DigitService.Models;
+using DigitService.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using Models;
-using Service;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DigitService.Controllers
@@ -12,27 +10,20 @@ namespace DigitService.Controllers
     [Route("api/[controller]")]
     public class PushController : Controller
     {
-        private readonly IDeviceRepository deviceRepository;
-        private readonly IHubContext<LogHub> context;
+        private readonly IUserRepository userRepository;
 
-        public PushController(IDeviceRepository deviceRepository, IHubContext<LogHub> context)
+        public PushController(IUserRepository userRepository)
         {
-            this.deviceRepository = deviceRepository;
-            this.context = context;
+            this.userRepository = userRepository;
         }
 
-
-        [HttpPost("channel")]
-        public async void Register([FromBody]PushChannelRegistration registration)
+        [Authorize("User")]
+        [HttpPost()]
+        public async Task<IActionResult> Register([FromBody]PushChannelRegistration registration)
         {
-            //await deviceRepository.LogAsync(id, entry);
-            //await context.Clients.All.InvokeAsync("log", entry);
-        }
-
-        [HttpGet("{id}/log")]
-        public async Task<LogEntry[]> GetLog(string id, int history = 20)
-        {
-            return await deviceRepository.GetLogAsync(id, history);
+            var id = User.Claims.Where(v => v.Type == "sub").Single().Value;
+            await userRepository.RegisterPushChannel(id, registration.Uri);
+            return Ok();
         }
     }
 }
