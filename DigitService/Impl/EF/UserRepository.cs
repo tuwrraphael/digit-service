@@ -40,10 +40,11 @@ namespace DigitService.Impl.EF
 
         public async Task CreateUser(NewUser user)
         {
-            context.Users.Add(new User()
+            var u = new User()
             {
                 Id = user.Id
-            });
+            };
+            context.Users.Add(u);
             await context.SaveChangesAsync();
         }
 

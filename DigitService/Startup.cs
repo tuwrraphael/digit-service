@@ -5,7 +5,6 @@ using DigitService.Impl.EF;
 using DigitService.Service;
 using FileStore;
 using Impl;
-using Kontokorrent.Impl.EF;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -59,6 +58,7 @@ namespace DigitService
             );
             services.AddTransient<IUserRepository, UserRepository>();
 
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {

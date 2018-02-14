@@ -13,8 +13,7 @@
       "launchBrowser": true,
       "launchUrl": "api/values",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "ServiceIdentityUrl": "https://serviceidentity.azurewebsites.net/"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
     "DigitService": {
