@@ -2,7 +2,6 @@
 using DigitService.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace DigitService.Controllers
@@ -10,19 +9,18 @@ namespace DigitService.Controllers
     [Route("api/[controller]")]
     public class PushController : Controller
     {
-        private readonly IUserRepository userRepository;
+        private readonly IPushService pushService;
 
-        public PushController(IUserRepository userRepository)
+        public PushController(IPushService pushService)
         {
-            this.userRepository = userRepository;
+            this.pushService = pushService;
         }
 
         [Authorize("User")]
         [HttpPost()]
         public async Task<IActionResult> Register([FromBody]PushChannelRegistration registration)
         {
-            var id = User.Claims.Where(v => v.Type == "sub").Single().Value;
-            await userRepository.RegisterPushChannel(id, registration.Uri);
+            await pushService.RegisterUser(User.GetId(), registration.Uri);
             return Ok();
         }
     }

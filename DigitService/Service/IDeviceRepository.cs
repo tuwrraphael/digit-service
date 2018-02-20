@@ -1,8 +1,7 @@
-﻿using Models;
-using System;
+﻿using DigitService.Models;
 using System.Threading.Tasks;
 
-namespace Service
+namespace DigitService.Service
 {
     public interface IDeviceRepository
     {

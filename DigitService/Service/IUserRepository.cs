@@ -9,5 +9,6 @@ namespace DigitService.Service
         Task<bool> Exists(string userId);
         Task RegisterPushChannel(string userId, string registrationId);
         Task<DeviceClaimResult> ClaimDevice(string userId, string deviceId);
+        Task<string> GetPushChannel(string userId);
     }
 }

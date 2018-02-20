@@ -1,10 +1,12 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.IO;
+using ButlerClient;
 using DigitService.Hubs;
+using DigitService.Impl;
 using DigitService.Impl.EF;
+using DigitService.Models;
 using DigitService.Service;
 using FileStore;
-using Impl;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -12,7 +14,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
-using Service;
 
 namespace DigitService
 {
@@ -41,6 +42,14 @@ namespace DigitService
             services.AddSingleton<IFileProvider>(provider);
             services.AddSingleton<IFileStore>(access);
             services.AddTransient<IDeviceRepository, FileDeviceRepository>();
+            services.AddTransient<IDigitLogger, DigitLogger>();
+            services.AddTransient<IPushService, NotificationHubPushService>();
+            services.Configure<NotificationHubConfig>(Configuration);
+
+            
+            services.Configure<ButlerOptions>(Configuration);
+            services.Configure<CallbackOptions>(Configuration);
+            services.AddTransient<IButler, Butler>();
 
             services.AddMvc();
             services.AddSignalR();

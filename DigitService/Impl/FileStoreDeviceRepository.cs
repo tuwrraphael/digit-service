@@ -4,28 +4,31 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using DigitService.Hubs;
+using DigitService.Models;
+using DigitService.Service;
 using FileStore;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.FileProviders;
-using Models;
 using Newtonsoft.Json;
-using Service;
 
-namespace Impl
+namespace DigitService.Impl
 {
     public class FileDeviceRepository : IDeviceRepository
     {
-        private readonly IFileStore store;
         private readonly IFileProvider provider;
+        private readonly IHubContext<LogHub> context;
         private const string LogCollection = "Logs";
         private const string DeviceConfigCollection = "Device";
 
         private ConcurrentDictionary<string, DeviceSynchronization> deviceSynchronizations;
 
-        public FileDeviceRepository(IFileProvider provider)
+        public FileDeviceRepository(IFileProvider provider, IHubContext<LogHub> context)
         {
 
             deviceSynchronizations = new ConcurrentDictionary<string, DeviceSynchronization>();
             this.provider = provider;
+            this.context = context;
         }
 
         public async Task<LogEntry[]> GetLogAsync(string deviceId, int history = 15)
@@ -66,6 +69,7 @@ namespace Impl
             var synchro = deviceSynchronizations.GetOrAdd(deviceId, new DeviceSynchronization());
             var fileInfo = provider.GetFileInfo($"{deviceId}-{"Log"}.json");
             var json = JsonConvert.SerializeObject(entry);
+            await synchro.SemaphoreSlim.WaitAsync();
             using (var stream = new FileStream(fileInfo.PhysicalPath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
             {
                 using (var writer = new StreamWriter(stream))
@@ -82,7 +86,7 @@ namespace Impl
 
                 }
             }
-            await synchro.SemaphoreSlim.WaitAsync();
+            await context.Clients.All.InvokeAsync("log", entry);
             synchro.SemaphoreSlim.Release();
             synchro.AutoResetEvent.Set();
             return entry;

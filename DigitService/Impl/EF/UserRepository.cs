@@ -53,6 +53,11 @@ namespace DigitService.Impl.EF
             return await context.Users.Where(p => p.Id == userId).AnyAsync();
         }
 
+        public async Task<string> GetPushChannel(string userId)
+        {
+            return await context.Users.Where(p => p.Id == userId).Select(v => v.PushChannel).SingleOrDefaultAsync();
+        }
+
         public async Task RegisterPushChannel(string userId, string registrationId)
         {
             var user = await context.Users.Where(p => p.Id == userId).SingleOrDefaultAsync();
