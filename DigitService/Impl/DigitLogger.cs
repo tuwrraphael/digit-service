@@ -22,7 +22,7 @@ namespace DigitService.Impl
             await deviceRepository.LogAsync("12345", new LogEntry()
             {
                 Author = "DigitService",
-                Code = 3,
+                Code = code,
                 OccurenceTime = DateTime.Now,
                 Message = message
             });

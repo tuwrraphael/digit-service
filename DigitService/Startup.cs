@@ -89,7 +89,7 @@ namespace DigitService
             {
                 options.AddPolicy("Service", builder =>
                 {
-                    builder.RequireClaim("scope", "digit.user");
+                    builder.RequireClaim("scope", "digit.service");
                 });
             });
         }

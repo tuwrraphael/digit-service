@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DigitService.Hubs;
@@ -33,7 +34,7 @@ namespace DigitService.Impl
 
         public async Task<LogEntry[]> GetLogAsync(string deviceId, int history = 15)
         {
-            var logEntryList = new Queue<LogEntry>(history);
+            var logList = new Queue<string>(history);
             var synchro = deviceSynchronizations.GetOrAdd(deviceId, new DeviceSynchronization());
             await synchro.SemaphoreSlim.WaitAsync();
             var fileInfo = provider.GetFileInfo($"{deviceId}-{"Log"}.json");
@@ -49,17 +50,17 @@ namespace DigitService.Impl
                     string line = null;
                     while (null != (line = await reader.ReadLineAsync()))
                     {
-                        var cleared = new Regex("(^(\\s*)\\,(\\s*))|(^(\\s*)\\[(\\s*))|((\\s*),(\\s*)$)|((\\s*)](\\s*)$)").Replace(line, String.Empty);
-                        if (logEntryList.Count >= history)
+                        if (logList.Count >= history)
                         {
-                            logEntryList.Dequeue();
+                            logList.Dequeue();
                         }
-                        logEntryList.Enqueue(JsonConvert.DeserializeObject<LogEntry>(cleared));
+                        logList.Enqueue(line);
                     }
                 }
             }
             synchro.SemaphoreSlim.Release();
-            return logEntryList.ToArray();
+            var regex = new Regex("(^(\\s*)\\,(\\s*))|(^(\\s*)\\[(\\s*))|((\\s*),(\\s*)$)|((\\s*)](\\s*)$)");
+            return logList.Select(v => regex.Replace(v, String.Empty)).Select(JsonConvert.DeserializeObject<LogEntry>).ToArray();
         }
 
         public async Task<LogEntry> LogAsync(string deviceId, LogEntry entry)
