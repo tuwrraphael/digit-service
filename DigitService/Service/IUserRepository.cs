@@ -5,10 +5,9 @@ namespace DigitService.Service
 {
     public interface IUserRepository
     {
-        Task CreateUser(NewUser user);
-        Task<bool> Exists(string userId);
-        Task RegisterPushChannel(string userId, string registrationId);
-        Task<DeviceClaimResult> ClaimDevice(string userId, string deviceId);
-        Task<string> GetPushChannel(string userId);
+        Task<User> CreateUser(string userId);
+        Task<User> GetAsync(string userId);
+        Task StoreReminderIdAsync(string userId, string reminderId);
+        Task StorePushChannelAsync(string userId, string channelId);
     }
 }

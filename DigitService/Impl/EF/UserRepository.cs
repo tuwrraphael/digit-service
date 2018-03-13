@@ -1,7 +1,6 @@
 ﻿using DigitService.Models;
 using DigitService.Service;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace DigitService.Impl.EF
@@ -15,58 +14,33 @@ namespace DigitService.Impl.EF
             context = Context;
         }
 
-        public async Task<DeviceClaimResult> ClaimDevice(string userId, string deviceId)
-        {
-            if (await context.Devices.Where(v => v.Id == deviceId && v.UserId != null).AnyAsync())
-            {
-                return DeviceClaimResult.DeviceAlreadyClaimed;
-            }
-            var dev = await context.Devices.Where(p => p.Id == deviceId).SingleOrDefaultAsync();
-            if (null != dev)
-            {
-                dev.UserId = userId;
-            }
-            else
-            {
-                context.Devices.Add(new Device()
-                {
-                    Id = deviceId,
-                    UserId = userId
-                });
-            }
-            await context.SaveChangesAsync();
-            return DeviceClaimResult.Success;
-        }
-
-        public async Task CreateUser(NewUser user)
+        public async Task<User> CreateUser(string userId)
         {
             var u = new User()
             {
-                Id = user.Id
+                Id = userId
             };
             context.Users.Add(u);
             await context.SaveChangesAsync();
+            return u;
         }
 
-        public async Task<bool> Exists(string userId)
+        public async Task<User> GetAsync(string userId)
         {
-            return await context.Users.Where(p => p.Id == userId).AnyAsync();
+            return await context.Users.SingleOrDefaultAsync(v => v.Id == userId);
         }
 
-        public async Task<string> GetPushChannel(string userId)
+        public async Task StorePushChannelAsync(string userId, string channelId)
         {
-            return await context.Users.Where(p => p.Id == userId).Select(v => v.PushChannel).SingleOrDefaultAsync();
+            var user = await context.Users.SingleAsync(v => v.Id == userId);
+            user.PushChannel = channelId;
+            await context.SaveChangesAsync();
         }
 
-        public async Task RegisterPushChannel(string userId, string registrationId)
+        public async Task StoreReminderIdAsync(string userId, string reminderId)
         {
-            var user = await context.Users.Where(p => p.Id == userId).SingleOrDefaultAsync();
-            if (null == user)
-            {
-                await CreateUser(new NewUser() { Id = userId });
-            }
-            user = await context.Users.Where(p => p.Id == userId).SingleAsync();
-            user.PushChannel = registrationId;
+            var user = await context.Users.SingleAsync(v => v.Id == userId);
+            user.ReminderId = reminderId;
             await context.SaveChangesAsync();
         }
     }

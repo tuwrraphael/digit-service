@@ -1,5 +1,4 @@
-﻿using DigitService.Models;
-using DigitService.Service;
+﻿using DigitService.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -10,32 +9,29 @@ namespace DigitService.Controllers
     [Route("api/[controller]")]
     public class UserController : Controller
     {
-        private readonly IUserRepository userRepository;
+        private readonly IUserService userService;
 
-        public UserController(IUserRepository userRepository)
+        public UserController(IUserService userService)
         {
-            this.userRepository = userRepository;
+            this.userService = userService;
         }
 
-
-        [HttpPost()]
-        public async Task<IActionResult> Register()
+        [HttpPost]
+        public async Task<IActionResult> Create()
         {
-            await userRepository.CreateUser(new NewUser() { Id = User.GetId() });
-            return Ok();
+            var userInfo = await userService.CreateAsync(User.GetId());
+            if (null == userInfo)
+            {
+                return NotFound();
+            }
+            return Ok(userInfo);
         }
 
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            if (await userRepository.Exists(User.GetId()))
-            {
-                return Ok();
-            }
-            else
-            {
-                return NotFound();
-            }
+            var userInfo = await userService.CreateAsync(User.GetId());
+            return Ok(userInfo);
         }
     }
 }
