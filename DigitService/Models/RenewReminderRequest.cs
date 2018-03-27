@@ -1,4 +1,4 @@
-﻿namespace DigitService.Service
+﻿namespace DigitService.Models
 {
     public class RenewReminderRequest
     {

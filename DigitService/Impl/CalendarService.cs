@@ -34,7 +34,7 @@ namespace DigitService.Impl
                 new StringContent(
                     JsonConvert.SerializeObject(new ReminderRequest()
                     {
-                        ClientState = Guid.NewGuid().ToString(),
+                        ClientState = userId,
                         Minutes = minutes,
                         NotificationUri = options.ReminderCallbackUri
                     }), Encoding.UTF8, "application/json"));
@@ -50,12 +50,16 @@ namespace DigitService.Impl
             var res = await (await GetClientAsync()).GetAsync($"{options.CalendarServiceUrl}/api/users/{userId}/reminders/{reminderId}");
             if (res.IsSuccessStatusCode)
             {
-                return JsonConvert.DeserializeObject<bool>(await res.Content.ReadAsStringAsync());
+                return true;
+            }
+            else if (res.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return false;
             }
             throw new ReminderException($"Could retrieve reminder status: {res.StatusCode}.");
         }
 
-        public async Task RenewReminder(string userId, RenewReminderRequest req)
+        public async Task<ReminderRegistration> RenewReminder(string userId, RenewReminderRequest req)
         {
             var request = new HttpRequestMessage(new HttpMethod("PATCH"),
                 $"{options.CalendarServiceUrl}/api/users/{userId}/reminders/{req.ReminderId}");
@@ -64,6 +68,7 @@ namespace DigitService.Impl
             {
                 throw new ReminderException($"Could not renew reminder: {res.StatusCode}.");
             }
+            return JsonConvert.DeserializeObject<ReminderRegistration>(await res.Content.ReadAsStringAsync());
         }
     }
 }

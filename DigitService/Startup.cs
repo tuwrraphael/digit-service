@@ -46,12 +46,26 @@ namespace DigitService
             services.AddTransient<IPushService, NotificationHubPushService>();
             services.Configure<NotificationHubConfig>(Configuration);
 
-            
+            services.Configure<DigitServiceOptions>(o =>
+            {
+                o.CalendarServiceUrl = Configuration["CalendarServiceUrl"];
+                o.DigitClientId = Configuration["DigitClientId"];
+                o.DigitClientSecret = Configuration["DigitClientSecret"];
+                var endpoint = Configuration["CallbackEndpoint"];
+                o.ReminderCallbackUri = $"{endpoint}/api/callback/reminder";
+                o.ReminderMaintainanceCallbackUri = $"{endpoint}/api/callback/reminder-maintainance";
+                o.ServiceIdentityUrl = Configuration["ServiceIdentityUrl"];
+            });
+
             services.Configure<ButlerOptions>(Configuration);
-            services.Configure<CallbackOptions>(Configuration);
             services.AddTransient<IButler, Butler>();
 
+            services.AddTransient<ICalendarService, CalendarService>();
+            services.AddTransient<IDigitAuthTokenService, DigitAuthTokenService>();
+            services.AddTransient<IUserService, UserService>();
+
             services.AddMvc();
+            services.AddMemoryCache();
             services.AddSignalR();
             services.AddCors(options =>
             {

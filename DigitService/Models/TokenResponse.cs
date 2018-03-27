@@ -5,8 +5,9 @@ using System.Threading.Tasks;
 
 namespace DigitService.Models
 {
-    public class UpdateRequest
+    public class TokenResponse
     {
-        public string UserId { get; set; }
+        public string access_token { get; set; }
+        public int expires_in { get; set; }
     }
 }

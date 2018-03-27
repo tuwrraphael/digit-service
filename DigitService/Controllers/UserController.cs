@@ -20,6 +20,13 @@ namespace DigitService.Controllers
         public async Task<IActionResult> Create()
         {
             var userInfo = await userService.CreateAsync(User.GetId());
+            return Ok(userInfo);
+        }
+
+        [HttpPatch]
+        public async Task<IActionResult> Maintain()
+        {
+            var userInfo = await userService.MaintainAsync(User.GetId());
             if (null == userInfo)
             {
                 return NotFound();
@@ -30,8 +37,15 @@ namespace DigitService.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var userInfo = await userService.CreateAsync(User.GetId());
-            return Ok(userInfo);
+            var userInfo = await userService.GetInformationAsync(User.GetId());
+            if (null != userInfo)
+            {
+                return Ok(userInfo);
+            }
+            else
+            {
+                return NotFound();
+            }
         }
     }
 }

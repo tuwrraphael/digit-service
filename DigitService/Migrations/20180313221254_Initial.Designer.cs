@@ -10,8 +10,8 @@ using System;
 namespace DigitService.Migrations
 {
     [DbContext(typeof(DigitServiceContext))]
-    [Migration("20180214120625_initial")]
-    partial class initial
+    [Migration("20180313221254_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -19,37 +19,18 @@ namespace DigitService.Migrations
             modelBuilder
                 .HasAnnotation("ProductVersion", "2.0.1-rtm-125");
 
-            modelBuilder.Entity("Kontokorrent.Impl.EF.Device", b =>
-                {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<string>("UserId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Devices");
-                });
-
-            modelBuilder.Entity("Kontokorrent.Impl.EF.User", b =>
+            modelBuilder.Entity("DigitService.Models.User", b =>
                 {
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<string>("PushChannel");
 
+                    b.Property<string>("ReminderId");
+
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("Kontokorrent.Impl.EF.Device", b =>
-                {
-                    b.HasOne("Kontokorrent.Impl.EF.User", "User")
-                        .WithMany("Devices")
-                        .HasForeignKey("UserId");
                 });
 #pragma warning restore 612, 618
         }

@@ -18,37 +18,18 @@ namespace DigitService.Migrations
             modelBuilder
                 .HasAnnotation("ProductVersion", "2.0.1-rtm-125");
 
-            modelBuilder.Entity("Kontokorrent.Impl.EF.Device", b =>
-                {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<string>("UserId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Devices");
-                });
-
-            modelBuilder.Entity("Kontokorrent.Impl.EF.User", b =>
+            modelBuilder.Entity("DigitService.Models.User", b =>
                 {
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<string>("PushChannel");
 
+                    b.Property<string>("ReminderId");
+
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("Kontokorrent.Impl.EF.Device", b =>
-                {
-                    b.HasOne("Kontokorrent.Impl.EF.User", "User")
-                        .WithMany("Devices")
-                        .HasForeignKey("UserId");
                 });
 #pragma warning restore 612, 618
         }

@@ -30,6 +30,11 @@ namespace DigitService.Impl.EF
             return await context.Users.SingleOrDefaultAsync(v => v.Id == userId);
         }
 
+        public async Task<User> GetByReminder(string reminderId)
+        {
+            return await context.Users.SingleOrDefaultAsync(v => v.ReminderId == reminderId);
+        }
+
         public async Task StorePushChannelAsync(string userId, string channelId)
         {
             var user = await context.Users.SingleAsync(v => v.Id == userId);

@@ -6,7 +6,7 @@ namespace DigitService.Service
     public interface ICalendarService
     {
         Task<ReminderRegistration> RegisterReminder(string userId, uint minutes);
-        Task RenewReminder(string userId, RenewReminderRequest request);
+        Task<ReminderRegistration> RenewReminder(string userId, RenewReminderRequest request);
         Task<bool> ReminderAliveAsync(string userId, string reminderId);
     }
 }
