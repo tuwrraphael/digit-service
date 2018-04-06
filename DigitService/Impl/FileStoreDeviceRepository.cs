@@ -22,12 +22,10 @@ namespace DigitService.Impl
         private const string LogCollection = "Logs";
         private const string DeviceConfigCollection = "Device";
 
-        private ConcurrentDictionary<string, DeviceSynchronization> deviceSynchronizations;
+        private static ConcurrentDictionary<string, DeviceSynchronization> deviceSynchronizations = new ConcurrentDictionary<string, DeviceSynchronization>();
 
         public FileDeviceRepository(IFileProvider provider, IHubContext<LogHub> context)
         {
-
-            deviceSynchronizations = new ConcurrentDictionary<string, DeviceSynchronization>();
             this.provider = provider;
             this.context = context;
         }
@@ -68,9 +66,9 @@ namespace DigitService.Impl
             entry.LogTime = DateTime.Now;
             entry.Id = Guid.NewGuid().ToString();
             var synchro = deviceSynchronizations.GetOrAdd(deviceId, new DeviceSynchronization());
-            var fileInfo = provider.GetFileInfo($"{deviceId}-{"Log"}.json");
             var json = JsonConvert.SerializeObject(entry);
             await synchro.SemaphoreSlim.WaitAsync();
+            var fileInfo = provider.GetFileInfo($"{deviceId}-{"Log"}.json");
             using (var stream = new FileStream(fileInfo.PhysicalPath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
             {
                 using (var writer = new StreamWriter(stream))
