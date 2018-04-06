@@ -34,29 +34,35 @@ namespace DigitService.Impl
         {
             var logList = new Queue<string>(history);
             var synchro = deviceSynchronizations.GetOrAdd(deviceId, new DeviceSynchronization());
-            await synchro.SemaphoreSlim.WaitAsync();
-            var fileInfo = provider.GetFileInfo($"{deviceId}-{"Log"}.json");
-            if (!fileInfo.Exists)
+            try
             {
-                return null;
-            }
-            else
-            {
-                using (var stream = fileInfo.CreateReadStream())
-                using (var reader = new StreamReader(stream))
+                await synchro.SemaphoreSlim.WaitAsync();
+                var fileInfo = provider.GetFileInfo($"{deviceId}-{"Log"}.json");
+                if (!fileInfo.Exists)
                 {
-                    string line = null;
-                    while (null != (line = await reader.ReadLineAsync()))
+                    return null;
+                }
+                else
+                {
+                    using (var stream = fileInfo.CreateReadStream())
+                    using (var reader = new StreamReader(stream))
                     {
-                        if (logList.Count >= history)
+                        string line = null;
+                        while (null != (line = await reader.ReadLineAsync()))
                         {
-                            logList.Dequeue();
+                            if (logList.Count >= history)
+                            {
+                                logList.Dequeue();
+                            }
+                            logList.Enqueue(line);
                         }
-                        logList.Enqueue(line);
                     }
                 }
             }
-            synchro.SemaphoreSlim.Release();
+            finally
+            {
+                synchro.SemaphoreSlim.Release();
+            }
             var regex = new Regex("(^(\\s*)\\,(\\s*))|(^(\\s*)\\[(\\s*))|((\\s*),(\\s*)$)|((\\s*)](\\s*)$)");
             return logList.Select(v => regex.Replace(v, String.Empty)).Select(JsonConvert.DeserializeObject<LogEntry>).ToArray();
         }
@@ -67,26 +73,32 @@ namespace DigitService.Impl
             entry.Id = Guid.NewGuid().ToString();
             var synchro = deviceSynchronizations.GetOrAdd(deviceId, new DeviceSynchronization());
             var json = JsonConvert.SerializeObject(entry);
-            await synchro.SemaphoreSlim.WaitAsync();
-            var fileInfo = provider.GetFileInfo($"{deviceId}-{"Log"}.json");
-            using (var stream = new FileStream(fileInfo.PhysicalPath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+            try
             {
-                using (var writer = new StreamWriter(stream))
+                await synchro.SemaphoreSlim.WaitAsync();
+                var fileInfo = provider.GetFileInfo($"{deviceId}-{"Log"}.json");
+                using (var stream = new FileStream(fileInfo.PhysicalPath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                 {
-                    if (stream.Length != 0)
+                    using (var writer = new StreamWriter(stream))
                     {
-                        stream.Seek(-1, SeekOrigin.End);
-                        await writer.WriteAsync($",{Environment.NewLine}{json}]");
-                    }
-                    else
-                    {
-                        await writer.WriteAsync($"[{json}]");
-                    }
+                        if (stream.Length != 0)
+                        {
+                            stream.Seek(-1, SeekOrigin.End);
+                            await writer.WriteAsync($",{Environment.NewLine}{json}]");
+                        }
+                        else
+                        {
+                            await writer.WriteAsync($"[{json}]");
+                        }
 
+                    }
                 }
+                await context.Clients.All.InvokeAsync("log", entry);
             }
-            await context.Clients.All.InvokeAsync("log", entry);
-            synchro.SemaphoreSlim.Release();
+            finally
+            {
+                synchro.SemaphoreSlim.Release();
+            }
             synchro.AutoResetEvent.Set();
             return entry;
         }

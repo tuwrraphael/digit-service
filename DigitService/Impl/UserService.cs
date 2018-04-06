@@ -59,40 +59,47 @@ namespace DigitService.Impl
         public async Task<UserInformation> MaintainAsync(string userId)
         {
             var sm = maintainanceSemaphores.GetOrAdd(userId, (key) => new SemaphoreSlim(1));
-            await sm.WaitAsync();
-            var user = await userRepository.GetAsync(userId);
-            if (null == user)
+            try
             {
-                return null;
-            }
-            bool reminderInactive = null == user.ReminderId || !await calendarService.ReminderAliveAsync(userId, user.ReminderId);
-            if (reminderInactive)
-            {
-                ReminderRegistration registration = null;
-                try
+                await sm.WaitAsync();
+                var user = await userRepository.GetAsync(userId);
+                if (null == user)
                 {
-                    registration = await calendarService.RegisterReminder(userId, ReminderTime);
-                    await digitLogger.Log(userId, "Registered reminder", 1);
+                    return null;
                 }
-                catch
-                {                    
-                    await digitLogger.Log(userId, "Could not register reminder", 3);
-                }
-                if (null != registration)
+                bool reminderInactive = null == user.ReminderId || !await calendarService.ReminderAliveAsync(userId, user.ReminderId);
+                if (reminderInactive)
                 {
-                    reminderInactive = false;
-                    user.ReminderId = registration.Id;
-                    await userRepository.StoreReminderIdAsync(userId, user.ReminderId);
-                    await InstallButlerForReminderRenewal(registration);
+                    ReminderRegistration registration = null;
+                    try
+                    {
+                        registration = await calendarService.RegisterReminder(userId, ReminderTime);
+                        await digitLogger.Log(userId, "Registered reminder", 1);
+                    }
+                    catch
+                    {
+                        await digitLogger.Log(userId, "Could not register reminder", 3);
+                    }
+                    if (null != registration)
+                    {
+                        reminderInactive = false;
+                        user.ReminderId = registration.Id;
+                        await userRepository.StoreReminderIdAsync(userId, user.ReminderId);
+                        await InstallButlerForReminderRenewal(registration);
+                    }
                 }
+                var userInformation = new UserInformation()
+                {
+                    PushChannelRegistered = null != user.PushChannel,
+                    CalendarReminderActive = !reminderInactive
+                };
+
+                return userInformation;
             }
-            sm.Release();
-            var userInformation = new UserInformation()
+            finally
             {
-                PushChannelRegistered = null != user.PushChannel,
-                CalendarReminderActive = !reminderInactive
-            };
-            return userInformation;
+                sm.Release();
+            }
         }
 
         public async Task RenewReminder(string userId, RenewReminderRequest request)
