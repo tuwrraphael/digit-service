@@ -10,10 +10,12 @@ namespace DigitService.Controllers
     public class PushController : Controller
     {
         private readonly IPushService pushService;
+        private readonly IUserService userService;
 
-        public PushController(IPushService pushService)
+        public PushController(IPushService pushService, IUserService userService)
         {
             this.pushService = pushService;
+            this.userService = userService;
         }
 
         [Authorize("User")]
@@ -21,6 +23,7 @@ namespace DigitService.Controllers
         public async Task<IActionResult> Register([FromBody]PushChannelRegistration registration)
         {
             await pushService.RegisterUser(User.GetId(), registration.Uri);
+            await userService.RegisterPushChannel(User.GetId(), registration.Uri);
             return Ok();
         }
     }
