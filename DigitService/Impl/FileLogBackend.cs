@@ -8,14 +8,13 @@ using System.Threading.Tasks;
 using DigitService.Hubs;
 using DigitService.Models;
 using DigitService.Service;
-using FileStore;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.FileProviders;
 using Newtonsoft.Json;
 
 namespace DigitService.Impl
 {
-    public class FileDeviceRepository : IDeviceRepository
+    public class FileLogBackend : ILogBackend
     {
         private readonly IFileProvider provider;
         private readonly IHubContext<LogHub> context;
@@ -24,7 +23,7 @@ namespace DigitService.Impl
 
         private static ConcurrentDictionary<string, DeviceSynchronization> deviceSynchronizations = new ConcurrentDictionary<string, DeviceSynchronization>();
 
-        public FileDeviceRepository(IFileProvider provider, IHubContext<LogHub> context)
+        public FileLogBackend(IFileProvider provider, IHubContext<LogHub> context)
         {
             this.provider = provider;
             this.context = context;

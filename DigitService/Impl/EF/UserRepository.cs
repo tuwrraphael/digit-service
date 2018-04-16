@@ -1,6 +1,7 @@
 ﻿using DigitService.Models;
 using DigitService.Service;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DigitService.Impl.EF

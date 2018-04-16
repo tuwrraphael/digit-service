@@ -41,9 +41,11 @@ namespace DigitService
             var access = new FileStore.FileStore(provider, path);
             services.AddSingleton<IFileProvider>(provider);
             services.AddSingleton<IFileStore>(access);
-            services.AddTransient<IDeviceRepository, FileDeviceRepository>();
+            services.AddTransient<ILogBackend, FileLogBackend>();
             services.AddTransient<IDigitLogger, DigitLogger>();
             services.AddTransient<IPushService, NotificationHubPushService>();
+            services.AddTransient<IDeviceService, DeviceService>();
+            services.AddTransient<IDeviceRepository, DeviceRepository>();
             services.Configure<NotificationHubConfig>(Configuration);
 
             services.Configure<DigitServiceOptions>(o =>

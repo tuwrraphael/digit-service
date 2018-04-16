@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace DigitService.Service
 {
-    public interface IDigitLogger
+    public interface ILogBackend
     {
-        Task Log(string user, string message, int code = 0);
-        Task Log(string user, LogEntry entry);
+        Task<LogEntry> LogAsync(string deviceId, LogEntry entry);
+        Task<LogEntry[]> GetLogAsync(string deviceId, int history = 15);
     }
 }
-

@@ -11,9 +11,10 @@ using System;
 namespace DigitService.Migrations
 {
     [DbContext(typeof(DigitServiceContext))]
-    partial class DigitServiceContextModelSnapshot : ModelSnapshot
+    [Migration("20180416111836_Devices")]
+    partial class Devices
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
