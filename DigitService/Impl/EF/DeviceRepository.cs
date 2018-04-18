@@ -79,33 +79,47 @@ namespace DigitService.Impl.EF
 
         public async Task<DateTime?> GetLastCharged(string deviceId)
         {
-            var last = await digitServiceContext.BatteryMeasurements.Where(v => v.DeviceId == deviceId)
-                 .OrderByDescending(v => v.MeasurementTime).FirstOrDefaultAsync();
-            if (last == null)
+            var measurements = await digitServiceContext.BatteryMeasurements.Where(v => v.DeviceId == deviceId)
+                 .OrderByDescending(v => v.MeasurementTime).ToArrayAsync();
+            if (measurements.Length == 0)
             {
                 return null;
             }
-            var lastLower = await digitServiceContext.BatteryMeasurements.Where(v => v.DeviceId == deviceId)
-                 .Where(v => v.RawValue < last.RawValue)
-                  .OrderByDescending(v => v.MeasurementTime).FirstOrDefaultAsync();
-            StoredBatteryMeasurement firstAfterCharge;
-            if (lastLower == null)
+            var before = uint.MaxValue;
+            foreach (var m in measurements)
             {
-                firstAfterCharge = await digitServiceContext.BatteryMeasurements.Where(v => v.DeviceId == deviceId)
-                    .OrderBy(v => v.MeasurementTime)
-                    .FirstOrDefaultAsync();
+                if (m.RawValue > before)
+                {
+                    return m.MeasurementTime;
+                }
+                before = m.RawValue;
             }
-            else
-            {
-                firstAfterCharge = await digitServiceContext.BatteryMeasurements.Where(v => v.DeviceId == deviceId)
-                    .Where(v => v.MeasurementTime > lastLower.MeasurementTime).OrderByDescending(v => v.RawValue)
-                    .FirstOrDefaultAsync();
-            }
-            if (firstAfterCharge == null)
-            {
-                return null;
-            }
-            return firstAfterCharge.MeasurementTime;
+            return measurements.Last().MeasurementTime;
+            //if (last == null)
+            //{
+            //    return null;
+            //}
+            //var lastLower = await digitServiceContext.BatteryMeasurements.Where(v => v.DeviceId == deviceId)
+            //     .Where(v => v.RawValue < last.RawValue)
+            //      .OrderByDescending(v => v.MeasurementTime).FirstOrDefaultAsync();
+            //StoredBatteryMeasurement firstAfterCharge;
+            //if (lastLower == null)
+            //{
+            //    firstAfterCharge = await digitServiceContext.BatteryMeasurements.Where(v => v.DeviceId == deviceId)
+            //        .OrderBy(v => v.MeasurementTime)
+            //        .FirstOrDefaultAsync();
+            //}
+            //else
+            //{
+            //    firstAfterCharge = await digitServiceContext.BatteryMeasurements.Where(v => v.DeviceId == deviceId)
+            //        .Where(v => v.MeasurementTime > lastLower.MeasurementTime).OrderByDescending(v => v.RawValue)
+            //        .FirstOrDefaultAsync();
+            //}
+            //if (firstAfterCharge == null)
+            //{
+            //    return null;
+            //}
+            //return firstAfterCharge.MeasurementTime;
         }
 
         public async Task StoreBatteryMeasurementAsync(string deviceId, BatteryMeasurement batteryStatus)
