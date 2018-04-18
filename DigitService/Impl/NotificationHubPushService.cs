@@ -57,16 +57,7 @@ namespace DigitService.Impl
         public async Task Push(string user, PushPayload payload)
         {
             var pText = JsonConvert.SerializeObject(payload);
-            var uri = $"https://{config.HubNamespace}.servicebus.windows.net/{config.HubName}/messages/?api-version=2015-01";
-            var token = GetSASToken(uri, config.HubSASKeyName, config.HubSASKey);
-            var cl = new HttpClient();
-            cl.DefaultRequestHeaders.Add("X-WNS-Type", "wns/raw");
-            cl.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", token);
-            cl.DefaultRequestHeaders.Add("ServiceBusNotification-Format", "windows");
-            cl.DefaultRequestHeaders.Add("ServiceBusNotification-Tags", user);
-            var res = await cl.PostAsync(uri, new OctetStreamStringContent(pText, Encoding.Default,
-                "application/octet-stream"));
-            await logger.Log(user, $"Push {pText} resulted in {res.StatusCode}");
+            await Push(user, pText);
         }
 
         public async Task RegisterUser(string user, string registrationId)
@@ -75,6 +66,20 @@ namespace DigitService.Impl
             var reg = await client.GetRegistrationAsync<RegistrationDescription>(registrationId);
             reg.Tags = (new[] { user }).ToHashSet();
             await client.UpdateRegistrationAsync(reg);
+        }
+
+        public async Task Push(string user, string payload)
+        {
+            var uri = $"https://{config.HubNamespace}.servicebus.windows.net/{config.HubName}/messages/?api-version=2015-01";
+            var token = GetSASToken(uri, config.HubSASKeyName, config.HubSASKey);
+            var cl = new HttpClient();
+            cl.DefaultRequestHeaders.Add("X-WNS-Type", "wns/raw");
+            cl.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", token);
+            cl.DefaultRequestHeaders.Add("ServiceBusNotification-Format", "windows");
+            cl.DefaultRequestHeaders.Add("ServiceBusNotification-Tags", user);
+            var res = await cl.PostAsync(uri, new OctetStreamStringContent(payload, Encoding.Default,
+                "application/octet-stream"));
+            await logger.Log(user, $"Push {payload} resulted in {res.StatusCode}");
         }
     }
 }

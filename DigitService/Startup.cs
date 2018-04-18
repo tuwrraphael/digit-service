@@ -66,7 +66,10 @@ namespace DigitService
             services.AddTransient<IDigitAuthTokenService, DigitAuthTokenService>();
             services.AddTransient<IUserService, UserService>();
 
-            services.AddMvc();
+            services.AddMvc().AddJsonOptions(v =>
+            {
+                v.SerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Utc;
+            });
             services.AddMemoryCache();
             services.AddSignalR();
             services.AddCors(options =>

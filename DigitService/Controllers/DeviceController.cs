@@ -12,13 +12,16 @@ namespace DigitService.Controllers
         private readonly IDigitLogger digitLogger;
         private readonly IDeviceService deviceService;
         private readonly ILogBackend logBackend;
+        private readonly IPushService pushService;
 
         public DeviceController(IDigitLogger digitLogger,
-            IDeviceService deviceService, ILogBackend logBackend)
+            IDeviceService deviceService, ILogBackend logBackend,
+            IPushService pushService)
         {
             this.digitLogger = digitLogger;
             this.deviceService = deviceService;
             this.logBackend = logBackend;
+            this.pushService = pushService;
         }
 
 
@@ -59,6 +62,18 @@ namespace DigitService.Controllers
             }
 
             await deviceService.AddBatteryMeasurementAsync(id, batteryMeasurement);
+            return Ok();
+        }
+
+        [HttpPost("{id}/battery/measure")]
+        [Authorize("User")]
+        public async Task<IActionResult> TriggerBatteryMeasurement(string id)
+        {
+            if (!await deviceService.HasAccessAsync(id, User.GetId()))
+            {
+                return Unauthorized();
+            }
+            await pushService.Push(User.GetId(), "measure_battery");
             return Ok();
         }
 
