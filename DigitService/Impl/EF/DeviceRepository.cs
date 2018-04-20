@@ -85,10 +85,10 @@ namespace DigitService.Impl.EF
             {
                 return null;
             }
-            var before = uint.MaxValue;
+            var before = uint.MinValue;
             foreach (var m in measurements)
             {
-                if (m.RawValue > before)
+                if (m.RawValue < before)
                 {
                     return m.MeasurementTime;
                 }
