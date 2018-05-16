@@ -14,6 +14,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using CalendarService.Client;
+using System;
 
 namespace DigitService
 {
@@ -59,11 +61,18 @@ namespace DigitService
                 o.ServiceIdentityUrl = Configuration["ServiceIdentityUrl"];
             });
 
+            services.AddCalendarServiceClient(new Uri(Configuration["CalendarServiceUrl"]))
+                .AddClientCredentialsAuthentication(new OAuthApiClient.ClientCredentialsConfig()
+                {
+                    ClientId = Configuration["DigitClientId"],
+                    ClientSecret = Configuration["DigitClientSecret"],
+                    Scopes = "calendar.service",
+                    ServiceIdentityBaseUrl = new Uri(Configuration["ServiceIdentityUrl"])
+                });
+
             services.Configure<ButlerOptions>(Configuration);
             services.AddTransient<IButler, Butler>();
-
-            services.AddTransient<ICalendarService, CalendarService>();
-            services.AddTransient<IDigitAuthTokenService, DigitAuthTokenService>();
+           
             services.AddTransient<IUserService, UserService>();
 
             services.AddMvc().AddJsonOptions(v =>

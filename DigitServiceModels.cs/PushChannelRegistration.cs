@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace DigitService.Models
 {
-    public class PushPayload
+    public class PushChannelRegistration
     {
-        public string Action { get; set; }
+        public string Uri { get; set; }
     }
 }

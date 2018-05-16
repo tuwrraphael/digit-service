@@ -1,4 +1,5 @@
-﻿using DigitService.Impl;
+﻿using CalendarService.Client;
+using DigitService.Impl;
 using DigitService.Models;
 using DigitService.Service;
 using Microsoft.AspNetCore.Authorization;
@@ -13,15 +14,15 @@ namespace DigitService.Controllers
     {
         private readonly IUserService userService;
         private readonly IDigitLogger digitLogger;
-        private readonly ICalendarService calendarService;
+        private readonly ICalendarServiceClient calendarServiceClient;
 
         public CallbackController(IUserService userService,
             IDigitLogger digitLogger,
-            ICalendarService calendarService)
+            ICalendarServiceClient calendarService)
         {
             this.userService = userService;
             this.digitLogger = digitLogger;
-            this.calendarService = calendarService;
+            this.calendarServiceClient = calendarService;
         }
 
         [HttpPost("reminder")]
@@ -47,7 +48,7 @@ namespace DigitService.Controllers
             {
                 await userService.RenewReminder(userId, renewReminderRequest);
             }
-            catch (ReminderException)
+            catch (CalendarServiceException)
             {
                 await digitLogger.Log(userId, $"Could not renew reminder.", 3);
             }

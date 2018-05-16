@@ -1,4 +1,6 @@
 ﻿using ButlerClient;
+using CalendarService.Client;
+using CalendarService.Models;
 using DigitService.Models;
 using DigitService.Service;
 using Microsoft.Extensions.Options;
@@ -12,7 +14,7 @@ namespace DigitService.Impl
     public class UserService : IUserService
     {
         private readonly IUserRepository userRepository;
-        private readonly ICalendarService calendarService;
+        private readonly ICalendarServiceClient calendarService;
         private readonly IButler butler;
         private readonly IDigitLogger digitLogger;
         private readonly DigitServiceOptions options;
@@ -20,7 +22,7 @@ namespace DigitService.Impl
         private static ConcurrentDictionary<string, SemaphoreSlim> maintainanceSemaphores = new ConcurrentDictionary<string, SemaphoreSlim>();
 
         public UserService(IUserRepository userRepository,
-            ICalendarService calendarService,
+            ICalendarServiceClient calendarService,
             IButler butler,
             IOptions<DigitServiceOptions> optionsAccessor,
             IDigitLogger digitLogger)
@@ -73,7 +75,11 @@ namespace DigitService.Impl
                     ReminderRegistration registration = null;
                     try
                     {
-                        registration = await calendarService.RegisterReminder(userId, ReminderTime);
+                        registration = await calendarService.RegisterReminderAsync(userId, new ReminderRequest() {
+                            Minutes = ReminderTime,
+                            ClientState = userId,
+                            NotificationUri = options.ReminderCallbackUri
+                        });
                         await digitLogger.Log(userId, "Registered reminder", 1);
                     }
                     catch
@@ -104,7 +110,7 @@ namespace DigitService.Impl
 
         public async Task RenewReminder(string userId, RenewReminderRequest request)
         {
-            var registration = await calendarService.RenewReminder(userId, request);
+            var registration = await calendarService.RenewReminderAsync(userId, request.ReminderId);
             await digitLogger.Log(userId, "Renewed reminder", 1);
             await InstallButlerForReminderRenewal(registration);
         }

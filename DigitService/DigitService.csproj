@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="ButlerClient" Version="1.0.1" />
+    <PackageReference Include="CalendarService.Client" Version="1.0.1" />
     <PackageReference Include="FileStore.tiscca-raphael" Version="1.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.0.0-alpha2-final" />
@@ -20,6 +21,10 @@
 
   <ItemGroup>
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DigitServiceModels.cs\DigitService.Models.csproj" />
   </ItemGroup>
 
 </Project>
