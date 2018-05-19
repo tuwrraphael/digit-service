@@ -16,6 +16,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using CalendarService.Client;
 using System;
+using OAuthApiClient;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DigitService
 {
@@ -52,7 +54,6 @@ namespace DigitService
 
             services.Configure<DigitServiceOptions>(o =>
             {
-                o.CalendarServiceUrl = Configuration["CalendarServiceUrl"];
                 o.DigitClientId = Configuration["DigitClientId"];
                 o.DigitClientSecret = Configuration["DigitClientSecret"];
                 var endpoint = Configuration["CallbackEndpoint"];
@@ -61,21 +62,23 @@ namespace DigitService
                 o.ServiceIdentityUrl = Configuration["ServiceIdentityUrl"];
             });
 
-            services.AddCalendarServiceClient(new Uri(Configuration["CalendarServiceUrl"]))
-                .AddClientCredentialsAuthentication(new OAuthApiClient.ClientCredentialsConfig()
+            var authenticationProviderBuilder = services.AddBearerTokenAuthenticationProvider("digitServiceToken")
+                .UseMemoryCacheTokenStore()
+                .UseClientCredentialsTokenStrategy(new ClientCredentialsConfig()
                 {
                     ClientId = Configuration["DigitClientId"],
                     ClientSecret = Configuration["DigitClientSecret"],
                     Scopes = "calendar.service",
                     ServiceIdentityBaseUrl = new Uri(Configuration["ServiceIdentityUrl"])
                 });
+            services.AddCalendarServiceClient(new Uri(Configuration["CalendarServiceUrl"]), authenticationProviderBuilder);
 
             services.Configure<ButlerOptions>(Configuration);
             services.AddTransient<IButler, Butler>();
            
             services.AddTransient<IUserService, UserService>();
 
-            services.AddMvc().AddJsonOptions(v =>
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1).AddJsonOptions(v =>
             {
                 v.SerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Utc;
             });
@@ -129,13 +132,18 @@ namespace DigitService
             {
                 app.UseDeveloperExceptionPage();
             }
+            else
+            {
+                app.UseHsts();
+            }
 
+            app.UseHttpsRedirection();
             app.UseAuthentication();
 
             app.UseCors("CorsPolicy");
             app.UseSignalR(routes =>
             {
-                routes.MapHub<LogHub>("log");
+                routes.MapHub<LogHub>("/log");
             });
             app.UseMvc();
 

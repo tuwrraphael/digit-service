@@ -92,7 +92,7 @@ namespace DigitService.Impl
 
                     }
                 }
-                await context.Clients.All.InvokeAsync("log", entry);
+                await context.Clients.All.SendAsync("log", entry);
             }
             finally
             {
