@@ -18,7 +18,7 @@ namespace DigitService.Impl
         private readonly IButler butler;
         private readonly IDigitLogger digitLogger;
         private readonly DigitServiceOptions options;
-        private const uint ReminderTime = 60;
+        private const uint ReminderTime = 120;
         private static ConcurrentDictionary<string, SemaphoreSlim> maintainanceSemaphores = new ConcurrentDictionary<string, SemaphoreSlim>();
 
         public UserService(IUserRepository userRepository,

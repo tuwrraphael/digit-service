@@ -18,6 +18,7 @@ using CalendarService.Client;
 using System;
 using OAuthApiClient;
 using Microsoft.AspNetCore.Mvc;
+using TravelService.Client;
 
 namespace DigitService
 {
@@ -68,10 +69,11 @@ namespace DigitService
                 {
                     ClientId = Configuration["DigitClientId"],
                     ClientSecret = Configuration["DigitClientSecret"],
-                    Scopes = "calendar.service",
+                    Scopes = "calendar.service travel.service",
                     ServiceIdentityBaseUrl = new Uri(Configuration["ServiceIdentityUrl"])
                 });
             services.AddCalendarServiceClient(new Uri(Configuration["CalendarServiceUrl"]), authenticationProviderBuilder);
+            services.AddTravelServiceClient(new Uri(Configuration["TravelServiceUrl"]), authenticationProviderBuilder);
 
             services.Configure<ButlerOptions>(Configuration);
             services.AddTransient<IButler, Butler>();

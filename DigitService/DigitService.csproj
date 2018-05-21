@@ -17,6 +17,7 @@
     <PackageReference Include="Microsoft.Azure.NotificationHubs" Version="2.0.0-preview2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.0-rc1-final" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Design" Version="2.0.0-preview1-final" />
+    <PackageReference Include="TravelService.Client" Version="1.0.3" />
   </ItemGroup>
 
   <ItemGroup>
