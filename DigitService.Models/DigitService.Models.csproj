@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard1.3</TargetFrameworks>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.1</Version>
+    <Authors>tuwrraphael</Authors>
+    <PackageProjectUrl>https://tuwrraphael.github.io/DigitService/</PackageProjectUrl>
+    <PackageTags>DigitService client models</PackageTags>
+    <Description>Models for HttpClient for DigitService api</Description>
+    <RepositoryUrl>https://github.com/tuwrraphael/DigitService</RepositoryUrl>
+    <NeutralLanguage>en</NeutralLanguage>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+</Project>

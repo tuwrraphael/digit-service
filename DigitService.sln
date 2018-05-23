@@ -5,7 +5,9 @@ VisualStudioVersion = 15.0.27130.2003
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitService", "DigitService\DigitService.csproj", "{38470AD3-C270-47C9-BB92-EE4C61611B85}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitService.Models", "DigitServiceModels.cs\DigitService.Models.csproj", "{6A6DB8C5-B6CC-48FE-B536-002568A8C24D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitService.Client", "DigitService.Client\DigitService.Client.csproj", "{90E2687B-D71E-45B0-B03F-AD0B9881B635}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitService.Models", "DigitService.Models\DigitService.Models.csproj", "{37898DAD-EA03-4514-83D9-1B098C295DD1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +19,14 @@ Global
 		{38470AD3-C270-47C9-BB92-EE4C61611B85}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38470AD3-C270-47C9-BB92-EE4C61611B85}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{38470AD3-C270-47C9-BB92-EE4C61611B85}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6A6DB8C5-B6CC-48FE-B536-002568A8C24D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6A6DB8C5-B6CC-48FE-B536-002568A8C24D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6A6DB8C5-B6CC-48FE-B536-002568A8C24D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6A6DB8C5-B6CC-48FE-B536-002568A8C24D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90E2687B-D71E-45B0-B03F-AD0B9881B635}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90E2687B-D71E-45B0-B03F-AD0B9881B635}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90E2687B-D71E-45B0-B03F-AD0B9881B635}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90E2687B-D71E-45B0-B03F-AD0B9881B635}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37898DAD-EA03-4514-83D9-1B098C295DD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37898DAD-EA03-4514-83D9-1B098C295DD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37898DAD-EA03-4514-83D9-1B098C295DD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37898DAD-EA03-4514-83D9-1B098C295DD1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -19,6 +19,7 @@ using System;
 using OAuthApiClient;
 using Microsoft.AspNetCore.Mvc;
 using TravelService.Client;
+using DigitService.Controllers;
 
 namespace DigitService
 {
@@ -79,6 +80,7 @@ namespace DigitService
             services.AddTransient<IButler, Butler>();
            
             services.AddTransient<IUserService, UserService>();
+            services.AddTransient<ILocationService, LocationService>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1).AddJsonOptions(v =>
             {
