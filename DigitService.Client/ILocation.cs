@@ -5,7 +5,9 @@ namespace DigitService.Client
 {
     public interface ILocation
     {
-        Task AddLocation(Location location);
+        Task AddLocationAsync(Location location);
+        Task<Location> GetAsync();
+        Task NotifyErrorAsync(LocationConfigurationError error);
         ILocation this[string userId] { get; }
     }
 }

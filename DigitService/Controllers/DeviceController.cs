@@ -73,7 +73,7 @@ namespace DigitService.Controllers
             {
                 return Unauthorized();
             }
-            await pushService.Push(User.GetId(), "measure_battery");
+            await pushService.Push(User.GetId(), new PushPayload() { Action = PushActions.MeasureBattery });
             return Ok();
         }
 

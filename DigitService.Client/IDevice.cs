@@ -4,7 +4,7 @@ namespace DigitService.Client
 {
     public interface IDevice
     {
-        Task<bool> Claim();
+        Task<bool> ClaimAsync();
 
         IBattery Battery { get; }
     }

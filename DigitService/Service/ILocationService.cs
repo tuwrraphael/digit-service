@@ -7,5 +7,6 @@ namespace DigitService.Service
     {
         Task<Location> GetCurrentLocation(string userId);
         Task LocationCallback(string userId, Location location);
+        Task LocationConfigurationErrorCallback(string userId, LocationConfigurationError error);
     }
 }

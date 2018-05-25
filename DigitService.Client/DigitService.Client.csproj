@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard1.3</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.1</Version>
+    <Version>1.0.4</Version>
     <Authors>tuwrraphael</Authors>
     <PackageProjectUrl>https://tuwrraphael.github.io/DigitService/</PackageProjectUrl>
     <PackageTags>DigitService client</PackageTags>

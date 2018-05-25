@@ -153,5 +153,11 @@ namespace DigitService.Impl
             }
             return null;
         }
+
+        public async Task<bool> PushChannelRegistered(string userId)
+        {
+            var user = await userRepository.GetAsync(userId);
+            return null != user && null != user.PushChannel;
+        }
     }
 }

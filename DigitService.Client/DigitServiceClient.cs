@@ -68,7 +68,7 @@ namespace DigitService.Client
 
             public IBattery Battery => new BatteryClient(deviceId, clientFactory);
 
-            public async Task<bool> Claim()
+            public async Task<bool> ClaimAsync()
             {
                 var client = await clientFactory();
                 HttpResponseMessage res = await client.PostAsync($"api/device/{deviceId}/claim",
@@ -94,7 +94,7 @@ namespace DigitService.Client
                     this.clientFactory = clientFactory;
                 }
 
-                public async Task AddMeasurement(BatteryMeasurement measurement)
+                public async Task AddMeasurementAsync(BatteryMeasurement measurement)
                 {
                     var client = await clientFactory();
                     var json = JsonConvert.SerializeObject(measurement);
@@ -123,7 +123,7 @@ namespace DigitService.Client
 
             public ILocation this[string userId] => new LocationClient(userId, clientFactory);
 
-            public async Task AddLocation(Location location)
+            public async Task AddLocationAsync(Location location)
             {
                 var client = await clientFactory();
                 var json = JsonConvert.SerializeObject(location);
@@ -132,6 +132,37 @@ namespace DigitService.Client
                 if (!res.IsSuccessStatusCode)
                 {
                     throw new DigitServiceException($"Location post error {res.StatusCode}");
+                }
+            }
+
+            public async Task<Location> GetAsync()
+            {
+                var client = await clientFactory();
+                var res = await client.GetAsync($"api/{userId}/location");
+                if (res.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
+                else if (res.IsSuccessStatusCode)
+                {
+                    var content = await res.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<Location>(content);
+                }
+                else
+                {
+                    throw new DigitServiceException($"Could not retrieve user location: {res.StatusCode}");
+                }
+            }
+
+            public async Task NotifyErrorAsync(LocationConfigurationError error)
+            {
+                var client = await clientFactory();
+                var json = JsonConvert.SerializeObject(error);
+                HttpResponseMessage res = await client.PutAsync($"api/{userId}/location/error",
+                    new StringContent(json, Encoding.UTF8, "application/json"));
+                if (!res.IsSuccessStatusCode)
+                {
+                    throw new DigitServiceException($"Could notify location configuration error: {res.StatusCode}");
                 }
             }
         }
@@ -151,7 +182,7 @@ namespace DigitService.Client
             return res.IsSuccessStatusCode;
         }
 
-        public async Task SetupPushChannel(PushChannelRegistration channelRegistration)
+        public async Task SetupPushChannelAsync(PushChannelRegistration channelRegistration)
         {
             var json = JsonConvert.SerializeObject(channelRegistration);
             var client = await ClientFactory();

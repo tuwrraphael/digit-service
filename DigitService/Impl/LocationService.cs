@@ -1,4 +1,3 @@
-using DigitService.Extensions;
 using DigitService.Models;
 using DigitService.Service;
 using System;
@@ -15,11 +14,13 @@ namespace DigitService.Impl
         private static readonly ConcurrentDictionary<string, LocationUserService> locationUserServices = new ConcurrentDictionary<string, LocationUserService>();
         private readonly IPushService pushService;
         private readonly IDigitLogger logger;
+        private readonly IUserService userService;
 
-        public LocationService(IPushService pushService, IDigitLogger logger)
+        public LocationService(IPushService pushService, IDigitLogger logger, IUserService userService)
         {
             this.pushService = pushService;
             this.logger = logger;
+            this.userService = userService;
         }
 
         public async Task<Location> GetCurrentLocation(string userId)
@@ -29,13 +30,24 @@ namespace DigitService.Impl
         }
         private async Task SendPushNotification(string userId)
         {
-            await pushService.Push(userId, new Models.PushPayload() { Action = "SendLocation" });
+            if (!await userService.PushChannelRegistered(userId))
+            {
+                throw new UserConfigurationException("No push channel configured for user");
+            }
+            await pushService.Push(userId, new PushPayload() { Action = PushActions.SendLocation });
         }
 
         public async Task LocationCallback(string userId, Location location)
         {
             var locationUserService = locationUserServices.GetOrAdd(userId, new LocationUserService(userId));
             await locationUserService.Set(location);
+        }
+
+        public async Task LocationConfigurationErrorCallback(string userId, LocationConfigurationError locationError)
+        {
+            var locationUserService = locationUserServices.GetOrAdd(userId, new LocationUserService(userId));
+            await locationUserService.Set(null);
+            await logger.Log(userId, "Location configuration error", 3);
         }
 
         private class LocationUserService
@@ -45,7 +57,7 @@ namespace DigitService.Impl
             private readonly string userId;
             private Location resolvedLocation = null;
             private const int Expiration = 10;
-            private const int Timeout = 30;
+            private const int TimeoutSeconds = 120;
 
             public LocationUserService(string userId)
             {
@@ -55,9 +67,9 @@ namespace DigitService.Impl
             public async Task<Location> GetCurrentLocation(Func<string, Task> sendPushNotification)
             {
                 Task<Location> result;
+                await sem.WaitAsync();
                 try
                 {
-                    await sem.WaitAsync();
                     if (null != resolvedLocation && (DateTime.Now - resolvedLocation.Timestamp).TotalSeconds < Expiration)
                     {
                         return new Location(resolvedLocation);
@@ -67,6 +79,21 @@ namespace DigitService.Impl
                         if (!taskCompletionSources.Any())
                         {
                             await sendPushNotification(userId);
+                            Timer timer = new Timer(async state =>
+                            {
+                                await sem.WaitAsync();
+                                try
+                                {
+                                    while (taskCompletionSources.TryDequeue(out TaskCompletionSource<Location> toRelease))
+                                    {
+                                        toRelease.TrySetException(new TimeoutException());
+                                    }
+                                }
+                                finally
+                                {
+                                    sem.Release();
+                                }
+                            }, null, TimeoutSeconds * 1000, Timeout.Infinite);
                         }
                         var tcs = new TaskCompletionSource<Location>();
                         taskCompletionSources.Enqueue(tcs);
@@ -77,7 +104,7 @@ namespace DigitService.Impl
                 {
                     sem.Release();
                 }
-                return await result.TimeoutAfter(Timeout * 1000);
+                return await result;
             }
 
             public async Task Set(Location location)

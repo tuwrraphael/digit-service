@@ -5,6 +5,6 @@ namespace DigitService.Client
 {
     public interface IBattery
     {
-        Task AddMeasurement(BatteryMeasurement measurement);
+        Task AddMeasurementAsync(BatteryMeasurement measurement);
     }
 }
