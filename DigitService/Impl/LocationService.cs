@@ -56,8 +56,8 @@ namespace DigitService.Impl
             private static readonly SemaphoreSlim sem = new SemaphoreSlim(1);
             private readonly string userId;
             private Location resolvedLocation = null;
-            private const int Expiration = 10;
-            private const int TimeoutSeconds = 120;
+            private const int Expiration = 10 * 60;
+            private const int TimeoutSeconds = 45;
 
             public LocationUserService(string userId)
             {
