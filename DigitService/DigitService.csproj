@@ -10,19 +10,17 @@
 
   <ItemGroup>
     <PackageReference Include="ButlerClient" Version="1.0.1" />
-    <PackageReference Include="CalendarService.Client" Version="1.0.3" />
+    <PackageReference Include="CalendarService.Client" Version="1.0.5" />
     <PackageReference Include="FileStore.tiscca-raphael" Version="1.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.0-rc1-final" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.0.0-rc1-final" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.0.0" />
     <PackageReference Include="Microsoft.Azure.NotificationHubs" Version="2.0.0-preview2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.0-rc1-final" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Design" Version="2.0.0-preview1-final" />
-    <PackageReference Include="TravelService.Client" Version="1.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.0" />
+    <PackageReference Include="OAuthApiClient" Version="1.0.4" />
+    <PackageReference Include="TravelService.Client" Version="1.0.6" />
+    <PackageReference Include="TravelService.Models" Version="1.0.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.1" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DigitService.Models\DigitService.Models.csproj" />

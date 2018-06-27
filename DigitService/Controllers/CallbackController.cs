@@ -38,11 +38,13 @@ namespace DigitService.Controllers
             var userId = reminderDelivery.ClientState;
             var timeToStart = reminderDelivery.Event.Start - DateTime.Now;
             TransitDirections directions = null;
-            if (!string.IsNullOrEmpty(reminderDelivery.Event.Location))
+            if (null != reminderDelivery.Event.Location)
             {
                 try
                 {
-                    directions = await travelServiceClient.Directions.Transit.Get(reminderDelivery.Event.Location, reminderDelivery.Event.Start - new TimeSpan(0, 2, 0), userId);
+                    var address = reminderDelivery.Event.Location.Address != null ?
+                        $"{reminderDelivery.Event.Location.Address.Street}, {reminderDelivery.Event.Location.Address.PostalCode} {reminderDelivery.Event.Location.Address.City} {reminderDelivery.Event.Location.Address.CountryOrRegion}" : reminderDelivery.Event.Location.Text;
+                    directions = await travelServiceClient.Directions.Transit.Get(address, reminderDelivery.Event.Start - new TimeSpan(0, 2, 0), userId);
                 }
                 catch (TravelServiceException ex)
                 {
