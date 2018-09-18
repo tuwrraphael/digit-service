@@ -20,6 +20,7 @@ using OAuthApiClient;
 using Microsoft.AspNetCore.Mvc;
 using TravelService.Client;
 using DigitService.Controllers;
+using DigitPushService.Client;
 
 namespace DigitService
 {
@@ -60,6 +61,7 @@ namespace DigitService
                 o.DigitClientSecret = Configuration["DigitClientSecret"];
                 var endpoint = Configuration["CallbackEndpoint"];
                 o.ReminderCallbackUri = $"{endpoint}/api/callback/reminder";
+                o.NotifyUserCallbackUri = $"{endpoint}/api/callback/notify-user";
                 o.ReminderMaintainanceCallbackUri = $"{endpoint}/api/callback/reminder-maintainance";
                 o.ServiceIdentityUrl = Configuration["ServiceIdentityUrl"];
             });
@@ -70,11 +72,12 @@ namespace DigitService
                 {
                     ClientId = Configuration["DigitClientId"],
                     ClientSecret = Configuration["DigitClientSecret"],
-                    Scopes = "calendar.service travel.service",
+                    Scopes = "calendar.service travel.service push.service",
                     ServiceIdentityBaseUrl = new Uri(Configuration["ServiceIdentityUrl"])
                 });
             services.AddCalendarServiceClient(new Uri(Configuration["CalendarServiceUrl"]), authenticationProviderBuilder);
             services.AddTravelServiceClient(new Uri(Configuration["TravelServiceUrl"]), authenticationProviderBuilder);
+            services.AddDigitPushServiceClient(new Uri(Configuration["PushServiceUrl"]), authenticationProviderBuilder);
 
             services.Configure<ButlerOptions>(Configuration);
             services.AddTransient<IButler, Butler>();

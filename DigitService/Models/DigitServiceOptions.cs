@@ -6,6 +6,7 @@
         public string DigitClientSecret { get; set; }
         public string ReminderCallbackUri { get; set; }
         public string ReminderMaintainanceCallbackUri { get; set; }
-        public object ServiceIdentityUrl { get; internal set; }
+        public object ServiceIdentityUrl { get; set; }
+        public string NotifyUserCallbackUri { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
+    <UserSecretsId>2b3680f5-2225-4ef9-aa6e-17951e519092</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,11 +12,12 @@
   <ItemGroup>
     <PackageReference Include="ButlerClient" Version="1.0.1" />
     <PackageReference Include="CalendarService.Client" Version="1.0.5" />
+    <PackageReference Include="DigitPushService.Client" Version="1.0.0" />
     <PackageReference Include="FileStore.tiscca-raphael" Version="1.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.0.0" />
-    <PackageReference Include="Microsoft.Azure.NotificationHubs" Version="2.0.0-preview2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.0.1" />
+    <PackageReference Include="Microsoft.Azure.NotificationHubs" Version="2.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.3" />
     <PackageReference Include="OAuthApiClient" Version="1.0.4" />
     <PackageReference Include="TravelService.Client" Version="1.0.6" />
     <PackageReference Include="TravelService.Models" Version="1.0.1" />
