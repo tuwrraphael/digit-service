@@ -1,5 +1,7 @@
+using DigitPushService.Client;
 using DigitService.Models;
 using DigitService.Service;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -15,12 +17,14 @@ namespace DigitService.Impl
         private readonly IPushService pushService;
         private readonly IDigitLogger logger;
         private readonly IUserService userService;
+        private readonly IDigitPushServiceClient digitPushServiceClient;
 
-        public LocationService(IPushService pushService, IDigitLogger logger, IUserService userService)
+        public LocationService(IPushService pushService, IDigitLogger logger, IUserService userService, IDigitPushServiceClient digitPushServiceClient)
         {
             this.pushService = pushService;
             this.logger = logger;
             this.userService = userService;
+            this.digitPushServiceClient = digitPushServiceClient;
         }
 
         public async Task<Location> GetCurrentLocation(string userId)
@@ -30,11 +34,26 @@ namespace DigitService.Impl
         }
         private async Task SendPushNotification(string userId)
         {
-            if (!await userService.PushChannelRegistered(userId))
+            var type = await pushService.GetPushRegistrationType(userId);
+            if (PushRegistrationType.Legacy == type)
+            {
+                await pushService.Push(userId, new PushPayload() { Action = PushActions.SendLocation });
+            }
+            else if (PushRegistrationType.PushServer == type)
+            {
+                await digitPushServiceClient.Push[userId].Create(new DigitPushService.Models.PushRequest()
+                {
+                    ChannelOptions = new Dictionary<string, string>()
+                    {
+                        { "digitLocationRequest", null}
+                    },
+                    Payload = JsonConvert.SerializeObject(new PushPayload() { Action = PushActions.SendLocation })
+                });
+            }
+            else
             {
                 throw new UserConfigurationException("No push channel configured for user");
             }
-            await pushService.Push(userId, new PushPayload() { Action = PushActions.SendLocation });
         }
 
         public async Task LocationCallback(string userId, Location location)

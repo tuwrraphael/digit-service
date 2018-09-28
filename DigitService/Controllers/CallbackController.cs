@@ -80,7 +80,7 @@ namespace DigitService.Controllers
                         UserId = userId,
                         Message = JsonConvert.SerializeObject(new { notification = new {
                             title = $"Losgehen zu {reminderDelivery.Event.Subject}",
-                            body = $"Mach dich auf den Weg. {reminderDelivery.Event.Subject} beginnt in {(reminderDelivery.Event.Start - route.DepatureTime.Value).TotalMinutes} Minuten." } })
+                            body = $"Mach dich auf den Weg. {reminderDelivery.Event.Subject} beginnt in {Math.Round((reminderDelivery.Event.Start - route.DepatureTime.Value).TotalMinutes)} Minuten." } })
                     },
                     Url = options.NotifyUserCallbackUri
                 });
@@ -88,9 +88,10 @@ namespace DigitService.Controllers
             else
             {
                 await digitLogger.Log(userId, $"Event {reminderDelivery.Event.Subject} starts in {Math.Round(timeToStart.TotalMinutes)} minutes.");
+                var deliveryTime = reminderDelivery.Event.Start - new TimeSpan(0, 45, 0);
                 await butler.InstallAsync(new WebhookRequest()
                 {
-                    When = reminderDelivery.Event.Start - new TimeSpan(0,45,0),
+                    When = deliveryTime,
                     Data = new NotifyUserRequest()
                     {
                         UserId = userId,
@@ -99,7 +100,7 @@ namespace DigitService.Controllers
                             notification = new
                             {
                                 title = $"Losgehen zu {reminderDelivery.Event.Subject}",
-                                body = $"Mach dich auf den Weg. {reminderDelivery.Event.Subject} beginnt in 45 Minuten."
+                                body = $"Mach dich auf den Weg. {reminderDelivery.Event.Subject} beginnt in {Math.Round((reminderDelivery.Event.Start - deliveryTime).TotalMinutes)} Minuten."
                             }
                         })
                     },

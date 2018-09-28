@@ -1,4 +1,5 @@
-﻿using DigitService.Models;
+﻿using DigitPushService.Client;
+using DigitService.Models;
 using DigitService.Service;
 using Microsoft.Azure.NotificationHubs;
 using Microsoft.Extensions.Options;
@@ -20,11 +21,16 @@ namespace DigitService.Impl
     {
         private readonly NotificationHubConfig config;
         private readonly IDigitLogger logger;
+        private readonly IUserRepository userRepository;
+        private readonly IDigitPushServiceClient digitPushServiceClient;
 
-        public NotificationHubPushService(IOptions<NotificationHubConfig> configAccessor, IDigitLogger logger)
+        public NotificationHubPushService(IOptions<NotificationHubConfig> configAccessor, IDigitLogger logger,
+            IUserRepository userRepository, IDigitPushServiceClient digitPushServiceClient)
         {
             config = configAccessor.Value;
             this.logger = logger;
+            this.userRepository = userRepository;
+            this.digitPushServiceClient = digitPushServiceClient;
         }
 
         private static string GetSASToken(string resourceUri, string keyName, string key)
@@ -80,6 +86,24 @@ namespace DigitService.Impl
             var res = await cl.PostAsync(uri, new OctetStreamStringContent(payload, Encoding.Default,
                 "application/octet-stream"));
             await logger.Log(user, $"Push {payload} resulted in {res.StatusCode}");
+        }
+
+        public async Task<PushRegistrationType> GetPushRegistrationType(string userId)
+        {
+            var channels = await digitPushServiceClient.PushChannels[userId].GetAllAsync();
+            if (channels.Any(v => v.Options.ContainsKey("digitLocationRequest")))
+            {
+                return PushRegistrationType.PushServer;
+            }
+            else
+            {
+                var user = await userRepository.GetAsync(userId);
+                if (null != user.PushChannel)
+                {
+                    return PushRegistrationType.Legacy;
+                }
+            }
+            return PushRegistrationType.None;
         }
     }
 }

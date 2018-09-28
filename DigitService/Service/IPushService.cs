@@ -8,5 +8,6 @@ namespace DigitService.Service
         Task Push(string user, PushPayload payload);
         Task Push(string user, string payload);
         Task RegisterUser(string user, string registrationId);
+        Task<PushRegistrationType> GetPushRegistrationType(string user);
     }
 }

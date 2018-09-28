@@ -17,6 +17,7 @@ namespace DigitService.Impl
         private readonly ICalendarServiceClient calendarService;
         private readonly IButler butler;
         private readonly IDigitLogger digitLogger;
+        private readonly IPushService pushService;
         private readonly DigitServiceOptions options;
         private const uint ReminderTime = 120;
         private static ConcurrentDictionary<string, SemaphoreSlim> maintainanceSemaphores = new ConcurrentDictionary<string, SemaphoreSlim>();
@@ -25,12 +26,14 @@ namespace DigitService.Impl
             ICalendarServiceClient calendarService,
             IButler butler,
             IOptions<DigitServiceOptions> optionsAccessor,
-            IDigitLogger digitLogger)
+            IDigitLogger digitLogger,
+            IPushService pushService)
         {
             this.userRepository = userRepository;
             this.calendarService = calendarService;
             this.butler = butler;
             this.digitLogger = digitLogger;
+            this.pushService = pushService;
             options = optionsAccessor.Value;
         }
 
@@ -96,7 +99,7 @@ namespace DigitService.Impl
                 }
                 var userInformation = new UserInformation()
                 {
-                    PushChannelRegistered = null != user.PushChannel,
+                    PushChannelRegistered = await PushChannelRegistered(userId),
                     CalendarReminderActive = !reminderInactive
                 };
 
@@ -129,7 +132,7 @@ namespace DigitService.Impl
             }
             var userInformation = new UserInformation()
             {
-                PushChannelRegistered = null != user.PushChannel,
+                PushChannelRegistered = await PushChannelRegistered(userId),
                 CalendarReminderActive = reminderAlive
             };
             return userInformation;
@@ -154,10 +157,9 @@ namespace DigitService.Impl
             return null;
         }
 
-        public async Task<bool> PushChannelRegistered(string userId)
+        private async Task<bool> PushChannelRegistered(string userId)
         {
-            var user = await userRepository.GetAsync(userId);
-            return null != user && null != user.PushChannel;
+            return await pushService.GetPushRegistrationType(userId) != PushRegistrationType.None;
         }
     }
 }
