@@ -13,6 +13,7 @@ namespace DigitService.Impl.EF
         public DbSet<User> Users { get; set; }
         public DbSet<StoredBatteryMeasurement> BatteryMeasurements { get; set; }
         public DbSet<StoredDevice> Devices { get; set; }
+        public DbSet<StoredFocusItem> FocusItems { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -22,6 +23,33 @@ namespace DigitService.Impl.EF
         {
             modelBuilder.Entity<User>()
                 .HasKey(p => p.Id);
+            modelBuilder.Entity<User>()
+                .HasOne(v => v.StoredLocation)
+                .WithOne(v => v.User)
+                .HasForeignKey<User>(v => v.StoredLocationId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<User>()
+                .HasMany(v => v.FocusItems)
+                .WithOne(v => v.User)
+                .HasForeignKey(v => v.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<StoredLocation>()
+                .HasKey(p => p.Id);
+            modelBuilder.Entity<StoredLocation>()
+                .Property(p => p.Id)
+                .ValueGeneratedOnAdd();
+
+            modelBuilder.Entity<StoredFocusItem>()
+                .HasKey(v => v.Id);
+            modelBuilder.Entity<StoredFocusItem>()
+                .HasOne(v => v.CalendarEvent)
+                .WithOne(v => v.FocusItem)
+                .HasForeignKey<StoredFocusItem>(v => new { v.CalendarEventId, v.CalendarEventFeedId })
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<StoredCalendarEvent>()
+                .HasKey(v => new { v.Id, v.FeedId });
 
             modelBuilder.Entity<StoredDevice>()
                 .HasKey(p => p.Id);

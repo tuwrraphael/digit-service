@@ -8,7 +8,7 @@ namespace DigitService.Service
         Task<User> CreateUser(string userId);
         Task<User> GetAsync(string userId);
         Task StoreReminderIdAsync(string userId, string reminderId);
-        Task StorePushChannelAsync(string userId, string channelId);
         Task<User> GetByReminder(string reminderId);
+        Task<User> GetOrCreateAsync(string userId);
     }
 }

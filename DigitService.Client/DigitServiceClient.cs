@@ -181,21 +181,5 @@ namespace DigitService.Client
                 new StringContent(json, Encoding.UTF8, "application/json"));
             return res.IsSuccessStatusCode;
         }
-
-        public async Task SetupPushChannelAsync(PushChannelRegistration channelRegistration)
-        {
-            var json = JsonConvert.SerializeObject(channelRegistration);
-            var client = await ClientFactory();
-            HttpResponseMessage res = await client.PostAsync($"api/push",
-                 new StringContent(json, Encoding.UTF8, "application/json"));
-            if (res.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                throw new DigitServiceException("Not authorized to register push channel");
-            }
-            if (!res.IsSuccessStatusCode)
-            {
-                throw new DigitServiceException($"Push channel registration error {res.StatusCode}");
-            }
-        }
     }
 }

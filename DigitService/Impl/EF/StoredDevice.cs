@@ -23,4 +23,32 @@ namespace DigitService.Impl.EF
         public uint RawValue { get; set; }
         public StoredDevice Device { get; internal set; }
     }
+
+    public class StoredLocation
+    {
+        public int Id { get; set; }
+        public double Lat { get; set; }
+        public double Lng { get; set; }
+        public double Accuracy { get; set; }
+        public DateTime Timestamp { get; set; }
+        public User User { get; set; }
+    }
+
+    public class StoredFocusItem
+    {
+        public string Id { get; set; }
+        public string UserId { get; set; }
+        public User User { get; set; }
+        public StoredCalendarEvent CalendarEvent { get; set; }
+        public string CalendarEventId { get; set; }
+        public string CalendarEventFeedId { get; set; }
+        public bool UserNotified { get; set; }
+    }
+
+    public class StoredCalendarEvent
+    {
+        public string Id { get; set; }
+        public string FeedId { get; set; }
+        public StoredFocusItem FocusItem { get; internal set; }
+    }
 }

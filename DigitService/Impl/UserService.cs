@@ -1,6 +1,7 @@
 ﻿using ButlerClient;
 using CalendarService.Client;
 using CalendarService.Models;
+using DigitPushService.Client;
 using DigitService.Models;
 using DigitService.Service;
 using Microsoft.Extensions.Options;
@@ -17,7 +18,7 @@ namespace DigitService.Impl
         private readonly ICalendarServiceClient calendarService;
         private readonly IButler butler;
         private readonly IDigitLogger digitLogger;
-        private readonly IPushService pushService;
+        private readonly IDigitPushServiceClient digitPushServiceClient;
         private readonly DigitServiceOptions options;
         private const uint ReminderTime = 120;
         private static ConcurrentDictionary<string, SemaphoreSlim> maintainanceSemaphores = new ConcurrentDictionary<string, SemaphoreSlim>();
@@ -27,13 +28,13 @@ namespace DigitService.Impl
             IButler butler,
             IOptions<DigitServiceOptions> optionsAccessor,
             IDigitLogger digitLogger,
-            IPushService pushService)
+            IDigitPushServiceClient digitPushServiceClient)
         {
             this.userRepository = userRepository;
             this.calendarService = calendarService;
             this.butler = butler;
             this.digitLogger = digitLogger;
-            this.pushService = pushService;
+            this.digitPushServiceClient = digitPushServiceClient;
             options = optionsAccessor.Value;
         }
 
@@ -72,13 +73,14 @@ namespace DigitService.Impl
                 {
                     return null;
                 }
-                bool reminderInactive = null == user.ReminderId || !await calendarService.ReminderAliveAsync(userId, user.ReminderId);
+                bool reminderInactive = null == user.ReminderId || !await calendarService.Users[userId].Reminders[user.ReminderId].IsAliveAsync();
                 if (reminderInactive)
                 {
                     ReminderRegistration registration = null;
                     try
                     {
-                        registration = await calendarService.RegisterReminderAsync(userId, new ReminderRequest() {
+                        registration = await calendarService.Users[userId].Reminders.RegisterAsync(new ReminderRequest()
+                        {
                             Minutes = ReminderTime,
                             ClientState = userId,
                             NotificationUri = options.ReminderCallbackUri
@@ -113,7 +115,7 @@ namespace DigitService.Impl
 
         public async Task RenewReminder(string userId, RenewReminderRequest request)
         {
-            var registration = await calendarService.RenewReminderAsync(userId, request.ReminderId);
+            var registration = await calendarService.Users[userId].Reminders[request.ReminderId].RenewAsync();
             await digitLogger.Log(userId, "Renewed reminder", 1);
             await InstallButlerForReminderRenewal(registration);
         }
@@ -128,7 +130,7 @@ namespace DigitService.Impl
             bool reminderAlive = false;
             if (null != user.ReminderId)
             {
-                reminderAlive = await calendarService.ReminderAliveAsync(user.Id, user.ReminderId);
+                reminderAlive = await calendarService.Users[user.Id].Reminders[user.ReminderId].IsAliveAsync();
             }
             var userInformation = new UserInformation()
             {
@@ -136,15 +138,6 @@ namespace DigitService.Impl
                 CalendarReminderActive = reminderAlive
             };
             return userInformation;
-        }
-
-        public async Task RegisterPushChannel(string userId, string channelId)
-        {
-            if (null == await userRepository.GetAsync(userId))
-            {
-                await CreateAsync(userId);
-            }
-            await userRepository.StorePushChannelAsync(userId, channelId);
         }
 
         public async Task<string> GetUserIdForReminderAsync(string reminderId)
@@ -159,7 +152,7 @@ namespace DigitService.Impl
 
         private async Task<bool> PushChannelRegistered(string userId)
         {
-            return await pushService.GetPushRegistrationType(userId) != PushRegistrationType.None;
+            return await digitPushServiceClient.HasPushChannelTypeAsync(userId, "digitLocationRequest");
         }
     }
 }

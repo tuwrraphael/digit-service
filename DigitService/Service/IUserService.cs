@@ -10,6 +10,5 @@ namespace DigitService.Service
         Task<UserInformation> MaintainAsync(string userId);
         Task<string> GetUserIdForReminderAsync(string reminderId);
         Task RenewReminder(string userId, RenewReminderRequest request);
-        Task RegisterPushChannel(string userId, string channelId);
     }
 }

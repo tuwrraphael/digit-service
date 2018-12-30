@@ -2,6 +2,7 @@
 using DigitService.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Threading.Tasks;
 
 namespace DigitService.Controllers
@@ -12,16 +13,13 @@ namespace DigitService.Controllers
         private readonly IDigitLogger digitLogger;
         private readonly IDeviceService deviceService;
         private readonly ILogBackend logBackend;
-        private readonly IPushService pushService;
 
         public DeviceController(IDigitLogger digitLogger,
-            IDeviceService deviceService, ILogBackend logBackend,
-            IPushService pushService)
+            IDeviceService deviceService, ILogBackend logBackend)
         {
             this.digitLogger = digitLogger;
             this.deviceService = deviceService;
             this.logBackend = logBackend;
-            this.pushService = pushService;
         }
 
 
@@ -73,8 +71,7 @@ namespace DigitService.Controllers
             {
                 return Unauthorized();
             }
-            await pushService.Push(User.GetId(), new PushPayload() { Action = PushActions.MeasureBattery });
-            return Ok();
+            throw new NotImplementedException();
         }
 
         [HttpGet("{id}")]

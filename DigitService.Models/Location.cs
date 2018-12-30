@@ -20,4 +20,9 @@ namespace DigitService.Models
         public double Accuracy { get; set; }
         public DateTime Timestamp { get; set; }
     }
+
+    public class LocationResponse
+    {
+        public DateTime? NextUpdateRequiredAt { get; set; }
+    }
 }

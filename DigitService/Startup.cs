@@ -50,10 +50,8 @@ namespace DigitService
             services.AddSingleton<IFileStore>(access);
             services.AddTransient<ILogBackend, FileLogBackend>();
             services.AddTransient<IDigitLogger, DigitLogger>();
-            services.AddTransient<IPushService, NotificationHubPushService>();
             services.AddTransient<IDeviceService, DeviceService>();
             services.AddTransient<IDeviceRepository, DeviceRepository>();
-            services.Configure<NotificationHubConfig>(Configuration);
 
             services.Configure<DigitServiceOptions>(o =>
             {
@@ -81,9 +79,11 @@ namespace DigitService
 
             services.Configure<ButlerOptions>(Configuration);
             services.AddTransient<IButler, Butler>();
-           
+
             services.AddTransient<IUserService, UserService>();
-            services.AddTransient<ILocationService, LocationService>();
+            services.AddTransient<ILocationStore, LocationStore>();
+            services.AddTransient<IFocusService, FocusService>();
+            services.AddTransient<IFocusStore, FocusStore>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1).AddJsonOptions(v =>
             {
