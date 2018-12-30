@@ -1,5 +1,6 @@
 ﻿using CalendarService.Models;
 using DigitService.Models;
+using System;
 using System.Threading.Tasks;
 
 namespace DigitService.Service
@@ -11,5 +12,7 @@ namespace DigitService.Service
         Task<FocusItem> GetForCalendarEventAsync(string userId, Event evt);
         Task<bool> FocusItemNotifiedAsync(string itemId);
         Task SetFocusItemNotifiedAsync(string itemId);
+        Task UpdateWithDirections(string itemId, DateTimeOffset indicateTime, string directionsKey);
+        Task<FocusItem[]> GetActiveAsync(string userId);
     }
 }

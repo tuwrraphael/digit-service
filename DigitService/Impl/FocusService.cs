@@ -59,6 +59,7 @@ namespace DigitService.Controllers
             var res = new ManageResult();
             var events = await calendarServiceClient.Users[userId].Events.Get(DateTimeOffset.Now, DateTimeOffset.Now.AddMinutes(130)) ?? new CalendarService.Models.Event[0];
             var starting = events.Where(v => v.Start >= DateTimeOffset.Now).ToArray();
+            string directionsKey = null;
             foreach (var evt in starting)
             {
                 DateTimeOffset? departureTime = null;
@@ -73,15 +74,19 @@ namespace DigitService.Controllers
                     {
                         var address = evt.Location.Address != null ?
                             $"{evt.Location.Address.Street}, {evt.Location.Address.PostalCode} {evt.Location.Address.City} {evt.Location.Address.CountryOrRegion}" : evt.Location.Text;
-                        var directions = await travelServiceClient.Directions.Transit.Get(new Coordinate()
+                        var directionsResult = await travelServiceClient.Directions.Transit.Get(new Coordinate()
                         {
                             Lat = location.Latitude,
                             Lng = location.Longitude
-                        }, address, evt.Start.UtcDateTime);
-                        if (null != directions && directions.Routes.Where(v => v.DepatureTime.HasValue).Any())
+                        }, address, evt.Start);
+                        if (null != directionsResult?.TransitDirections && directionsResult.TransitDirections.Routes.Any())
                         {
-                            var route = directions.Routes.Where(v => v.DepatureTime.HasValue).First();
-                            departureTime = route.DepatureTime.Value;
+                            directionsKey = directionsResult.CacheKey.Replace("\"","");
+                            if (directionsResult.TransitDirections.Routes.Where(v => v.DepatureTime.HasValue).Any())
+                            {
+                                var route = directionsResult.TransitDirections.Routes.Where(v => v.DepatureTime.HasValue).First();
+                                departureTime = route.DepatureTime.Value;
+                            }
                         }
                     }
                     catch (TravelServiceException ex)
@@ -98,6 +103,7 @@ namespace DigitService.Controllers
                 {
                     res.DepartureTimes.Add(departureTime.Value);
                 }
+                await focusStore.UpdateWithDirections(focusItem.Id, departureTime.Value, directionsKey);
                 if (departureTime.Value - DateTimeOffset.Now < new TimeSpan(0, 5, 0))
                 {
                     var notifySemaphore = _notifySempahores.GetOrAdd(userId, s => new SemaphoreSlim(1));

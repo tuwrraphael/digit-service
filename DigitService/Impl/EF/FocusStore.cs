@@ -19,7 +19,11 @@ namespace DigitService.Impl.EF
         {
             return new FocusItem()
             {
-                Id = storedFocusItem.Id
+                Id = storedFocusItem.Id,
+                IndicateTime = new DateTimeOffset(storedFocusItem.IndicateAt, TimeSpan.Zero),
+                DirectionsKey = storedFocusItem.DirectionsKey,
+                CalendarEventId = storedFocusItem.CalendarEventId,
+                CalendarEventFeedId = storedFocusItem.CalendarEventFeedId
             };
         }
     }
@@ -41,6 +45,13 @@ namespace DigitService.Impl.EF
         {
             var item = await digitServiceContext.FocusItems.Where(v => v.Id == itemId).SingleOrDefaultAsync();
             return item.UserNotified;
+        }
+
+        public async Task<FocusItem[]> GetActiveAsync(string userId)
+        {
+            return (await digitServiceContext.FocusItems.Where(v => v.UserId == userId && DateTime.UtcNow <= v.ActiveEnd)
+                .ToArrayAsync())
+                .Select(v => v.MapToFocusItem()).ToArray();
         }
 
         public async Task<FocusItem> GetForCalendarEventAsync(string userId, Event evt)
@@ -69,7 +80,10 @@ namespace DigitService.Impl.EF
                     Id = evt.Id
                 },
                 User = user,
-                UserNotified = false
+                UserNotified = false,
+                ActiveEnd = evt.End.UtcDateTime,
+                IndicateAt = evt.Start.UtcDateTime,
+                DirectionsKey = null
             };
             await digitServiceContext.FocusItems.AddAsync(focusItem);
             await digitServiceContext.SaveChangesAsync();
@@ -81,8 +95,17 @@ namespace DigitService.Impl.EF
             var item = await digitServiceContext.FocusItems.Where(v => v.UserId == userId
                         && v.CalendarEventFeedId == evt.FeedId && v.CalendarEventId == evt.Id).SingleOrDefaultAsync();
             item.UserNotified = false;
+            item.ActiveEnd = evt.End.UtcDateTime;
             await digitServiceContext.SaveChangesAsync();
             return item.MapToFocusItem();
+        }
+
+        public async Task UpdateWithDirections(string itemId, DateTimeOffset indicateTime, string directionsKey)
+        {
+            var item = await digitServiceContext.FocusItems.Where(v => v.Id == itemId).SingleOrDefaultAsync();
+            item.IndicateAt = indicateTime.UtcDateTime;
+            item.DirectionsKey = directionsKey;
+            await digitServiceContext.SaveChangesAsync();
         }
     }
 }

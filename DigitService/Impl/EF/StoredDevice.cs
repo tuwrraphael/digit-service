@@ -43,6 +43,9 @@ namespace DigitService.Impl.EF
         public string CalendarEventId { get; set; }
         public string CalendarEventFeedId { get; set; }
         public bool UserNotified { get; set; }
+        public DateTime ActiveEnd { get; set; }
+        public DateTime IndicateAt { get; set; }
+        public string DirectionsKey { get; set; }
     }
 
     public class StoredCalendarEvent
