@@ -6,8 +6,10 @@ using DigitService.Service;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using TravelService.Client;
 using TravelService.Models;
@@ -24,6 +26,7 @@ namespace DigitService.Controllers
         private readonly IDigitPushServiceClient digitPushServiceClient;
         private readonly DigitServiceOptions options;
         private readonly IFocusStore focusStore;
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _notifySempahores = new ConcurrentDictionary<string, SemaphoreSlim>();
 
         public FocusService(ILocationStore locationStore, IDigitLogger logger,
             ICalendarServiceClient calendarServiceClient, ITravelServiceClient travelServiceClient, IButler butler,
@@ -97,28 +100,37 @@ namespace DigitService.Controllers
                 }
                 if (departureTime.Value - DateTimeOffset.Now < new TimeSpan(0, 5, 0))
                 {
-                    if (!await focusStore.FocusItemNotifiedAsync(focusItem.Id))
+                    var notifySemaphore = _notifySempahores.GetOrAdd(userId, s => new SemaphoreSlim(1));
+                    await notifySemaphore.WaitAsync();
+                    try
                     {
-                        try
+                        if (!await focusStore.FocusItemNotifiedAsync(focusItem.Id))
                         {
-                            await digitPushServiceClient.Push[userId].Create(new DigitPushService.Models.PushRequest()
+                            try
                             {
-                                ChannelOptions = new Dictionary<string, string>() { { "digit.notify", null } },
-                                Payload = JsonConvert.SerializeObject(new
+                                await digitPushServiceClient.Push[userId].Create(new DigitPushService.Models.PushRequest()
                                 {
-                                    notification = new
+                                    ChannelOptions = new Dictionary<string, string>() { { "digit.notify", null } },
+                                    Payload = JsonConvert.SerializeObject(new
                                     {
-                                        title = $"Losgehen zu {evt.Subject}",
-                                        body = $"Mach dich auf den Weg. {evt.Subject} beginnt in {(evt.Start - DateTime.Now).TotalMinutes:0} Minuten."
-                                    }
-                                })
-                            });
-                            await focusStore.SetFocusItemNotifiedAsync(focusItem.Id);
+                                        notification = new
+                                        {
+                                            title = $"Losgehen zu {evt.Subject}",
+                                            body = $"Mach dich auf den Weg. {evt.Subject} beginnt in {(evt.Start - DateTime.Now).TotalMinutes:0} Minuten."
+                                        }
+                                    })
+                                });
+                                await focusStore.SetFocusItemNotifiedAsync(focusItem.Id);
+                            }
+                            catch (Exception e)
+                            {
+                                await logger.Log(userId, $"Could notify user ({e.Message}).", 3);
+                            }
                         }
-                        catch (Exception e)
-                        {
-                            await logger.Log(userId, $"Could notify user ({e.Message}).", 3);
-                        }
+                    }
+                    finally
+                    {
+                        notifySemaphore.Release();
                     }
                 }
                 else
@@ -188,7 +200,9 @@ namespace DigitService.Controllers
             }
             if (requestLocation)
             {
-                bool lastRequestPending = locationRequestTime > storedLocation.Timestamp && (DateTime.Now - locationRequestTime) < new TimeSpan(0, 20, 0);
+                bool lastRequestPending =
+                    null != locationRequestTime && null != storedLocation &&
+                    locationRequestTime > storedLocation.Timestamp && (DateTime.Now - locationRequestTime) < new TimeSpan(0, 20, 0);
                 if (lastRequestPending)
                 {
                     await logger.Log(userId, $"Not requesting location because last request is still pending ({locationRequestTime:s})");
