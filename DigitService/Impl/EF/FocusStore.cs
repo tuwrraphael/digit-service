@@ -44,6 +44,7 @@ namespace DigitService.Impl.EF
         public async Task<bool> FocusItemNotifiedAsync(string itemId)
         {
             var item = await digitServiceContext.FocusItems.Where(v => v.Id == itemId).SingleOrDefaultAsync();
+            await digitServiceContext.Entry(item).ReloadAsync();
             return item.UserNotified;
         }
 

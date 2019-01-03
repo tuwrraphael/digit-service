@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="ButlerClient" Version="1.0.1" />
-    <PackageReference Include="CalendarService.Client" Version="2.0.1" />
+    <PackageReference Include="CalendarService.Client" Version="2.0.2" />
     <PackageReference Include="DigitPushService.Client" Version="1.0.1" />
     <PackageReference Include="FileStore.tiscca-raphael" Version="1.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
@@ -19,7 +19,7 @@
     <PackageReference Include="Microsoft.Azure.NotificationHubs" Version="2.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.3" />
     <PackageReference Include="OAuthApiClient" Version="1.0.4" />
-    <PackageReference Include="TravelService.Client" Version="2.0.1" />
+    <PackageReference Include="TravelService.Client" Version="2.0.2" />
     <PackageReference Include="TravelService.Models" Version="2.0.0" />
   </ItemGroup>
 
