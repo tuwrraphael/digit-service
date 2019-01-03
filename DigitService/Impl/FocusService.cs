@@ -81,7 +81,7 @@ namespace DigitService.Controllers
                         }, address, evt.Start);
                         if (null != directionsResult?.TransitDirections && directionsResult.TransitDirections.Routes.Any())
                         {
-                            directionsKey = directionsResult.CacheKey.Replace("\"","");
+                            directionsKey = directionsResult.CacheKey.Replace("\"", "");
                             if (directionsResult.TransitDirections.Routes.Where(v => v.DepatureTime.HasValue).Any())
                             {
                                 var route = directionsResult.TransitDirections.Routes.Where(v => v.DepatureTime.HasValue).First();
@@ -240,6 +240,11 @@ namespace DigitService.Controllers
                 await logger.Log(userId, $"Not requesting location because cached location from {storedLocation.Timestamp:s} is used");
             }
             await ManageFocus(userId, storedLocation);
+        }
+
+        public async Task PatchAsync(string userId)
+        {
+            await ManageFocus(userId, await locationStore.GetLastLocationAsync(userId));
         }
     }
 }
