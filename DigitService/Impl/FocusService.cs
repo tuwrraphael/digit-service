@@ -68,12 +68,12 @@ namespace DigitService.Controllers
                 {
                     focusItem = await focusStore.StoreCalendarEventAsync(userId, evt);
                 }
-                if (null != evt.Location && null != location)
+                var address = evt.Location?.Address != null ?
+                            $"{evt.Location.Address.Street}, {evt.Location.Address.PostalCode} {evt.Location.Address.City} {evt.Location.Address.CountryOrRegion}" : evt.Location?.Text;
+                if (null != address && null != location)
                 {
                     try
                     {
-                        var address = evt.Location.Address != null ?
-                            $"{evt.Location.Address.Street}, {evt.Location.Address.PostalCode} {evt.Location.Address.City} {evt.Location.Address.CountryOrRegion}" : evt.Location.Text;
                         var directionsResult = await travelServiceClient.Directions.Transit.Get(new Coordinate()
                         {
                             Lat = location.Latitude,
