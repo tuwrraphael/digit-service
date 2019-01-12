@@ -2,6 +2,7 @@
 using CalendarService.Client;
 using CalendarService.Models;
 using DigitPushService.Client;
+using DigitService.Controllers;
 using DigitService.Models;
 using DigitService.Service;
 using Microsoft.Extensions.Options;
@@ -20,7 +21,6 @@ namespace DigitService.Impl
         private readonly IDigitLogger digitLogger;
         private readonly IDigitPushServiceClient digitPushServiceClient;
         private readonly DigitServiceOptions options;
-        private const uint ReminderTime = 120;
         private static ConcurrentDictionary<string, SemaphoreSlim> maintainanceSemaphores = new ConcurrentDictionary<string, SemaphoreSlim>();
 
         public UserService(IUserRepository userRepository,
@@ -81,7 +81,7 @@ namespace DigitService.Impl
                     {
                         registration = await calendarService.Users[userId].Reminders.RegisterAsync(new ReminderRequest()
                         {
-                            Minutes = ReminderTime,
+                            Minutes = (uint)FocusService.FocusScanTime.TotalMinutes,
                             ClientState = userId,
                             NotificationUri = options.ReminderCallbackUri
                         });

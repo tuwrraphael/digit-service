@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TravelService.Client;
 using TravelService.Models;
+using TravelService.Models.Directions;
 
 namespace DigitService.Controllers
 {
@@ -27,6 +28,15 @@ namespace DigitService.Controllers
         private readonly DigitServiceOptions options;
         private readonly IFocusStore focusStore;
         private static readonly ConcurrentDictionary<string, SemaphoreSlim> _notifySempahores = new ConcurrentDictionary<string, SemaphoreSlim>();
+
+        private static readonly TimeSpan NotifyTime = new TimeSpan(0, 6, 0);
+        private static readonly TimeSpan ButlerInaccuracy = new TimeSpan(0, 1, 0);
+        private static readonly TimeSpan LastLocationCacheTime = new TimeSpan(0, 5, 0);
+        private static readonly TimeSpan LocationRequestInvalidationTime = new TimeSpan(0, 20, 0);
+        private static readonly TimeSpan NoUpdateBeforeDepartureMargin = new TimeSpan(0, 10, 0);
+        public static readonly TimeSpan FocusScanTime = new TimeSpan(2, 0, 0);
+        private static readonly TimeSpan CalendarServiceInacurracy = new TimeSpan(0, 10, 0);
+        private static readonly TimeSpan DefaultTravelTime = new TimeSpan(0, 45, 0);
 
         public FocusService(ILocationStore locationStore, IDigitLogger logger,
             ICalendarServiceClient calendarServiceClient, ITravelServiceClient travelServiceClient, IButler butler,
@@ -54,13 +64,27 @@ namespace DigitService.Controllers
             public List<DateTimeOffset> DepartureTimes { get; set; } = new List<DateTimeOffset>();
         }
 
+        private DateTimeOffset? GetDepartureTime(DirectionsResult directionsResult)
+        {
+            if (null != directionsResult?.TransitDirections && directionsResult.TransitDirections.Routes.Any())
+            {
+                if (directionsResult.TransitDirections.Routes.Where(v => v.DepatureTime.HasValue).Any())
+                {
+                    var route = directionsResult.TransitDirections.Routes.Where(v => v.DepatureTime.HasValue).First();
+                    return route.DepatureTime.Value;
+                }
+            }
+            return null;
+        }
+
+
         private async Task<ManageResult> ManageFocus(string userId, Location location)
         {
             var res = new ManageResult();
-            var events = await calendarServiceClient.Users[userId].Events.Get(DateTimeOffset.Now, DateTimeOffset.Now.AddMinutes(130)) ?? new CalendarService.Models.Event[0];
-            var starting = events.Where(v => v.Start >= DateTimeOffset.Now).ToArray();
+            var events = await calendarServiceClient.Users[userId].Events.Get(DateTimeOffset.Now, DateTimeOffset.Now.Add(FocusScanTime + CalendarServiceInacurracy)) ?? new CalendarService.Models.Event[0];
+            var notAllDay = events.Where(v => !v.IsAllDay).ToArray();
             string directionsKey = null;
-            foreach (var evt in starting)
+            foreach (var evt in notAllDay)
             {
                 DateTimeOffset? departureTime = null;
                 var focusItem = await focusStore.GetForCalendarEventAsync(userId, evt);
@@ -74,20 +98,28 @@ namespace DigitService.Controllers
                 {
                     try
                     {
-                        var directionsResult = await travelServiceClient.Directions.Transit.Get(new Coordinate()
+                        var start = new Coordinate()
                         {
                             Lat = location.Latitude,
                             Lng = location.Longitude
-                        }, address, evt.Start);
-                        if (null != directionsResult?.TransitDirections && directionsResult.TransitDirections.Routes.Any())
+                        };
+                        bool requestWithNow = evt.Start >= DateTimeOffset.Now;
+                        DirectionsResult directionsResult = null;
+                        if (!requestWithNow)
                         {
-                            directionsKey = directionsResult.CacheKey.Replace("\"", "");
-                            if (directionsResult.TransitDirections.Routes.Where(v => v.DepatureTime.HasValue).Any())
+                            directionsResult = await travelServiceClient.Directions.Transit.Get(start, address, evt.Start);
+                            departureTime = GetDepartureTime(directionsResult);
+                            if (departureTime.HasValue && departureTime.Value > DateTimeOffset.Now)
                             {
-                                var route = directionsResult.TransitDirections.Routes.Where(v => v.DepatureTime.HasValue).First();
-                                departureTime = route.DepatureTime.Value;
+                                requestWithNow = true;
                             }
                         }
+                        if (requestWithNow)
+                        {
+                            directionsResult = await travelServiceClient.Directions.Transit.Get(start, address, null, DateTimeOffset.Now);
+                            departureTime = GetDepartureTime(directionsResult);
+                        }
+                        directionsKey = directionsResult?.CacheKey;
                     }
                     catch (TravelServiceException ex)
                     {
@@ -96,15 +128,15 @@ namespace DigitService.Controllers
                 }
                 if (null == departureTime)
                 {
-                    await logger.Log(userId, $"No departure time found, using 45 minutes for {evt.Subject}");
-                    departureTime = evt.Start - new TimeSpan(0, 45, 0);
+                    await logger.Log(userId, $"No departure time found, using {DefaultTravelTime.TotalMinutes:0} minutes for {evt.Subject}");
+                    departureTime = evt.Start - DefaultTravelTime;
                 }
                 else
                 {
                     res.DepartureTimes.Add(departureTime.Value);
                 }
                 await focusStore.UpdateWithDirections(focusItem.Id, departureTime.Value, directionsKey);
-                if (departureTime.Value - DateTimeOffset.Now < new TimeSpan(0, 5, 0))
+                if (departureTime.Value - DateTimeOffset.Now < NotifyTime.Add(ButlerInaccuracy))
                 {
                     var notifySemaphore = _notifySempahores.GetOrAdd(userId, s => new SemaphoreSlim(1));
                     await notifySemaphore.WaitAsync();
@@ -145,7 +177,7 @@ namespace DigitService.Controllers
                     // it will be ignored if any of the conditions (user location, traffic, event start time) changed
                     await butler.InstallAsync(new WebhookRequest()
                     {
-                        When = departureTime.Value.AddMinutes(-4).UtcDateTime,
+                        When = departureTime.Value.Add(-NotifyTime).UtcDateTime,
                         Data = new NotifyUserRequest()
                         {
                             UserId = userId,
@@ -163,11 +195,12 @@ namespace DigitService.Controllers
             await logger.Log(userId, $"Received Location {location.Longitude:0.00}/{location.Latitude:0.00}");
             await locationStore.StoreLocationAsync(userId, location);
             var manageResult = await ManageFocus(userId, location);
+
             var response = new LocationResponse()
             {
                 NextUpdateRequiredAt = manageResult.DepartureTimes
                 .Select(v => v - DateTimeOffset.Now)
-                .Where(v => v >= new TimeSpan(0, 10, 0)) // no location update in the last 10 minutes
+                .Where(v => v >= NoUpdateBeforeDepartureMargin) // no location update in the last 10 minutes
                 .Select(v => DateTimeOffset.Now + (v / 2))
                 .OrderBy(v => v)
                 .Select(v => (DateTime?)v.UtcDateTime)
@@ -181,7 +214,7 @@ namespace DigitService.Controllers
             return response;
         }
 
-        private readonly TimeSpan LastLocationCacheTime = new TimeSpan(0, 5, 0);
+
 
         public async Task ReminderDeliveryAsync(string userId, ReminderDelivery reminderDelivery)
         {
@@ -208,7 +241,7 @@ namespace DigitService.Controllers
             {
                 bool lastRequestPending =
                     null != locationRequestTime && null != storedLocation &&
-                    locationRequestTime > storedLocation.Timestamp && (DateTime.Now - locationRequestTime) < new TimeSpan(0, 20, 0);
+                    locationRequestTime > storedLocation.Timestamp && (DateTime.Now - locationRequestTime) < LocationRequestInvalidationTime;
                 if (lastRequestPending)
                 {
                     await logger.Log(userId, $"Not requesting location because last request is still pending ({locationRequestTime:s})");
