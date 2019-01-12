@@ -103,13 +103,13 @@ namespace DigitService.Controllers
                             Lat = location.Latitude,
                             Lng = location.Longitude
                         };
-                        bool requestWithNow = evt.Start >= DateTimeOffset.Now;
+                        bool requestWithNow = evt.Start <= DateTimeOffset.Now;
                         DirectionsResult directionsResult = null;
                         if (!requestWithNow)
                         {
                             directionsResult = await travelServiceClient.Directions.Transit.Get(start, address, evt.Start);
                             departureTime = GetDepartureTime(directionsResult);
-                            if (departureTime.HasValue && departureTime.Value > DateTimeOffset.Now)
+                            if (departureTime.HasValue && departureTime.Value < DateTimeOffset.Now)
                             {
                                 requestWithNow = true;
                             }
