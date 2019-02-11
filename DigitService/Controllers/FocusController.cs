@@ -39,7 +39,7 @@ namespace DigitService.Controllers
         public async Task<IActionResult> Test()
         {
             return Ok(new {
-                msg = "it works2"
+                msg = "it works3"
             });
         }
     }
