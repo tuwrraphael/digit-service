@@ -1,4 +1,5 @@
 ﻿using CalendarService.Client;
+using CalendarService.Models;
 using DigitService.Models;
 using DigitService.Service;
 using Microsoft.AspNetCore.Authorization;
