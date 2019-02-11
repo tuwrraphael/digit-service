@@ -7,7 +7,7 @@ namespace DigitService.Test
         [Fact]
         public void Test()
         {
-            Assert.Equal("a", "a");
+            Assert.Equal("a", "fail");
         }
     }
 }
