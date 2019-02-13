@@ -84,6 +84,8 @@ namespace DigitService
             services.AddTransient<ILocationStore, LocationStore>();
             services.AddTransient<IFocusService, FocusService>();
             services.AddTransient<IFocusStore, FocusStore>();
+            services.AddTransient<IFocusCalendarSyncService, FocusCalendarSyncService>();
+            services.AddTransient<ILocationService, LocationService>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1).AddJsonOptions(v =>
             {
@@ -135,6 +137,13 @@ namespace DigitService
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
+            {
+                using (var context = serviceScope.ServiceProvider.GetService<DigitServiceContext>())
+                {
+                    context.Database.Migrate();
+                }
+            }
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

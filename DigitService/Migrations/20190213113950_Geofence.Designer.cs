@@ -3,14 +3,16 @@ using System;
 using DigitService.Impl.EF;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DigitService.Migrations
 {
     [DbContext(typeof(DigitServiceContext))]
-    partial class DigitServiceContextModelSnapshot : ModelSnapshot
+    [Migration("20190213113950_Geofence")]
+    partial class Geofence
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
