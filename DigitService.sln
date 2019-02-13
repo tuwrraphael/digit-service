@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitService.Client", "Digi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitService.Models", "DigitService.Models\DigitService.Models.csproj", "{37898DAD-EA03-4514-83D9-1B098C295DD1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitService.Test", "DigitService.Test\DigitService.Test.csproj", "{8526CE29-92CE-471E-9402-23ECE87D2DB6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitService.Test", "DigitService.Test\DigitService.Test.csproj", "{1AD99D7C-BAD6-4AC6-BB0E-F361515F16D1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +29,10 @@ Global
 		{37898DAD-EA03-4514-83D9-1B098C295DD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37898DAD-EA03-4514-83D9-1B098C295DD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37898DAD-EA03-4514-83D9-1B098C295DD1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8526CE29-92CE-471E-9402-23ECE87D2DB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8526CE29-92CE-471E-9402-23ECE87D2DB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8526CE29-92CE-471E-9402-23ECE87D2DB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8526CE29-92CE-471E-9402-23ECE87D2DB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1AD99D7C-BAD6-4AC6-BB0E-F361515F16D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1AD99D7C-BAD6-4AC6-BB0E-F361515F16D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1AD99D7C-BAD6-4AC6-BB0E-F361515F16D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1AD99D7C-BAD6-4AC6-BB0E-F361515F16D1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

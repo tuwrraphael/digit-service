@@ -34,6 +34,13 @@ namespace DigitService.Controllers
             var active = await focusStore.GetActiveAsync(User.GetId());
             return Ok(active);
         }
-
+        [AllowAnonymous]
+        [HttpGet("test")]
+        public async Task<IActionResult> Test()
+        {
+            return Ok(new {
+                msg = "it works2"
+            });
+        }
     }
 }
