@@ -23,7 +23,8 @@ namespace DigitService.Impl.EF
                 IndicateTime = new DateTimeOffset(storedFocusItem.IndicateAt, TimeSpan.Zero),
                 DirectionsKey = storedFocusItem.DirectionsKey,
                 CalendarEventId = storedFocusItem.CalendarEventId,
-                CalendarEventFeedId = storedFocusItem.CalendarEventFeedId
+                CalendarEventFeedId = storedFocusItem.CalendarEventFeedId,
+                CalendarEventHash = storedFocusItem.CalendarEvent.CalendarEventHash
             };
         }
     }
@@ -50,16 +51,26 @@ namespace DigitService.Impl.EF
 
         public async Task<FocusItem[]> GetActiveAsync(string userId)
         {
-            return (await digitServiceContext.FocusItems.Where(v => v.UserId == userId && DateTime.UtcNow <= v.ActiveEnd)
+            return (await digitServiceContext.FocusItems
+                .Include(v => v.CalendarEvent)
+                .Where(v => v.UserId == userId && DateTime.UtcNow <= v.ActiveEnd)
                 .ToArrayAsync())
                 .Select(v => v.MapToFocusItem()).ToArray();
         }
 
-        public async Task<FocusItem> GetForCalendarEventAsync(string userId, Event evt)
+        public async Task<FocusItem[]> GetCalendarItemsAsync(string userId)
         {
-            var item = await digitServiceContext.FocusItems.Where(v => v.UserId == userId
-            && v.CalendarEventFeedId == evt.FeedId && v.CalendarEventId == evt.Id).SingleOrDefaultAsync();
-            return item?.MapToFocusItem();
+            return (await digitServiceContext.FocusItems
+                .Include(v => v.CalendarEvent)
+                .Where(v => v.UserId == userId && null != v.CalendarEventFeedId && null != v.CalendarEventId)
+            .ToArrayAsync())
+            .Select(v => v.MapToFocusItem()).ToArray();
+        }
+        public async Task RemoveAsync(FocusItem evt)
+        {
+            var item = await digitServiceContext.FocusItems.Where(v => v.Id == evt.Id).SingleOrDefaultAsync();
+            digitServiceContext.FocusItems.Remove(item);
+            await digitServiceContext.SaveChangesAsync();
         }
 
         public async Task SetFocusItemNotifiedAsync(string itemId)
@@ -78,7 +89,8 @@ namespace DigitService.Impl.EF
                 CalendarEvent = new StoredCalendarEvent()
                 {
                     FeedId = evt.FeedId,
-                    Id = evt.Id
+                    Id = evt.Id,
+                    CalendarEventHash = evt.GenerateHash()
                 },
                 User = user,
                 UserNotified = false,
@@ -93,10 +105,15 @@ namespace DigitService.Impl.EF
 
         public async Task<FocusItem> UpdateCalendarEventAsync(string userId, Event evt)
         {
-            var item = await digitServiceContext.FocusItems.Where(v => v.UserId == userId
-                        && v.CalendarEventFeedId == evt.FeedId && v.CalendarEventId == evt.Id).SingleOrDefaultAsync();
+            var item = await digitServiceContext.FocusItems
+                .Include(v => v.CalendarEvent)
+                .Where(v => v.UserId == userId
+                        && v.CalendarEventFeedId == evt.FeedId
+                        && v.CalendarEventId == evt.Id)
+                        .SingleOrDefaultAsync();
             item.UserNotified = false;
             item.ActiveEnd = evt.End.UtcDateTime;
+            item.CalendarEvent.CalendarEventHash = evt.GenerateHash();
             await digitServiceContext.SaveChangesAsync();
             return item.MapToFocusItem();
         }

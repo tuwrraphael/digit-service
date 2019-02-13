@@ -6,9 +6,12 @@ namespace DigitService.Service
 {
     public interface ILocationStore
     {
-        Task StoreLocationAsync(string userId, Location location);
+        Task UpdateLocationAsync(string userId, Location location);
         Task<Location> GetLastLocationAsync(string userId);
-        Task<DateTime?> GetLocationRequestTimeAsync(string userId);
-        Task SetLocationRequestedForAsync(string userId, DateTime dateTime);
+        Task<DateTimeOffset?> GetLocationRequestTimeAsync(string userId);
+        Task SetLocationRequestedForAsync(string userId, DateTimeOffset dateTime);
+        Task<bool> IsGeofenceActiveAsync(string userId, GeofenceRequest when);
+        Task SetGeofenceRequestedAsync(string userId, GeofenceRequest request);
+        Task ClearGeofenceAsync(string userId);
     }
 }

@@ -81,7 +81,7 @@ namespace DigitService.Impl
                     {
                         registration = await calendarService.Users[userId].Reminders.RegisterAsync(new ReminderRequest()
                         {
-                            Minutes = (uint)FocusService.FocusScanTime.TotalMinutes,
+                            Minutes = (uint)FocusConstants.FocusScanTime.TotalMinutes,
                             ClientState = userId,
                             NotificationUri = options.ReminderCallbackUri
                         });

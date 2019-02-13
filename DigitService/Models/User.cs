@@ -13,5 +13,7 @@ namespace DigitService.Models
         public StoredLocation StoredLocation { get; set; }
         public List<StoredFocusItem> FocusItems { get; set; }
         public DateTime? LocationRequestTime { get; set; }
+        public DateTime? GeofenceFrom { get; set; }
+        public DateTime? GeofenceTo { get; set; }
     }
 }

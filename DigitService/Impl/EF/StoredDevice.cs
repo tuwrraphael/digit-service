@@ -41,7 +41,7 @@ namespace DigitService.Impl.EF
         public User User { get; set; }
         public StoredCalendarEvent CalendarEvent { get; set; }
         public string CalendarEventId { get; set; }
-        public string CalendarEventFeedId { get; set; }
+        public string CalendarEventFeedId { get; set; }        
         public bool UserNotified { get; set; }
         public DateTime ActiveEnd { get; set; }
         public DateTime IndicateAt { get; set; }
@@ -52,6 +52,7 @@ namespace DigitService.Impl.EF
     {
         public string Id { get; set; }
         public string FeedId { get; set; }
+        public string CalendarEventHash { get; set; }
         public StoredFocusItem FocusItem { get; internal set; }
     }
 }

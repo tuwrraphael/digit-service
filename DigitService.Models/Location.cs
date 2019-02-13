@@ -18,11 +18,18 @@ namespace DigitService.Models
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public double Accuracy { get; set; }
-        public DateTime Timestamp { get; set; }
+        public DateTimeOffset Timestamp { get; set; }
     }
 
     public class LocationResponse
     {
-        public DateTime? NextUpdateRequiredAt { get; set; }
+        public DateTimeOffset? NextUpdateRequiredAt { get; set; }
+        public GeofenceRequest RequestGeofence { get; set; }
+    }
+
+    public class GeofenceRequest
+    {
+        public DateTimeOffset Start { get; set; }
+        public DateTimeOffset End { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using DigitService.Models;
+﻿using CalendarService.Models;
+using DigitService.Models;
 using System.Threading.Tasks;
 
 namespace DigitService.Service

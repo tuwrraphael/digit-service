@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using DigitService.Service;
 using Microsoft.AspNetCore.Authorization;
@@ -33,14 +33,6 @@ namespace DigitService.Controllers
             await focusService.PatchAsync(User.GetId());
             var active = await focusStore.GetActiveAsync(User.GetId());
             return Ok(active);
-        }
-        [AllowAnonymous]
-        [HttpGet("test")]
-        public async Task<IActionResult> Test()
-        {
-            return Ok(new {
-                msg = "it works3"
-            });
         }
     }
 }
