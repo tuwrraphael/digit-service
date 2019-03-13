@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Mvc;
 using TravelService.Client;
 using DigitService.Controllers;
 using DigitPushService.Client;
+using Digit.Focus.Service;
 
 namespace DigitService
 {

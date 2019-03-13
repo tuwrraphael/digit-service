@@ -1,4 +1,6 @@
-﻿namespace DigitService.Models
+﻿using Digit.Focus.Models;
+
+namespace DigitService.Models
 {
     public class FocusCalendarSyncResult
     {

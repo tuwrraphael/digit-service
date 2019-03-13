@@ -1,4 +1,6 @@
 ﻿using CalendarService.Models;
+using Digit.Focus.Models;
+using Digit.Focus.Service;
 using DigitService.Models;
 using DigitService.Service;
 using Microsoft.EntityFrameworkCore;

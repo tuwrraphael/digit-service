@@ -1,9 +1,9 @@
 ﻿using CalendarService.Models;
-using DigitService.Models;
+using Digit.Focus.Models;
 using System;
 using System.Threading.Tasks;
 
-namespace DigitService.Service
+namespace Digit.Focus.Service
 {
     public interface IFocusStore
     {

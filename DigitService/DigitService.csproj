@@ -22,6 +22,7 @@
 
 
   <ItemGroup>
+    <ProjectReference Include="..\Digit.Focus\Digit.Focus.csproj" />
     <ProjectReference Include="..\DigitService.Models\DigitService.Models.csproj" />
   </ItemGroup>
 
