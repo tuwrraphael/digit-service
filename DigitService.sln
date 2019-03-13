@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DigitService.Test", "DigitS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Digit.Focus", "Digit.Focus\Digit.Focus.csproj", "{131C4406-4C1B-4FD9-9809-D29B48624BB0}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Digit.DeviceSynchronization", "Digit.DeviceSynchronization\Digit.DeviceSynchronization.csproj", "{2B8AFC24-DB40-44D7-9F74-998C34F79D40}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{131C4406-4C1B-4FD9-9809-D29B48624BB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{131C4406-4C1B-4FD9-9809-D29B48624BB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{131C4406-4C1B-4FD9-9809-D29B48624BB0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B8AFC24-DB40-44D7-9F74-998C34F79D40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B8AFC24-DB40-44D7-9F74-998C34F79D40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B8AFC24-DB40-44D7-9F74-998C34F79D40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B8AFC24-DB40-44D7-9F74-998C34F79D40}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
