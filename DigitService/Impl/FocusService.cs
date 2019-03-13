@@ -134,7 +134,8 @@ namespace DigitService.Controllers
                     });
                 }
                 await focusStore.UpdateWithDirections(focusItem.Id, departureTime, directionsKey);
-                if (departureTime - DateTimeOffset.Now < NotifyTime.Add(ButlerInaccuracy))
+                var timeToDeparture = departureTime - DateTimeOffset.Now;
+                if (timeToDeparture < NotifyTime.Add(ButlerInaccuracy))
                 {
                     var notifySemaphore = _notifySempahores.GetOrAdd(userId, s => new SemaphoreSlim(1));
                     await notifySemaphore.WaitAsync();
@@ -156,12 +157,12 @@ namespace DigitService.Controllers
                                         }
                                     })
                                 });
-                                await focusStore.SetFocusItemNotifiedAsync(focusItem.Id);
                             }
                             catch (Exception e)
                             {
                                 await logger.Log(userId, $"Could notify user ({e.Message}).", 3);
                             }
+                            await focusStore.SetFocusItemNotifiedAsync(focusItem.Id); // always set notified for now to prevent massive notification spam
                         }
                     }
                     finally
