@@ -87,7 +87,7 @@ namespace DigitService
             services.AddTransient<IFocusCalendarSyncService, FocusCalendarSyncService>();
             services.AddTransient<ILocationService, LocationService>();
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1).AddJsonOptions(v =>
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddJsonOptions(v =>
             {
                 v.SerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Utc;
             });

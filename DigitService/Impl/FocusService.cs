@@ -208,7 +208,7 @@ namespace DigitService.Controllers
             var syncResult = await focusCalendarSyncService.SyncAsync(userId);
             var lastLocation = await locationService.GetLastLocationAsync(userId);
             var res = await ManageFocus(userId, lastLocation);
-            await locationService.RequestLocationAsync(userId, DateTimeOffset.Now, res);
+            await locationService.RequestLocationAsync(userId, DateTimeOffset.Now, res);  //only request on changed or added?
         }
 
         public async Task PatchAsync(string userId)
