@@ -1,7 +1,4 @@
 ﻿using Digit.DeviceSynchronization.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Digit.DeviceSynchronization.Service
@@ -10,5 +7,6 @@ namespace Digit.DeviceSynchronization.Service
     {
         Task CreateAsync(string userId, string deviceId, DeviceSyncRequest request);
         Task<Device[]> GetForUserAsync(string userId);
+        Task<string> DeviceClaimedByAsync(string deviceId);
     }
 }

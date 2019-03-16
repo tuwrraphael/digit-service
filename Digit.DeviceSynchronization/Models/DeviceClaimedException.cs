@@ -1,10 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Digit.DeviceSynchronization.Models
 {
-    //class DeviceClaimedException
-    //{
-    //}
+    public class DeviceClaimedException : Exception
+    {
+        public DeviceClaimedException(string deviceId, string userId)
+            : base($"Device {deviceId} already claimed by {userId}")
+        {
+
+        }
+    }
 }

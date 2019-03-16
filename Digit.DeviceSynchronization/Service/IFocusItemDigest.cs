@@ -1,12 +1,10 @@
 ﻿using Digit.Focus.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace Digit.DeviceSynchronization.Service
 {
     internal interface IFocusItemDigest
     {
-        string GetDigest(FocusItem item);
+        Task<string> GetDigestAsync(FocusItem item);
     }
 }
