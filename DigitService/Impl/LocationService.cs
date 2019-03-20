@@ -113,7 +113,7 @@ namespace DigitService.Controllers
             };
             if (response.NextUpdateRequiredAt.HasValue)
             {
-                await locationStore.SetLocationRequestedForAsync(userId, response.NextUpdateRequiredAt.Value);
+                await pushSyncService.SetRequestedExternal(userId, new LegacyLocationPushSyncRequest(response.NextUpdateRequiredAt.Value));
             }
             return response;
         }

@@ -60,16 +60,6 @@ namespace DigitService.Impl.EF
             return user?.StoredLocation?.MapToLocation();
         }
 
-        public async Task<DateTimeOffset?> GetLocationRequestTimeAsync(string userId)
-        {
-            var user = await userRepository.GetAsync(userId);
-            if (null == user || !user.LocationRequestTime.HasValue)
-            {
-                return null;
-            }
-            return new DateTimeOffset(user.LocationRequestTime.Value, TimeSpan.Zero);
-        }
-
         public async Task<bool> IsGeofenceActiveAsync(string userId, GeofenceRequest when)
         {
             var user = await userRepository.GetOrCreateAsync(userId);
@@ -85,13 +75,6 @@ namespace DigitService.Impl.EF
             user = await digitServiceContext.Users.Include(v => v.StoredLocation).Where(v => v.Id == userId).SingleAsync();
             user.GeofenceFrom = request.Start.UtcDateTime;
             user.GeofenceTo = request.End.UtcDateTime;
-            await digitServiceContext.SaveChangesAsync();
-        }
-
-        public async Task SetLocationRequestedForAsync(string userId, DateTimeOffset dateTime)
-        {
-            var user = await userRepository.GetOrCreateAsync(userId);
-            user.LocationRequestTime = dateTime.UtcDateTime;
             await digitServiceContext.SaveChangesAsync();
         }
 

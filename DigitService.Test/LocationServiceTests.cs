@@ -115,7 +115,6 @@ namespace DigitService.Test
             {
                 var locationStoreMock = new Mock<ILocationStore>(MockBehavior.Strict);
                 locationStoreMock.Setup(v => v.UpdateLocationAsync(userId, It.IsAny<Location>())).Returns(Task.CompletedTask);
-                locationStoreMock.Setup(v => v.SetLocationRequestedForAsync(userId, It.IsAny<DateTimeOffset>())).Returns(Task.CompletedTask);
                 locationStoreMock.Setup(v => v.SetGeofenceRequestedAsync(userId, It.IsAny<GeofenceRequest>())).Returns(Task.CompletedTask);
                 locationStoreMock.Setup(v => v.IsGeofenceActiveAsync(userId, It.IsAny<GeofenceRequest>())).Returns(Task.FromResult(false));
                 locationStoreMock.Setup(v => v.ClearGeofenceAsync(userId)).Returns(Task.CompletedTask);
@@ -123,6 +122,8 @@ namespace DigitService.Test
                 locationStore = locationStoreMock.Object;
 
                 var pushSyncServiceMock = new Mock<IPushSyncService>(MockBehavior.Strict);
+                pushSyncServiceMock.Setup(v => v.SetRequestedExternal(It.IsAny<string>(), It.IsAny<ISyncRequest>()))
+                    .Returns(Task.CompletedTask);
                 logger = Mock.Of<IDigitLogger>();
                 pushSyncService = pushSyncServiceMock.Object;
             }
@@ -271,7 +272,6 @@ namespace DigitService.Test
             {
                 var locationStoreMock = new Mock<ILocationStore>(MockBehavior.Strict);
                 locationStoreMock.Setup(v => v.UpdateLocationAsync(userId, It.IsAny<Location>())).Returns(Task.CompletedTask);
-                locationStoreMock.Setup(v => v.SetLocationRequestedForAsync(userId, It.IsAny<DateTimeOffset>())).Returns(Task.CompletedTask);
                 locationStoreMock.Setup(v => v.SetGeofenceRequestedAsync(userId, It.IsAny<GeofenceRequest>())).Returns(Task.CompletedTask);
                 locationStoreMock.Setup(v => v.IsGeofenceActiveAsync(userId, It.Is<GeofenceRequest>(d => d.Start == now && d.End == now.AddMinutes(60)))).Returns(Task.FromResult(true));
                 locationStoreMock.Setup(v => v.IsGeofenceActiveAsync(userId, It.Is<GeofenceRequest>(d => d.Start == now && d.End == now))).Returns(Task.FromResult(true));
@@ -297,7 +297,6 @@ namespace DigitService.Test
             {
                 var locationStoreMock = new Mock<ILocationStore>(MockBehavior.Strict);
                 locationStoreMock.Setup(v => v.UpdateLocationAsync(userId, It.IsAny<Location>())).Returns(Task.CompletedTask);
-                locationStoreMock.Setup(v => v.SetLocationRequestedForAsync(userId, It.IsAny<DateTimeOffset>())).Returns(Task.CompletedTask);
                 locationStoreMock.Setup(v => v.SetGeofenceRequestedAsync(userId, It.IsAny<GeofenceRequest>())).Returns(Task.CompletedTask);
                 locationStoreMock.Setup(v => v.IsGeofenceActiveAsync(userId, It.Is<GeofenceRequest>(d => d.Start == now && d.End == now))).Returns(Task.FromResult(true));
                 locationStoreMock.Setup(v => v.GetLastLocationAsync(userId)).Returns(Task.FromResult(new Location()
@@ -327,7 +326,6 @@ namespace DigitService.Test
             {
                 var locationStoreMock = new Mock<ILocationStore>(MockBehavior.Strict);
                 locationStoreMock.Setup(v => v.UpdateLocationAsync(userId, It.IsAny<Location>())).Returns(Task.CompletedTask);
-                locationStoreMock.Setup(v => v.SetLocationRequestedForAsync(userId, It.IsAny<DateTimeOffset>())).Returns(Task.CompletedTask);
                 locationStoreMock.Setup(v => v.SetGeofenceRequestedAsync(userId, It.IsAny<GeofenceRequest>())).Returns(Task.CompletedTask);
                 locationStoreMock.Setup(v => v.IsGeofenceActiveAsync(userId, It.Is<GeofenceRequest>(d => d.Start == now && d.End == now))).Returns(Task.FromResult(true));
                 locationStoreMock.Setup(v => v.GetLastLocationAsync(userId)).Returns(Task.FromResult(new Location()
