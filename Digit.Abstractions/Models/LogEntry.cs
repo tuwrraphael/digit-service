@@ -1,6 +1,6 @@
 using System;
 
-namespace DigitService.Models
+namespace Digit.Abstractions.Models
 {
     public class LogEntry
     {

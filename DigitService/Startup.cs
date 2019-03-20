@@ -22,6 +22,7 @@ using TravelService.Client;
 using DigitService.Controllers;
 using DigitPushService.Client;
 using Digit.Focus.Service;
+using Digit.Abstractions.Service;
 
 namespace DigitService
 {

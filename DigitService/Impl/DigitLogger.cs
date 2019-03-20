@@ -1,4 +1,6 @@
-﻿using DigitService.Models;
+﻿using Digit.Abstractions.Models;
+using Digit.Abstractions.Service;
+using DigitService.Models;
 using DigitService.Service;
 using System;
 using System.Collections.Generic;

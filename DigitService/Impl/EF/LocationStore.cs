@@ -1,4 +1,5 @@
-﻿using DigitService.Controllers;
+﻿using Digit.Abstractions.Service;
+using DigitService.Controllers;
 using DigitService.Models;
 using DigitService.Service;
 using Microsoft.EntityFrameworkCore;

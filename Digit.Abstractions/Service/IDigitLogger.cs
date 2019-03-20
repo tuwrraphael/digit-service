@@ -1,10 +1,7 @@
-﻿using DigitService.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Digit.Abstractions.Models;
 using System.Threading.Tasks;
 
-namespace DigitService.Service
+namespace Digit.Abstractions.Service
 {
     public interface IDigitLogger
     {

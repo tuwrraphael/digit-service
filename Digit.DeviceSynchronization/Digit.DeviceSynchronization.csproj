@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Digit.Abstractions\Digit.Abstractions.csproj" />
     <ProjectReference Include="..\Digit.Focus\Digit.Focus.csproj" />
   </ItemGroup>
 

@@ -1,9 +1,9 @@
-﻿using DigitPushService.Client;
+﻿using Digit.Abstractions.Service;
+using Digit.DeviceSynchronization.Models;
+using Digit.DeviceSynchronization.Service;
 using DigitService.Models;
 using DigitService.Service;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -11,13 +11,13 @@ namespace DigitService.Controllers
 {
     public class LocationService : ILocationService
     {
-        private readonly IDigitPushServiceClient digitPushServiceClient;
+        private readonly IPushSyncService pushSyncService;
         private readonly ILocationStore locationStore;
         private readonly IDigitLogger logger;
 
-        public LocationService(IDigitPushServiceClient digitPushServiceClient, ILocationStore locationStore, IDigitLogger logger)
+        public LocationService(IPushSyncService pushSyncService, ILocationStore locationStore, IDigitLogger logger)
         {
-            this.digitPushServiceClient = digitPushServiceClient;
+            this.pushSyncService = pushSyncService;
             this.locationStore = locationStore;
             this.logger = logger;
         }
@@ -121,7 +121,6 @@ namespace DigitService.Controllers
         public async Task<LocationRequestResult> RequestLocationAsync(string userId, DateTimeOffset requestTime, FocusManageResult focusManageResult)
         {
             var storedLocation = await locationStore.GetLastLocationAsync(userId);
-            var locationRequestTime = await locationStore.GetLocationRequestTimeAsync(userId);
             bool requestLocation = false;
             string requestReason = null;
             if (null == storedLocation)
@@ -136,47 +135,14 @@ namespace DigitService.Controllers
             }
             if (requestLocation)
             {
-                bool lastRequestPending =
-                    null != locationRequestTime && null != storedLocation &&
-                    locationRequestTime > storedLocation.Timestamp && (requestTime - locationRequestTime) < FocusConstants.LocationRequestInvalidationTime;
-                if (lastRequestPending)
+                var res = await pushSyncService.RequestSync(userId,
+                    new LegacyLocationPushSyncRequest(requestTime.Add(FocusConstants.LocationRequestExpectedTime)),
+                    requestTime);
+                return new LocationRequestResult()
                 {
-                    await logger.Log(userId, $"Not requesting location because last request is still pending ({locationRequestTime:s})");
-                    return new LocationRequestResult()
-                    {
-                        LocationRequestSent = false,
-                        LocationRequestTime = locationRequestTime
-                    };
-                }
-                else
-                {
-                    try
-                    {
-                        await digitPushServiceClient.Push[userId].Create(new DigitPushService.Models.PushRequest()
-                        {
-                            Options = new PushServer.Models.PushOptions()
-                            {
-                                Urgency = PushServer.Models.PushUrgency.High
-                            },
-                            ChannelOptions = new Dictionary<string, string>()
-                            {
-                                { "digitLocationRequest", null }
-                            },
-                            Payload = JsonConvert.SerializeObject(new PushPayload() { Action = PushActions.SendLocation })
-                        });
-                        await locationStore.SetLocationRequestedForAsync(userId, requestTime);
-                        await logger.Log(userId, $"Sent push location request: {requestReason}");
-                    }
-                    catch (Exception e)
-                    {
-                        await logger.Log(userId, $"Failed to send push location request: {requestReason}; Error: {e.Message}");
-                    }
-                    return new LocationRequestResult()
-                    {
-                        LocationRequestSent = true,
-                        LocationRequestTime = requestTime
-                    };
-                }
+                    LocationRequestSent = res.SyncRequested,
+                    LocationRequestTime = res.SyncRequested ? requestTime : res.SyncPendingFor
+                };
             }
             else
             {

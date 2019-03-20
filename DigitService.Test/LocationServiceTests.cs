@@ -1,4 +1,8 @@
 using CalendarService.Models;
+using Digit.Abstractions.Service;
+using Digit.DeviceSynchronization.Impl;
+using Digit.DeviceSynchronization.Models;
+using Digit.DeviceSynchronization.Service;
 using DigitPushService.Client;
 using DigitService.Controllers;
 using DigitService.Models;
@@ -16,6 +20,19 @@ namespace DigitService.Test
     {
         const string userId = "12345";
 
+        private static IPushSyncService IntegratePushSyncService(DateTimeOffset? locationRequestTime)
+        {
+            var syncActions = null == locationRequestTime ? new SyncAction[0] :
+                new[] { new SyncAction() {
+                    Id = new LegacyLocationPushSyncRequest(DateTimeOffset.Now).Id,
+                    Deadline = locationRequestTime
+                }  };
+            var pushSyncStoreMock = new Mock<IPushSyncStore>(MockBehavior.Strict);
+            pushSyncStoreMock.Setup(v => v.GetPendingSyncActions(It.IsAny<string>()))
+                .Returns(Task.FromResult(syncActions));
+            return new PushSyncService(pushSyncStoreMock.Object, Mock.Of<IDigitPushServiceClient>(), Mock.Of<IDigitLogger>());
+        }
+
         public class RequestLocation
         {
             [Fact]
@@ -23,10 +40,8 @@ namespace DigitService.Test
             {
                 var locationStore = new Mock<ILocationStore>(MockBehavior.Strict);
                 locationStore.Setup(v => v.GetLastLocationAsync(userId)).Returns(Task.FromResult((Location)null));
-                locationStore.Setup(v => v.GetLocationRequestTimeAsync(userId)).Returns(Task.FromResult((DateTimeOffset?)null));
-                var digitPushServiceClient = new Mock<IDigitPushServiceClient>(MockBehavior.Strict);
                 var logger = Mock.Of<IDigitLogger>();
-                var locationService = new LocationService(digitPushServiceClient.Object, locationStore.Object, logger);
+                var locationService = new LocationService(IntegratePushSyncService(null), locationStore.Object, logger);
                 var res = await locationService.RequestLocationAsync(userId, new DateTimeOffset(2018, 01, 01, 0, 0, 0, TimeSpan.Zero), null);
                 Assert.True(res.LocationRequestSent);
                 Assert.Equal(new DateTimeOffset(2018, 01, 01, 0, 0, 0, TimeSpan.Zero), res.LocationRequestTime);
@@ -43,10 +58,8 @@ namespace DigitService.Test
                     Timestamp = new DateTimeOffset(2018, 01, 01, 0, 10, 0, TimeSpan.Zero)
                 };
                 locationStore.Setup(v => v.GetLastLocationAsync(userId)).Returns(Task.FromResult(stored));
-                locationStore.Setup(v => v.GetLocationRequestTimeAsync(userId)).Returns(Task.FromResult((DateTimeOffset?)new DateTimeOffset(2018, 01, 01, 0, 5, 0, TimeSpan.Zero)));
-                var digitPushServiceClient = new Mock<IDigitPushServiceClient>(MockBehavior.Strict);
                 var logger = Mock.Of<IDigitLogger>();
-                var locationService = new LocationService(digitPushServiceClient.Object, locationStore.Object, logger);
+                var locationService = new LocationService(IntegratePushSyncService(new DateTimeOffset(2018, 01, 01, 0, 5, 0, TimeSpan.Zero)), locationStore.Object, logger);
                 var res = await locationService.RequestLocationAsync(userId, new DateTimeOffset(2018, 01, 01, 1, 0, 0, TimeSpan.Zero), null);
                 Assert.True(res.LocationRequestSent);
                 Assert.Equal(new DateTimeOffset(2018, 01, 01, 1, 0, 0, TimeSpan.Zero), res.LocationRequestTime);
@@ -63,10 +76,9 @@ namespace DigitService.Test
                     Timestamp = new DateTimeOffset(2018, 01, 01, 0, 59, 0, TimeSpan.Zero)
                 };
                 locationStore.Setup(v => v.GetLastLocationAsync(userId)).Returns(Task.FromResult(stored));
-                locationStore.Setup(v => v.GetLocationRequestTimeAsync(userId)).Returns(Task.FromResult((DateTimeOffset?)new DateTimeOffset(2018, 01, 01, 0, 58, 0, TimeSpan.Zero)));
-                var digitPushServiceClient = new Mock<IDigitPushServiceClient>(MockBehavior.Strict);
+                var pushSyncService = new Mock<IPushSyncService>(MockBehavior.Strict);
                 var logger = Mock.Of<IDigitLogger>();
-                var locationService = new LocationService(digitPushServiceClient.Object, locationStore.Object, logger);
+                var locationService = new LocationService(pushSyncService.Object, locationStore.Object, logger);
                 var res = await locationService.RequestLocationAsync(userId, new DateTimeOffset(2018, 01, 01, 1, 0, 0, TimeSpan.Zero), null);
                 Assert.False(res.LocationRequestSent);
                 Assert.Null(res.LocationRequestTime);
@@ -83,11 +95,9 @@ namespace DigitService.Test
                     Timestamp = new DateTimeOffset(2018, 01, 01, 0, 0, 0, TimeSpan.Zero)
                 };
                 locationStore.Setup(v => v.GetLastLocationAsync(userId)).Returns(Task.FromResult(stored));
-                locationStore.Setup(v => v.GetLocationRequestTimeAsync(userId)).Returns(Task.FromResult((DateTimeOffset?)new DateTimeOffset(2018, 01, 01, 0, 45, 0, TimeSpan.Zero)));
-                var digitPushServiceClient = new Mock<IDigitPushServiceClient>(MockBehavior.Strict);
                 var logger = Mock.Of<IDigitLogger>();
-                var locationService = new LocationService(digitPushServiceClient.Object, locationStore.Object, logger);
-                var res = await locationService.RequestLocationAsync(userId, new DateTimeOffset(2018, 01, 01, 1, 0, 0, TimeSpan.Zero), null);
+                var locationService = new LocationService(IntegratePushSyncService(new DateTimeOffset(2018, 01, 01, 0, 45, 0, TimeSpan.Zero)), locationStore.Object, logger);
+                var res = await locationService.RequestLocationAsync(userId, new DateTimeOffset(2018, 01, 01, 0, 55, 0, TimeSpan.Zero), null);
                 Assert.False(res.LocationRequestSent);
                 Assert.Equal(new DateTimeOffset(2018, 01, 01, 0, 45, 0, TimeSpan.Zero), res.LocationRequestTime);
             }
@@ -99,7 +109,7 @@ namespace DigitService.Test
 
             private readonly DateTimeOffset now = new DateTimeOffset(2018, 1, 1, 10, 0, 0, TimeSpan.Zero);
             private readonly IDigitLogger logger;
-            private readonly IDigitPushServiceClient digitPushServiceClient;
+            private readonly IPushSyncService pushSyncService;
 
             public LocationUpdateReceived()
             {
@@ -112,9 +122,9 @@ namespace DigitService.Test
                 locationStoreMock.Setup(v => v.GetLastLocationAsync(userId)).Returns(Task.FromResult((Location)null));
                 locationStore = locationStoreMock.Object;
 
-                var digitPushServiceClientMock = new Mock<IDigitPushServiceClient>(MockBehavior.Strict);
+                var pushSyncServiceMock = new Mock<IPushSyncService>(MockBehavior.Strict);
                 logger = Mock.Of<IDigitLogger>();
-                digitPushServiceClient = digitPushServiceClientMock.Object;
+                pushSyncService = pushSyncServiceMock.Object;
             }
 
             private FocusDeparture GetDeparture(DateTimeOffset departureTime, DateTimeOffset firstStopTime, Event evt = null)
@@ -136,7 +146,7 @@ namespace DigitService.Test
             [Fact]
             public async void LocationUpdateReceived_NoDepartures_NoUpdateRequired()
             {
-                var locationService = new LocationService(digitPushServiceClient, locationStore, logger);
+                var locationService = new LocationService(pushSyncService, locationStore, logger);
                 var response = await locationService.LocationUpdateReceivedAsync(userId, new Location()
                 {
 
@@ -150,7 +160,7 @@ namespace DigitService.Test
             [Fact]
             public async void LocationUpdateReceived_UpcomingDeparture_LocationUpdateRequired()
             {
-                var locationService = new LocationService(digitPushServiceClient, locationStore, logger);
+                var locationService = new LocationService(pushSyncService, locationStore, logger);
                 var response = await locationService.LocationUpdateReceivedAsync(userId, new Location()
                 {
                     Timestamp = now.AddMinutes(-2)
@@ -167,7 +177,7 @@ namespace DigitService.Test
             [Fact]
             public async void LocationUpdateReceived_PendingDeparture_UpdateForFirstStep()
             {
-                var locationService = new LocationService(digitPushServiceClient, locationStore, logger);
+                var locationService = new LocationService(pushSyncService, locationStore, logger);
                 var response = await locationService.LocationUpdateReceivedAsync(userId, new Location()
                 {
                     Timestamp = now.AddMinutes(-2)
@@ -186,7 +196,7 @@ namespace DigitService.Test
             [Fact]
             public async void LocationUpdateReceived_UpcomingDepartures_EarlierUpdate()
             {
-                var locationService = new LocationService(digitPushServiceClient, locationStore, logger);
+                var locationService = new LocationService(pushSyncService, locationStore, logger);
                 var response = await locationService.LocationUpdateReceivedAsync(userId, new Location()
                 {
                     Timestamp = now.AddMinutes(-2)
@@ -204,7 +214,7 @@ namespace DigitService.Test
             [Fact]
             public async void LocationUpdateReceived_PastDeparture_NoUpdate()
             {
-                var locationService = new LocationService(digitPushServiceClient, locationStore, logger);
+                var locationService = new LocationService(pushSyncService, locationStore, logger);
                 var response = await locationService.LocationUpdateReceivedAsync(userId, new Location()
                 {
                     Timestamp = now.AddMinutes(-2)
@@ -221,7 +231,7 @@ namespace DigitService.Test
             [Fact]
             public async void LocationUpdateReceived_UpcomingDeparture_NoGeofenceRequested()
             {
-                var locationService = new LocationService(digitPushServiceClient, locationStore, logger);
+                var locationService = new LocationService(pushSyncService, locationStore, logger);
                 var response = await locationService.LocationUpdateReceivedAsync(userId, new Location()
                 {
                     Timestamp = now.AddMinutes(-2)
@@ -238,7 +248,7 @@ namespace DigitService.Test
             [Fact]
             public async void LocationUpdateReceived_PendingDeparture_GeofenceRequested()
             {
-                var locationService = new LocationService(digitPushServiceClient, locationStore, logger);
+                var locationService = new LocationService(pushSyncService, locationStore, logger);
                 var response = await locationService.LocationUpdateReceivedAsync(userId, new Location()
                 {
                     Timestamp = now.AddMinutes(-2)
@@ -266,7 +276,7 @@ namespace DigitService.Test
                 locationStoreMock.Setup(v => v.IsGeofenceActiveAsync(userId, It.Is<GeofenceRequest>(d => d.Start == now && d.End == now.AddMinutes(60)))).Returns(Task.FromResult(true));
                 locationStoreMock.Setup(v => v.IsGeofenceActiveAsync(userId, It.Is<GeofenceRequest>(d => d.Start == now && d.End == now))).Returns(Task.FromResult(true));
                 locationStoreMock.Setup(v => v.GetLastLocationAsync(userId)).Returns(Task.FromResult((Location)null));
-                var locationService = new LocationService(digitPushServiceClient, locationStoreMock.Object, logger);
+                var locationService = new LocationService(pushSyncService, locationStoreMock.Object, logger);
                 var response = await locationService.LocationUpdateReceivedAsync(userId, new Location()
                 {
                     Timestamp = now.AddMinutes(-2)
@@ -297,7 +307,7 @@ namespace DigitService.Test
                     Timestamp = now.AddMinutes(-10)
                 }));
                 locationStoreMock.Setup(v => v.ClearGeofenceAsync(userId)).Returns(Task.CompletedTask).Verifiable();
-                var locationService = new LocationService(digitPushServiceClient, locationStoreMock.Object, logger);
+                var locationService = new LocationService(pushSyncService, locationStoreMock.Object, logger);
                 var response = await locationService.LocationUpdateReceivedAsync(userId, new Location()
                 {
                     Latitude = 48.204598,
@@ -327,7 +337,7 @@ namespace DigitService.Test
                     Timestamp = now.AddMinutes(-10)
                 }));
                 locationStoreMock.Setup(v => v.ClearGeofenceAsync(userId)).Returns(Task.CompletedTask).Verifiable();
-                var locationService = new LocationService(digitPushServiceClient, locationStoreMock.Object, logger);
+                var locationService = new LocationService(pushSyncService, locationStoreMock.Object, logger);
                 var response = await locationService.LocationUpdateReceivedAsync(userId, new Location()
                 {
                     Latitude = 48.204083,

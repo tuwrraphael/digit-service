@@ -8,7 +8,7 @@ namespace DigitService.Controllers
         internal static readonly TimeSpan CalendarServiceInacurracy = new TimeSpan(0, 10, 0);
 
         internal static readonly TimeSpan LastLocationCacheTime = new TimeSpan(0, 5, 0);
-        internal static readonly TimeSpan LocationRequestInvalidationTime = new TimeSpan(0, 20, 0);
+        internal static readonly TimeSpan LocationRequestExpectedTime = new TimeSpan(0, 5, 0);
 
         internal static readonly TimeSpan NoUpdateBeforeDepartureMargin = new TimeSpan(0, 10, 0);
 

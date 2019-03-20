@@ -1,4 +1,5 @@
-﻿using DigitService.Models;
+﻿using Digit.Abstractions.Models;
+using DigitService.Models;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using OAuthApiClient.Abstractions;
