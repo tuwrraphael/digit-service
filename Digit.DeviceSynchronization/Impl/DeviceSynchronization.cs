@@ -75,10 +75,5 @@ namespace Digit.DeviceSynchronization.Impl
                 await digitPushServiceClient.PushChannels[userId][syncChannel.Id].Options.PutAsync(options);
             }
         }
-
-        public Task TriggerSynchronizationAsync(string userId)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

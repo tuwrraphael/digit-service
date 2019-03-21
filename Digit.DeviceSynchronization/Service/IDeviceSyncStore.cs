@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Digit.DeviceSynchronization.Service
 {
-    internal interface IDeviceSyncStore
+    public interface IDeviceSyncStore
     {
         Task CreateAsync(string userId, string deviceId, DeviceSyncRequest request);
         Task<Device[]> GetForUserAsync(string userId);

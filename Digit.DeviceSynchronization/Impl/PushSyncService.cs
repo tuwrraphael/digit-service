@@ -41,14 +41,15 @@ namespace Digit.DeviceSynchronization.Impl
                     ChannelOptions = syncRequest.GetChannelOptions(),
                     Payload = syncRequest.GetPayload()
                 });
+                await logger.Log(userId, $"Pushed {syncRequest}", 1);
             }
             catch (PushChannelNotFoundException)
             {
-                await logger.Log(userId, $"Could not find channel for {syncRequest}");
+                await logger.Log(userId, $"Could not find channel for {syncRequest}", 3);
             }
             catch (Exception e)
             {
-                await logger.Log(userId, $"Could not push {syncRequest}; Error: {e.Message}");
+                await logger.Log(userId, $"Could not push {syncRequest}; Error: {e.Message}", 3);
             }
         }
 

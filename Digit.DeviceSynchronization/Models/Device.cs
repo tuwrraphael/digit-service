@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Digit.DeviceSynchronization.Models
 {
-    internal class Device
+    public class Device
     {
         public string Id { get; set; }
         public string OwnerId { get; set; }

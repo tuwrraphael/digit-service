@@ -109,7 +109,7 @@ namespace DigitService.Impl
             return route;
         }
 
-        private async Task<Route> GetUpdatedOrNew(string userId, Event evt, FocusItem item, Location location)
+        private async Task<RouteUpdateResult> GetUpdatedOrNew(string userId, Event evt, FocusItem item, Location location)
         {
             if (null != item.DirectionsKey)
             {
@@ -119,17 +119,34 @@ namespace DigitService.Impl
                     var route = SelectRoute(directionsResult);
                     if (null != route && route.DepatureTime >= DateTimeOffset.Now)
                     {
-                        return route;
+                        return new RouteUpdateResult()
+                        {
+                            Route = route,
+                            IsNew = false
+                        };
                     }
                 }
             }
-            return await GetNewRoute(userId, evt, item, location);
+            return new RouteUpdateResult()
+            {
+                Route = await GetNewRoute(userId, evt, item, location),
+                IsNew = true
+            };
+        }
+
+        private class RouteUpdateResult
+        {
+            public Route Route { get; set; }
+            public bool IsNew { get; set; }
         }
 
         public async Task<FocusManageResult> Update(string userId, FocusUpdateRequest focusUpdateRequest)
         {
             var res = new FocusManageResult();
             var activeItems = await focusStore.GetActiveAsync(userId);
+            var updatedItemIds = new HashSet<string>(focusUpdateRequest.ItemSyncResult != null ?
+                focusUpdateRequest.ItemSyncResult.ChangedItems.Select(v => v.Id) :
+                new string[0]);
             foreach (var item in activeItems)
             {
                 var evt = await calendarServiceClient.Users[userId].Feeds[item.CalendarEventFeedId].Events.Get(item.CalendarEventId);
@@ -142,7 +159,12 @@ namespace DigitService.Impl
                 }
                 else
                 {
-                    route = await GetUpdatedOrNew(userId, evt, item, focusUpdateRequest.Location);
+                    var routeRes = await GetUpdatedOrNew(userId, evt, item, focusUpdateRequest.Location);
+                    route = routeRes.Route;
+                    if (routeRes.IsNew)
+                    {
+                        updatedItemIds.Add(item.Id);
+                    }
                 }
                 DateTimeOffset departureTime;
                 if (null == route)
@@ -166,9 +188,12 @@ namespace DigitService.Impl
             }
             var active = activeItems.Where(v => v.IndicateTime - DateTimeOffset.Now < FocusConstants.ItemActiveBeforeIndicate)
                 .OrderBy(v => v.IndicateTime).FirstOrDefault();
-            var activeItemChanged = focusStore.UpdateActiveItem(userId, active?.Id);
-            await Task.WhenAll(focusSubscribers.Select(v => v.ActiveItemChanged(userId, active)));
-            if (null != focusUpdateRequest.ItemSyncResult && focusUpdateRequest.ItemSyncResult.AnyChanges())
+            var activeItemChanged = await focusStore.UpdateActiveItem(userId, active?.Id);
+            if (activeItemChanged || updatedItemIds.Contains(active.Id))
+            {
+                await Task.WhenAll(focusSubscribers.Select(v => v.ActiveItemChanged(userId, active)));
+            }
+            if (updatedItemIds.Count > 0)
             {
                 await Task.WhenAll(focusSubscribers.Select(v => v.ActiveItemsChanged(userId, activeItems)));
             }
