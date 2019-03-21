@@ -11,7 +11,9 @@ namespace Digit.Focus.Service
         Task<FocusItem> UpdateCalendarEventAsync(string userId, Event evt);
         Task<bool> FocusItemNotifiedAsync(string itemId);
         Task SetFocusItemNotifiedAsync(string itemId);
-        Task UpdateWithDirections(string itemId, DateTimeOffset indicateTime, string directionsKey);
+        Task UpdateIndicateTime(string itemId, DateTimeOffset indicateTime);
+        Task UpdateDirections(string itemId, string directionsKey);
+        Task<bool> UpdateActiveItem(string userId, string itemId);
         Task<FocusItem[]> GetActiveAsync(string userId);
         Task<FocusItem[]> GetCalendarItemsAsync(string userId);
         Task RemoveAsync(FocusItem evt);

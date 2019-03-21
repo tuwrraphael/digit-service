@@ -6,6 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Migrations\20190321145017_DeviceSync.cs" />
+    <Compile Remove="Migrations\DeviceSynchronization\20190321145111_DeviceSync.cs" />
+    <Compile Remove="Migrations\DeviceSynchronization\20190321145659_DeviceSync.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="ButlerClient" Version="1.0.1" />
     <PackageReference Include="CalendarService.Client" Version="2.1.2" />
     <PackageReference Include="CalendarService.Extensions" Version="1.0.0" />
@@ -26,6 +32,11 @@
     <ProjectReference Include="..\Digit.DeviceSynchronization\Digit.DeviceSynchronization.csproj" />
     <ProjectReference Include="..\Digit.Focus\Digit.Focus.csproj" />
     <ProjectReference Include="..\DigitService.Models\DigitService.Models.csproj" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Folder Include="wwwroot\App_Data\" />
   </ItemGroup>
 
 </Project>

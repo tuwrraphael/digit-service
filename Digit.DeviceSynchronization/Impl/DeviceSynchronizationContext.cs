@@ -3,15 +3,15 @@ using System;
 
 namespace Digit.DeviceSynchronization.Impl
 {
-    internal class DeviceSynchronizationContext : DbContext
+    public class DeviceSynchronizationContext : DbContext
     {
         public DeviceSynchronizationContext(DbContextOptions<DeviceSynchronizationContext> contextOptions) : base(contextOptions)
         {
 
         }
 
-        public DbSet<StoredDevice> Devices { get; set; }
-        public DbSet<StoredSyncAction> SyncActions { get; set; }
+        internal DbSet<StoredDevice> Devices { get; set; }
+        internal DbSet<StoredSyncAction> SyncActions { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -20,8 +20,10 @@ namespace Digit.DeviceSynchronization.Impl
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<StoredDevice>().HasKey(v => v.Id);
+            modelBuilder.Entity<StoredDevice>().ToTable("Sync_Devices");
             modelBuilder.Entity<StoredSyncAction>()
                 .HasKey(v => v.Id);
+            modelBuilder.Entity<StoredSyncAction>().ToTable("Sync_SyncActions");
             modelBuilder.Entity<StoredSyncAction>().Property(v => v.ActionId).IsRequired();
             modelBuilder.Entity<StoredSyncAction>().Property(v => v.RequestedFor).IsRequired();
             modelBuilder.Entity<StoredSyncAction>().Property(v => v.UserId).IsRequired();

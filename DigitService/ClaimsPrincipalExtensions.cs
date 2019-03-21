@@ -1,9 +1,9 @@
 ﻿using System.Linq;
 using System.Security.Claims;
 
-namespace DigitService.Controllers
+namespace DigitService
 {
-    public static class UserExtensions
+    public static class ClaimsPrincipalExtensions
     {
         public static string GetId(this ClaimsPrincipal p)
         {

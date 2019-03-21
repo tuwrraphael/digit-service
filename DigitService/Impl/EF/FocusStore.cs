@@ -105,6 +105,24 @@ namespace DigitService.Impl.EF
             return focusItem.MapToFocusItem();
         }
 
+        public async Task<bool> UpdateActiveItem(string userId, string itemId)
+        {
+            var user = await digitServiceContext.Users
+                .Where(v => v.Id == userId).SingleOrDefaultAsync();
+            bool matches = false;
+            if (null == user)
+            {
+                return false;
+            }
+            else
+            {
+                matches = itemId == user.ActiveFocusItem;
+                user.ActiveFocusItem = itemId;
+            }
+            await digitServiceContext.SaveChangesAsync();
+            return !matches;
+        }
+
         public async Task<FocusItem> UpdateCalendarEventAsync(string userId, Event evt)
         {
             var item = await digitServiceContext.FocusItems
@@ -120,11 +138,17 @@ namespace DigitService.Impl.EF
             return item.MapToFocusItem();
         }
 
-        public async Task UpdateWithDirections(string itemId, DateTimeOffset indicateTime, string directionsKey)
+        public async Task UpdateDirections(string itemId, string directionsKey)
+        {
+            var item = await digitServiceContext.FocusItems.Where(v => v.Id == itemId).SingleOrDefaultAsync();
+            item.DirectionsKey = directionsKey;
+            await digitServiceContext.SaveChangesAsync();
+        }
+
+        public async Task UpdateIndicateTime(string itemId, DateTimeOffset indicateTime)
         {
             var item = await digitServiceContext.FocusItems.Where(v => v.Id == itemId).SingleOrDefaultAsync();
             item.IndicateAt = indicateTime.UtcDateTime;
-            item.DirectionsKey = directionsKey;
             await digitServiceContext.SaveChangesAsync();
         }
     }

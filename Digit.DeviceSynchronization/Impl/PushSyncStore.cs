@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace Digit.DeviceSynchronization.Impl
 {
-    internal class PushSyncStore : IPushSyncStore
+    public class PushSyncStore : IPushSyncStore
     {
         private readonly DeviceSynchronizationContext deviceSynchronizationContext;
 
-        internal PushSyncStore(DeviceSynchronizationContext deviceSynchronizationContext)
+        public PushSyncStore(DeviceSynchronizationContext deviceSynchronizationContext)
         {
             this.deviceSynchronizationContext = deviceSynchronizationContext;
         }

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace DigitService.Hubs
 {
     [Authorize("User")]
-    public class LogHub : Hub
+    public class FocusHub : Hub
     {
 
     }

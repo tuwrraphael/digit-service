@@ -2,6 +2,7 @@
 using CalendarService.Models;
 using Digit.Focus.Models;
 using Digit.Focus.Service;
+using DigitService.Impl;
 using DigitService.Models;
 using DigitService.Service;
 using System;
@@ -24,9 +25,9 @@ namespace DigitService.Controllers
             this.focusStore = focusStore;
         }
 
-        public async Task<FocusCalendarSyncResult> SyncAsync(string userId)
+        public async Task<FocusItemSyncResult> SyncAsync(string userId)
         {
-            var events = await calendarServiceClient.Users[userId].Events.Get(DateTimeOffset.Now, DateTimeOffset.Now.Add(FocusConstants.FocusScanTime + FocusConstants.CalendarServiceInacurracy)) ?? new CalendarService.Models.Event[0];
+            var events = await calendarServiceClient.Users[userId].Events.Get(DateTimeOffset.Now, DateTimeOffset.Now.Add(FocusConstants.FocusScanTime + FocusConstants.CalendarServiceInacurracy)) ?? new Event[0];
             var notAllDay = events.Where(v => !v.IsAllDay).ToArray();
             var focusItems = new List<FocusItem>(await focusStore.GetCalendarItemsAsync(userId));
             var newItems = new List<FocusItem>();
@@ -52,7 +53,7 @@ namespace DigitService.Controllers
             {
                 await focusStore.RemoveAsync(evt);
             }
-            return new FocusCalendarSyncResult()
+            return new FocusItemSyncResult()
             {
                 AddedItems = newItems.ToArray(),
                 ChangedItems = changedItems.ToArray(),

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DigitService.Controllers
+namespace DigitService.Impl
 {
     internal static class FocusConstants
     {
@@ -15,5 +15,11 @@ namespace DigitService.Controllers
         internal const uint GeofenceRadius = 50;
 
         internal const double GeofenceThreshold = 0.95;
+
+        internal static readonly TimeSpan DefaultTravelTime = new TimeSpan(0, 45, 0);
+        internal static readonly TimeSpan NotifyTime = new TimeSpan(0, 6, 0);
+        internal static readonly TimeSpan ButlerInaccuracy = new TimeSpan(0, 1, 0);
+
+        internal static readonly TimeSpan ItemActiveBeforeIndicate = new TimeSpan(0, 30, 0);
     }
 }
