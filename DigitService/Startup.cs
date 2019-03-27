@@ -153,10 +153,12 @@ namespace DigitService
                     builder.RequireAuthenticatedUser();
                     builder.RequireClaim("scope", "digit.user");
                 });
-            });
-
-            services.AddAuthorization(options =>
-            {
+                options.AddPolicy("UserDevice", builder =>
+                {
+                    builder.RequireAuthenticatedUser();
+                    // TODO create digit.userdevice scope
+                    builder.RequireClaim("scope", "digit.user");
+                });
                 options.AddPolicy("Service", builder =>
                 {
                     builder.RequireClaim("scope", "digit.service");

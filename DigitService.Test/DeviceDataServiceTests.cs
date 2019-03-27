@@ -16,8 +16,6 @@ namespace DigitService.Test
 {
     public class DeviceDataServiceTests
     {
-        const string userId = "12345";
-
         public class GetDeviceDataAsync
         {
             [Fact]
@@ -28,6 +26,7 @@ namespace DigitService.Test
                 const string feedId = "feed";
                 DateTime now = DateTime.Now;
                 var deviceSyncStoreMock = new Mock<IDeviceSyncStore>(MockBehavior.Strict);
+                deviceSyncStoreMock.Setup(d => d.DeviceClaimedByAsync(deviceId)).Returns(Task.FromResult(userId));
                 var digitPushServiceClientMock = new Mock<IDigitPushServiceClient>(MockBehavior.Strict);
                 var calendarServiceMock = new Mock<ICalendarServiceClient>(MockBehavior.Strict);
                 var travelServiceMock = new Mock<ITravelServiceClient>(MockBehavior.Strict);
@@ -73,6 +72,7 @@ namespace DigitService.Test
                 const string directionsKey = "dirs";
                 DateTime now = DateTime.Now;
                 var deviceSyncStoreMock = new Mock<IDeviceSyncStore>(MockBehavior.Strict);
+                deviceSyncStoreMock.Setup(d => d.DeviceClaimedByAsync(deviceId)).Returns(Task.FromResult(userId));
                 var digitPushServiceClientMock = new Mock<IDigitPushServiceClient>(MockBehavior.Strict);
                 var calendarServiceMock = new Mock<ICalendarServiceClient>(MockBehavior.Strict);
                 var travelServiceMock = new Mock<ITravelServiceClient>(MockBehavior.Strict);

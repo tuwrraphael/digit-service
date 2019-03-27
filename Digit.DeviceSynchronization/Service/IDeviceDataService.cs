@@ -5,7 +5,7 @@ namespace Digit.DeviceSynchronization.Service
 {
     public interface IDeviceDataService
     {
-        Task<DeviceData> GetDeviceData(string userId, string deviceData);
-        Task<DeviceSyncStatus[]> GetDeviceSyncStatus(string userId);
+        Task<DeviceData> GetDeviceData(string userId, string deviceId);
+        Task<DeviceSyncStatus> GetDeviceSyncStatus(string userId, string deviceId);
     }
 }

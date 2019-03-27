@@ -21,11 +21,6 @@ namespace Digit.DeviceSynchronization.Impl
             this.deviceSyncStore = deviceSyncStore;
         }
 
-        public Task RemoveDeviceSync(string userId, string deviceId)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task RequestSynchronizationAsync(string userId, string deviceId, DeviceSyncRequest request)
         {
             var claimedBy = await deviceSyncStore.DeviceClaimedByAsync(deviceId);

@@ -7,7 +7,5 @@ namespace Digit.DeviceSynchronization.Service
     {
         /// <exception cref="DeviceClaimedException">the device was claimed by another user</exception>
         Task RequestSynchronizationAsync(string userId, string deviceId, DeviceSyncRequest request);
-
-        Task RemoveDeviceSync(string userId, string deviceId);
     }
 }

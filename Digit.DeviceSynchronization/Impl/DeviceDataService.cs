@@ -29,8 +29,13 @@ namespace Digit.DeviceSynchronization.Impl
             _travelServiceClient = travelServiceClient;
         }
 
-        public async Task<DeviceData> GetDeviceData(string userId, string deviceData)
+        public async Task<DeviceData> GetDeviceData(string userId, string deviceId)
         {
+            var owner = await _deviceSyncStore.DeviceClaimedByAsync(deviceId);
+            if (owner != userId)
+            {
+                throw new DeviceAccessException(deviceId, userId, owner);
+            }
             var activeItem = await _focusStore.GetActiveItem(userId);
             if (null == activeItem.CalendarEventId && null == activeItem.CalendarEventFeedId)
             {
@@ -68,7 +73,7 @@ namespace Digit.DeviceSynchronization.Impl
             };
         }
 
-        public Task<DeviceSyncStatus[]> GetDeviceSyncStatus(string userId)
+        public Task<DeviceSyncStatus> GetDeviceSyncStatus(string userId, string deviceId)
         {
             throw new NotImplementedException();
         }
