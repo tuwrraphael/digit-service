@@ -29,7 +29,7 @@ namespace DigitService.Test
                 var calendarServiceMock = new Mock<ICalendarServiceClient>(MockBehavior.Strict);
                 var travelServiceMock = new Mock<ITravelServiceClient>(MockBehavior.Strict);
                 var focusStoreMock = new Mock<IFocusStore>(MockBehavior.Strict);
-                deviceSyncStoreMock.Setup(v => v.CreateAsync(userId, deviceId, It.IsAny<DeviceSyncRequest>()))
+                deviceSyncStoreMock.Setup(v => v.CreateAsync(userId, deviceId))
                     .Returns(Task.CompletedTask);
                 deviceSyncStoreMock.Setup(v => v.DeviceClaimedByAsync(It.IsAny<string>())).Returns(Task.FromResult<string>(null));
                 digitPushServiceClientMock.Setup(v => v.PushChannels[userId].GetAllAsync()).Returns(Task.FromResult(new[] {
@@ -50,7 +50,7 @@ namespace DigitService.Test
                     PushChannelId = channel1Id
                 });
                 digitPushServiceClientMock.Verify(v => v.PushChannels[userId][channel1Id].Options.PutAsync(It.Is<PushChannelOptions>(d => d.ContainsKey($"digit.sync.{deviceId}"))), Times.Once);
-                deviceSyncStoreMock.Verify(v => v.CreateAsync(userId, deviceId, It.IsAny<DeviceSyncRequest>()));
+                deviceSyncStoreMock.Verify(v => v.CreateAsync(userId, deviceId));
             }
 
             [Fact]
@@ -65,7 +65,7 @@ namespace DigitService.Test
                 var calendarServiceMock = new Mock<ICalendarServiceClient>(MockBehavior.Strict);
                 var travelServiceMock = new Mock<ITravelServiceClient>(MockBehavior.Strict);
                 var focusStoreMock = new Mock<IFocusStore>(MockBehavior.Strict);
-                deviceSyncStoreMock.Setup(v => v.CreateAsync(userId, deviceId, It.IsAny<DeviceSyncRequest>()))
+                deviceSyncStoreMock.Setup(v => v.CreateAsync(userId, deviceId))
                     .Returns(Task.CompletedTask);
                 deviceSyncStoreMock.Setup(v => v.DeviceClaimedByAsync(It.IsAny<string>())).Returns(Task.FromResult<string>(userId));
                 digitPushServiceClientMock.Setup(v => v.PushChannels[userId].GetAllAsync()).Returns(Task.FromResult(new[] {
@@ -111,7 +111,7 @@ namespace DigitService.Test
                 var calendarServiceMock = new Mock<ICalendarServiceClient>(MockBehavior.Strict);
                 var travelServiceMock = new Mock<ITravelServiceClient>(MockBehavior.Strict);
                 var focusStoreMock = new Mock<IFocusStore>(MockBehavior.Strict);
-                deviceSyncStoreMock.Setup(v => v.CreateAsync(userId, deviceId, It.IsAny<DeviceSyncRequest>()))
+                deviceSyncStoreMock.Setup(v => v.CreateAsync(userId, deviceId))
                     .Returns(Task.CompletedTask);
                 deviceSyncStoreMock.Setup(v => v.DeviceClaimedByAsync(It.IsAny<string>())).Returns(Task.FromResult<string>(userId));
                 digitPushServiceClientMock.Setup(v => v.PushChannels[userId].GetAllAsync()).Returns(Task.FromResult(new[] {
@@ -161,7 +161,7 @@ namespace DigitService.Test
                 var calendarServiceMock = new Mock<ICalendarServiceClient>(MockBehavior.Strict);
                 var travelServiceMock = new Mock<ITravelServiceClient>(MockBehavior.Strict);
                 var focusStoreMock = new Mock<IFocusStore>(MockBehavior.Strict);
-                deviceSyncStoreMock.Setup(v => v.CreateAsync(userId, deviceId, It.IsAny<DeviceSyncRequest>()))
+                deviceSyncStoreMock.Setup(v => v.CreateAsync(userId, deviceId))
                     .Returns(Task.CompletedTask);
                 deviceSyncStoreMock.Setup(v => v.DeviceClaimedByAsync(It.IsAny<string>())).Returns(Task.FromResult("user2"));
                 digitPushServiceClientMock.Setup(v => v.PushChannels[userId].GetAllAsync())

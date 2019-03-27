@@ -41,7 +41,7 @@ namespace Digit.DeviceSynchronization.Impl
             }
             if (null == claimedBy)
             {
-                await deviceSyncStore.CreateAsync(userId, deviceId, request);
+                await deviceSyncStore.CreateAsync(userId, deviceId);
             }
             var deviceSyncKey = $"digit.sync.{deviceId}";
             foreach (var channel in channels.Where(v => v.Id != syncChannel.Id &&

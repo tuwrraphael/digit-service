@@ -34,10 +34,6 @@ namespace Digit.DeviceSynchronization.Impl
     {
         public string Id { get; set; }
         public string OwnerId { get; set; }
-        public bool UpToDate { get; set; }
-        public DateTime? LastSyncTime { get; set; }
-        public string FocusItemId { get; set; }
-        public string FocusItemDigest { get; set; }
     }
 
     internal class StoredSyncAction
