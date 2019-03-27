@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DigitService.Migrations.DeviceSynchronization
 {
     [DbContext(typeof(DeviceSynchronizationContext))]
-    [Migration("20190321145748_DeviceSync")]
+    [Migration("20190327152138_DeviceSync")]
     partial class DeviceSync
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,15 +23,8 @@ namespace DigitService.Migrations.DeviceSynchronization
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("FocusItemDigest");
-
-                    b.Property<string>("FocusItemId");
-
-                    b.Property<DateTime?>("LastSyncTime");
-
-                    b.Property<string>("OwnerId");
-
-                    b.Property<bool>("UpToDate");
+                    b.Property<string>("OwnerId")
+                        .IsRequired();
 
                     b.HasKey("Id");
 

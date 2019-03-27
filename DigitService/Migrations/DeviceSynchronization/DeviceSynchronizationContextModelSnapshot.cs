@@ -21,15 +21,8 @@ namespace DigitService.Migrations.DeviceSynchronization
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("FocusItemDigest");
-
-                    b.Property<string>("FocusItemId");
-
-                    b.Property<DateTime?>("LastSyncTime");
-
-                    b.Property<string>("OwnerId");
-
-                    b.Property<bool>("UpToDate");
+                    b.Property<string>("OwnerId")
+                        .IsRequired();
 
                     b.HasKey("Id");
 

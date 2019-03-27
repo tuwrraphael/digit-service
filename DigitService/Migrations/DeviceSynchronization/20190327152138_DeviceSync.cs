@@ -12,11 +12,7 @@ namespace DigitService.Migrations.DeviceSynchronization
                 columns: table => new
                 {
                     Id = table.Column<string>(nullable: false),
-                    OwnerId = table.Column<string>(nullable: true),
-                    UpToDate = table.Column<bool>(nullable: false),
-                    LastSyncTime = table.Column<DateTime>(nullable: true),
-                    FocusItemId = table.Column<string>(nullable: true),
-                    FocusItemDigest = table.Column<string>(nullable: true)
+                    OwnerId = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {

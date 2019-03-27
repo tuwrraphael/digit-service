@@ -27,6 +27,7 @@ using Microsoft.AspNetCore.SignalR;
 using Digit.DeviceSynchronization;
 using System.Reflection;
 using System.Threading.Tasks;
+using Digit.DeviceSynchronization.Impl;
 
 namespace DigitService
 {
@@ -172,6 +173,10 @@ namespace DigitService
             using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
             {
                 using (var context = serviceScope.ServiceProvider.GetService<DigitServiceContext>())
+                {
+                    context.Database.Migrate();
+                }
+                using (var context = serviceScope.ServiceProvider.GetService<DeviceSynchronizationContext>())
                 {
                     context.Database.Migrate();
                 }

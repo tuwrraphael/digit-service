@@ -21,6 +21,7 @@ namespace Digit.DeviceSynchronization.Impl
         {
             modelBuilder.Entity<StoredDevice>().HasKey(v => v.Id);
             modelBuilder.Entity<StoredDevice>().ToTable("Sync_Devices");
+            modelBuilder.Entity<StoredDevice>().Property(v => v.OwnerId).IsRequired();
             modelBuilder.Entity<StoredSyncAction>()
                 .HasKey(v => v.Id);
             modelBuilder.Entity<StoredSyncAction>().ToTable("Sync_SyncActions");
