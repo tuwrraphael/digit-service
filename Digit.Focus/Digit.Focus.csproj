@@ -6,6 +6,11 @@
 
   <ItemGroup>
     <PackageReference Include="CalendarService.Models" Version="1.1.2" />
+    <PackageReference Include="TravelService.Models" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Impl\" />
   </ItemGroup>
 
 </Project>

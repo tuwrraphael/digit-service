@@ -1,6 +1,7 @@
 ﻿using Digit.Abstractions.Service;
 using Digit.DeviceSynchronization.Models;
 using Digit.DeviceSynchronization.Service;
+using Digit.Focus;
 using DigitService.Impl;
 using DigitService.Models;
 using DigitService.Service;

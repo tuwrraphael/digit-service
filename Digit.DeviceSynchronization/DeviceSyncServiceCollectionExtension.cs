@@ -13,6 +13,9 @@ namespace Digit.DeviceSynchronization
         {
             services.AddTransient<IPushSyncService, PushSyncService>();
             services.AddTransient<IPushSyncStore, PushSyncStore>();
+            services.AddTransient<IDeviceDataService, DeviceDataService>();
+            services.AddTransient<IDeviceSyncService, DeviceSyncService>();
+            services.AddTransient<IDeviceSyncStore, DeviceSyncStore>();
             services.AddDbContext<DeviceSynchronizationContext>(ConfigureDbContext);
             return services;
         }

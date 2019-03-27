@@ -2,6 +2,7 @@
 using CalendarService.Client;
 using CalendarService.Models;
 using Digit.Abstractions.Service;
+using Digit.Focus;
 using Digit.Focus.Models;
 using Digit.Focus.Service;
 using DigitPushService.Client;
@@ -52,18 +53,7 @@ namespace DigitService.Impl
             options = optionsAccessor.Value;
         }
 
-        private Route SelectRoute(DirectionsResult directionsResult)
-        {
-            if (null != directionsResult?.TransitDirections && directionsResult.TransitDirections.Routes.Any())
-            {
-                if (directionsResult.TransitDirections.Routes.Where(v => v.DepatureTime.HasValue).Any())
-                {
-                    var route = directionsResult.TransitDirections.Routes.Where(v => v.DepatureTime.HasValue).First();
-                    return route;
-                }
-            }
-            return null;
-        }
+       
 
         private async Task<Route> GetNewRoute(string userId, Event evt, FocusItem item, Location location)
         {
@@ -84,7 +74,7 @@ namespace DigitService.Impl
                     if (!requestWithNow)
                     {
                         directionsResult = await travelServiceClient.Directions.Transit.Get(start, address, evt.Start);
-                        route = SelectRoute(directionsResult);
+                        route = DirectionUtils.SelectRoute(directionsResult);
                         if (null != route && route.DepatureTime.Value < DateTimeOffset.Now)
                         {
                             requestWithNow = true;
@@ -93,7 +83,7 @@ namespace DigitService.Impl
                     if (requestWithNow)
                     {
                         directionsResult = await travelServiceClient.Directions.Transit.Get(start, address, null, DateTimeOffset.Now);
-                        route = SelectRoute(directionsResult);
+                        route = DirectionUtils.SelectRoute(directionsResult);
                     }
                     directionsKey = directionsResult?.CacheKey;
                     if (null != route)
@@ -116,7 +106,7 @@ namespace DigitService.Impl
                 var directionsResult = await travelServiceClient.Directions[item.DirectionsKey].GetAsync();
                 if (null != directionsResult)
                 {
-                    var route = SelectRoute(directionsResult);
+                    var route = DirectionUtils.SelectRoute(directionsResult);
                     if (null != route && route.DepatureTime >= DateTimeOffset.Now)
                     {
                         return new RouteUpdateResult()
@@ -186,8 +176,7 @@ namespace DigitService.Impl
                 await focusStore.UpdateIndicateTime(item.Id, departureTime);
                 await NotifyOrInstall(userId, item, evt, departureTime);
             }
-            var active = activeItems.Where(v => v.IndicateTime - DateTimeOffset.Now < FocusConstants.ItemActiveBeforeIndicate)
-                .OrderBy(v => v.IndicateTime).FirstOrDefault();
+            var active = await focusStore.GetActiveItem(userId);
             var activeItemChanged = await focusStore.UpdateActiveItem(userId, active?.Id);
             if (activeItemChanged || updatedItemIds.Contains(active.Id))
             {

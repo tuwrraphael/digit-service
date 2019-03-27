@@ -1,41 +1,24 @@
-﻿using CalendarService.Client;
-using Digit.DeviceSynchronization.Models;
+﻿using Digit.DeviceSynchronization.Models;
 using Digit.DeviceSynchronization.Service;
-using Digit.Focus.Service;
 using DigitPushService.Client;
 using PushServer.PushConfiguration.Abstractions.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using TravelService.Client;
 
 namespace Digit.DeviceSynchronization.Impl
 {
-    public class DeviceSynchronization : IDeviceSynchronization
+
+    public class DeviceSyncService : IDeviceSyncService
     {
         private readonly IDigitPushServiceClient digitPushServiceClient;
         private readonly IDeviceSyncStore deviceSyncStore;
-        private readonly ICalendarServiceClient calendarServiceClient;
 
-        internal DeviceSynchronization(IFocusStore focusStore,
-            IDigitPushServiceClient digitPushServiceClient, IDeviceSyncStore deviceSyncStore,
-            IFocusItemDigest focusItemDigest,
-            ICalendarServiceClient calendarServiceClient,
-            ITravelServiceClient travelServiceClient)
+        internal DeviceSyncService(IDigitPushServiceClient digitPushServiceClient,
+            IDeviceSyncStore deviceSyncStore)
         {
             this.digitPushServiceClient = digitPushServiceClient;
             this.deviceSyncStore = deviceSyncStore;
-            this.calendarServiceClient = calendarServiceClient;
-        }
-
-        public Task<DeviceData> GetDeviceDataAsync(string userId, string deviceData)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<DeviceSyncStatus> GetDeviceSyncStatusAsync(string userId, string deviceId)
-        {
-            throw new NotImplementedException();
         }
 
         public Task RemoveDeviceSync(string userId, string deviceId)
