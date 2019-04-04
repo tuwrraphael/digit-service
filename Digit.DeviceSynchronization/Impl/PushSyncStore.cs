@@ -26,6 +26,7 @@ namespace Digit.DeviceSynchronization.Impl
                 Done = false,
                 RequestedFor = syncTime.UtcDateTime
             });
+            await deviceSynchronizationContext.SaveChangesAsync();
         }
 
         public async Task<SyncAction[]> GetPendingSyncActions(string userId)
