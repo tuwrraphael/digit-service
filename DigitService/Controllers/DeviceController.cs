@@ -1,98 +1,97 @@
-﻿using Digit.DeviceSynchronization.Models;
-using Digit.DeviceSynchronization.Service;
+﻿using Digit.Abstractions.Models;
+using Digit.Abstractions.Service;
+using DigitService.Models;
+using DigitService.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
 namespace DigitService.Controllers
 {
-    [Route("api")]
-    public class DevicesController : Controller
+    [Route("api/[controller]")]
+    public class DeviceController : Controller
     {
-        private readonly IDeviceSyncService _deviceSyncService;
-        private readonly IDeviceDataService _deviceDataService;
-        private readonly IPushSyncService _pushSyncService;
-        private readonly ILogger<DevicesController> _logger;
+        private readonly IDigitLogger digitLogger;
+        private readonly IDeviceService deviceService;
+        private readonly ILogBackend logBackend;
 
-        public DevicesController(IDeviceSyncService deviceSyncService,
-            IDeviceDataService deviceDataService,
-            IPushSyncService pushSyncService,
-            ILogger<DevicesController> logger)
+        public DeviceController(IDigitLogger digitLogger,
+            IDeviceService deviceService, ILogBackend logBackend)
         {
-            _deviceSyncService = deviceSyncService;
-            _deviceDataService = deviceDataService;
-            _pushSyncService = pushSyncService;
-            _logger = logger;
+            this.digitLogger = digitLogger;
+            this.deviceService = deviceService;
+            this.logBackend = logBackend;
         }
 
-        [HttpPut("me/devices/{id}")]
-        [Authorize("UserDevice")]
-        public async Task<IActionResult> RequestSync(string id, [FromBody]DeviceSyncRequest deviceSyncRequest)
+
+        [HttpPost("{id}/log")]
+        public async void PostLog(string id, [FromBody]LogEntry entry)
         {
-            if (!ModelState.IsValid)
+            await digitLogger.Log(id, entry);
+        }
+
+        [HttpGet("{id}/log")]
+        public async Task<LogEntry[]> GetLog(string id, int history = 20)
+        {
+            return await logBackend.GetLogAsync(id, history);
+        }
+
+        [HttpPost("{id}/claim")]
+        [Authorize("User")]
+        public async Task<IActionResult> Claim(string id)
+        {
+            var success = await deviceService.ClaimAsync(User.GetId(), id);
+            if (success)
             {
-                return BadRequest();
-            }
-            try
-            {
-                await _deviceSyncService.RequestSynchronizationAsync(User.GetId(), id, deviceSyncRequest);
                 return Ok();
             }
-            catch (DeviceClaimedException ex)
+            else
             {
-                return Forbid();
+                return BadRequest("Device already claimed");
             }
         }
 
-        [HttpGet("devices/{id}/sync")]
-        [Authorize("UserDevice")]
-        public async Task<IActionResult> GetSyncStatus(string id)
+        [HttpPost("{id}/battery")]
+        [Authorize("User")]
+        public async Task<IActionResult> AddBatteryMeasurement(string id, [FromBody] BatteryMeasurement batteryMeasurement)
         {
-            try
+            if (!await deviceService.HasAccessAsync(id, User.GetId()))
             {
-                var status = await _deviceDataService.GetDeviceSyncStatus(User.GetId(), id);
-                if (null == status)
-                {
-                    return NotFound();
-                }
-                return Ok(status);
-            }
-            catch (DeviceAccessException e)
-            {
-                _logger.LogError("Invalid device status access", e);
-                return Forbid();
+                return Unauthorized();
             }
 
-        }
-
-        [HttpGet("devices/{id}/data")]
-        [Authorize("UserDevice")]
-        public async Task<IActionResult> GetData(string id)
-        {
-            try
-            {
-                var data = await _deviceDataService.GetDeviceData(User.GetId(), id);
-                if (null == data)
-                {
-                    return NotFound();
-                }
-                return Ok(data);
-            }
-            catch (DeviceAccessException e)
-            {
-                _logger.LogError("Invalid device data access", e);
-                return Forbid();
-            }
-        }
-
-        [HttpPut("devices/{id}/sync")]
-        [Authorize("UserDevice")]
-        public async Task<IActionResult> PutSync(string id)
-        {
-            await _pushSyncService.SetDone(User.GetId(), new DevicePushSyncRequest(id, DateTimeOffset.Now));
+            await deviceService.AddBatteryMeasurementAsync(id, batteryMeasurement);
             return Ok();
+        }
+
+        [HttpPost("{id}/battery/measure")]
+        [Authorize("User")]
+        public async Task<IActionResult> TriggerBatteryMeasurement(string id)
+        {
+            if (!await deviceService.HasAccessAsync(id, User.GetId()))
+            {
+                return Unauthorized();
+            }
+            throw new NotImplementedException();
+        }
+
+        [HttpGet("{id}")]
+        [Authorize("User")]
+        public async Task<IActionResult> GetStatus(string id)
+        {
+            if (!await deviceService.HasAccessAsync(id, User.GetId()))
+            {
+                return Unauthorized();
+            }
+            return Ok(await deviceService.GetDeviceStatusAsync(id));
+        }
+
+        [HttpGet()]
+        [Authorize("User")]
+        public async Task<IActionResult> GetDevices()
+        {
+            return Ok(await deviceService.GetDevices(User.GetId()));
         }
     }
 }

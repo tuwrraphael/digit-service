@@ -124,6 +124,10 @@ namespace DigitService.Test
                 var pushSyncServiceMock = new Mock<IPushSyncService>(MockBehavior.Strict);
                 pushSyncServiceMock.Setup(v => v.SetRequestedExternal(It.IsAny<string>(), It.IsAny<ISyncRequest>()))
                     .Returns(Task.CompletedTask);
+                pushSyncServiceMock.Setup(v => v.SetDone(It.IsAny<string>(), It.IsAny<ISyncRequest>()))
+                    .Returns(Task.CompletedTask);
+                pushSyncServiceMock.Setup(v => v.SetDone(It.IsAny<string>(), It.IsAny<string>()))
+                    .Returns(Task.CompletedTask);
                 logger = Mock.Of<IDigitLogger>();
                 pushSyncService = pushSyncServiceMock.Object;
             }
