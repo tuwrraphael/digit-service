@@ -106,6 +106,7 @@ namespace DigitService.Controllers
 
         public async Task<LocationResponse> LocationUpdateReceivedAsync(string userId, Location location, DateTimeOffset now, FocusManageResult focusManageResult)
         {
+            await pushSyncService.SetDone(userId, new LegacyLocationPushSyncRequest(now));
             await CheckGeofenceTriggeredAsync(userId, location, now);
             await locationStore.UpdateLocationAsync(userId, location);
             var response = new LocationResponse()

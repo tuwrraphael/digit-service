@@ -10,5 +10,6 @@ namespace Digit.DeviceSynchronization.Service
         Task<SyncResult> RequestSync(string userId, ISyncRequest syncRequest, DateTimeOffset now);
         Task SetRequestedExternal(string userId, ISyncRequest syncRequest);
         Task SetDone(string userId, ISyncRequest syncRequest);
+        Task SetDone(string userId, string id);
     }
 }

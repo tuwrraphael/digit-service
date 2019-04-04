@@ -86,7 +86,12 @@ namespace Digit.DeviceSynchronization.Impl
 
         public async Task SetDone(string userId, ISyncRequest syncRequest)
         {
-            await pushSyncStore.SetDone(userId, syncRequest.Id);
+            await SetDone(userId, syncRequest.Id);
+        }
+
+        public async Task SetDone(string userId, string id)
+        {
+            await pushSyncStore.SetDone(userId, id);
         }
 
         public async Task SetRequestedExternal(string userId, ISyncRequest syncRequest)
