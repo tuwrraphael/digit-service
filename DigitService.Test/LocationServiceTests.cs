@@ -30,6 +30,8 @@ namespace DigitService.Test
             var pushSyncStoreMock = new Mock<IPushSyncStore>(MockBehavior.Strict);
             pushSyncStoreMock.Setup(v => v.GetPendingSyncActions(It.IsAny<string>()))
                 .Returns(Task.FromResult(syncActions));
+            pushSyncStoreMock.Setup(v => v.AddSyncAction(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>()))
+                .Returns(Task.FromResult(syncActions));
             return new PushSyncService(pushSyncStoreMock.Object, Mock.Of<IDigitPushServiceClient>(), Mock.Of<IDigitLogger>());
         }
 
