@@ -56,6 +56,7 @@ namespace Digit.DeviceSynchronization.Impl
         public async Task<SyncResult> RequestSync(string userId, ISyncRequest syncRequest, DateTimeOffset now)
         {
             var all = await pushSyncStore.GetPendingSyncActions(userId);
+            await pushSyncStore.AddSyncAction(userId, syncRequest.Id, syncRequest.Deadline);
             var pending = all.Where(d => now - d.Deadline <= syncRequest.AllowMissed).ToArray();
             var pendingAction = pending.Where(v => v.Id == syncRequest.Id);
             if (!pending.Any())
