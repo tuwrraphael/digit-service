@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Digit.DeviceSynchronization\Digit.DeviceSynchronization.csproj" />
     <ProjectReference Include="..\DigitService\DigitService.csproj" />
   </ItemGroup>
 

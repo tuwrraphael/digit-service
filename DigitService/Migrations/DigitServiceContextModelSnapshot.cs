@@ -14,7 +14,7 @@ namespace DigitService.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.1.4-rtm-31024");
+                .HasAnnotation("ProductVersion", "2.2.3-servicing-35854");
 
             modelBuilder.Entity("DigitService.Impl.EF.StoredBatteryMeasurement", b =>
                 {
@@ -119,11 +119,11 @@ namespace DigitService.Migrations
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<string>("ActiveFocusItem");
+
                     b.Property<DateTime?>("GeofenceFrom");
 
                     b.Property<DateTime?>("GeofenceTo");
-
-                    b.Property<DateTime?>("LocationRequestTime");
 
                     b.Property<string>("ReminderId");
 

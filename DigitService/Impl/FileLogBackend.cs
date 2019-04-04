@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Digit.Abstractions.Models;
 using DigitService.Hubs;
 using DigitService.Models;
 using DigitService.Service;

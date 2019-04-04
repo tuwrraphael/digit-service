@@ -5,6 +5,6 @@ namespace DigitService.Service
 {
     public interface IFocusCalendarSyncService
     {
-        Task<FocusCalendarSyncResult> SyncAsync(string userId);
+        Task<FocusItemSyncResult> SyncAsync(string userId);
     }
 }

@@ -21,6 +21,13 @@ using Microsoft.AspNetCore.Mvc;
 using TravelService.Client;
 using DigitService.Controllers;
 using DigitPushService.Client;
+using Digit.Focus.Service;
+using Digit.Abstractions.Service;
+using Microsoft.AspNetCore.SignalR;
+using Digit.DeviceSynchronization;
+using System.Reflection;
+using System.Threading.Tasks;
+using Digit.DeviceSynchronization.Impl;
 
 namespace DigitService
 {
@@ -43,6 +50,9 @@ namespace DigitService
         public void ConfigureServices(IServiceCollection services)
         {
             var path = Path.Combine(HostingEnvironment.WebRootPath, "App_Data");
+            var connectionString = $"Data Source={HostingEnvironment.WebRootPath}\\App_Data\\digitService.db";
+            var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
+
             new FileStore.FileStore(null, path).InitializeAsync().Wait();
             var provider = new PhysicalFileProvider(path);
             var access = new FileStore.FileStore(provider, path);
@@ -83,9 +93,13 @@ namespace DigitService
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<ILocationStore, LocationStore>();
             services.AddTransient<IFocusService, FocusService>();
+            services.AddTransient<IFocusUpdateService, FocusUpdateService>();
+            services.AddTransient<IFocusSubscriber, SignalRFocusSubscriber>();
             services.AddTransient<IFocusStore, FocusStore>();
             services.AddTransient<IFocusCalendarSyncService, FocusCalendarSyncService>();
             services.AddTransient<ILocationService, LocationService>();
+            services.AddDeviceSynchronization(builder => builder.UseSqlite(connectionString,
+                                sql => sql.MigrationsAssembly(migrationsAssembly)));
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddJsonOptions(v =>
             {
@@ -93,17 +107,19 @@ namespace DigitService
             });
             services.AddMemoryCache();
             services.AddSignalR();
+            services.AddSingleton<IUserIdProvider, SubUserIdProvider>();
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy",
-                    builder => builder.AllowAnyOrigin()
+                    builder => builder
+                    .WithOrigins("http://localhost:4200", "https://digit.kesal.at")
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .AllowCredentials());
             });
 
             services.AddDbContext<DigitServiceContext>(options =>
-                options.UseSqlite($"Data Source={HostingEnvironment.WebRootPath}\\App_Data\\digitService.db")
+                options.UseSqlite(connectionString)
             );
             services.AddTransient<IUserRepository, UserRepository>();
 
@@ -114,6 +130,21 @@ namespace DigitService
                     options.Authority = Configuration["ServiceIdentityUrl"];
                     options.Audience = "digit";
                     options.RequireHttpsMetadata = false;
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+                            var requestPath = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) &&
+                                (requestPath.StartsWithSegments("/hubs")))
+                            {
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
 
             services.AddAuthorization(options =>
@@ -123,10 +154,12 @@ namespace DigitService
                     builder.RequireAuthenticatedUser();
                     builder.RequireClaim("scope", "digit.user");
                 });
-            });
-
-            services.AddAuthorization(options =>
-            {
+                options.AddPolicy("UserDevice", builder =>
+                {
+                    builder.RequireAuthenticatedUser();
+                    // TODO create digit.userdevice scope
+                    builder.RequireClaim("scope", "digit.user");
+                });
                 options.AddPolicy("Service", builder =>
                 {
                     builder.RequireClaim("scope", "digit.service");
@@ -140,6 +173,10 @@ namespace DigitService
             using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
             {
                 using (var context = serviceScope.ServiceProvider.GetService<DigitServiceContext>())
+                {
+                    context.Database.Migrate();
+                }
+                using (var context = serviceScope.ServiceProvider.GetService<DeviceSynchronizationContext>())
                 {
                     context.Database.Migrate();
                 }
@@ -159,7 +196,8 @@ namespace DigitService
             app.UseCors("CorsPolicy");
             app.UseSignalR(routes =>
             {
-                routes.MapHub<LogHub>("/log");
+                routes.MapHub<LogHub>("/hubs/log");
+                routes.MapHub<FocusHub>("/hubs/focus");
             });
             app.UseMvc();
 
