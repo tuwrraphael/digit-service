@@ -14,7 +14,7 @@ namespace Digit.DeviceSynchronization.Impl
         private readonly IDigitPushServiceClient digitPushServiceClient;
         private readonly IDeviceSyncStore deviceSyncStore;
 
-        internal DeviceSyncService(IDigitPushServiceClient digitPushServiceClient,
+        public DeviceSyncService(IDigitPushServiceClient digitPushServiceClient,
             IDeviceSyncStore deviceSyncStore)
         {
             this.digitPushServiceClient = digitPushServiceClient;
