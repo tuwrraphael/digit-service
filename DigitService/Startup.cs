@@ -95,6 +95,7 @@ namespace DigitService
             services.AddTransient<IFocusService, FocusService>();
             services.AddTransient<IFocusUpdateService, FocusUpdateService>();
             services.AddTransient<IFocusSubscriber, SignalRFocusSubscriber>();
+            services.AddTransient<IFocusSubscriber, DeviceSyncFocusSubscriber>();
             services.AddTransient<IFocusStore, FocusStore>();
             services.AddTransient<IFocusCalendarSyncService, FocusCalendarSyncService>();
             services.AddTransient<ILocationService, LocationService>();
