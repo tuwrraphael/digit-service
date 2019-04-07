@@ -178,7 +178,7 @@ namespace DigitService.Impl
             }
             var active = await focusStore.GetActiveItem(userId);
             var activeItemChanged = await focusStore.UpdateActiveItem(userId, active?.Id);
-            if (activeItemChanged || updatedItemIds.Contains(active.Id))
+            if (activeItemChanged || (null != active && updatedItemIds.Contains(active.Id)))
             {
                 await Task.WhenAll(focusSubscribers.Select(v => v.ActiveItemChanged(userId, active)));
             }

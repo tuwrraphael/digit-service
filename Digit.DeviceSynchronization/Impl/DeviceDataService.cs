@@ -37,6 +37,14 @@ namespace Digit.DeviceSynchronization.Impl
                 throw new DeviceAccessException(deviceId, userId, owner);
             }
             var activeItem = await _focusStore.GetActiveItem(userId);
+            if (null == activeItem)
+            {
+                return new DeviceData()
+                {
+                    Event = null,
+                    Directions = null
+                };
+            }
             if (null == activeItem.CalendarEventId && null == activeItem.CalendarEventFeedId)
             {
                 return null; //other items are not supported yet
@@ -62,7 +70,8 @@ namespace Digit.DeviceSynchronization.Impl
                 {
                     ArrivalTime = route.ArrivalTime.Value,
                     DepartureTime = route.DepatureTime.Value,
-                    Legs = route.Steps.Select(v => new LegData() {
+                    Legs = route.Steps.Select(v => new LegData()
+                    {
                         ArrivalStop = v.ArrivalStop.Name,
                         DepartureStop = v.DepartureStop.Name,
                         DepartureTime = v.DepartureTime,
