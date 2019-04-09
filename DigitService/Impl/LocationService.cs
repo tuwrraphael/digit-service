@@ -106,7 +106,7 @@ namespace DigitService.Controllers
 
         public async Task<LocationResponse> LocationUpdateReceivedAsync(string userId, Location location, DateTimeOffset now, FocusManageResult focusManageResult)
         {
-            await pushSyncService.SetDone(userId, new LegacyLocationPushSyncRequest(now));
+            await pushSyncService.SetDone(userId, new LocationPushSyncRequest(now));
             await CheckGeofenceTriggeredAsync(userId, location, now);
             await locationStore.UpdateLocationAsync(userId, location);
             var response = new LocationResponse()
@@ -116,7 +116,7 @@ namespace DigitService.Controllers
             };
             if (response.NextUpdateRequiredAt.HasValue)
             {
-                await pushSyncService.SetRequestedExternal(userId, new LegacyLocationPushSyncRequest(response.NextUpdateRequiredAt.Value));
+                await pushSyncService.SetRequestedExternal(userId, new LocationPushSyncRequest(response.NextUpdateRequiredAt.Value));
             }
             return response;
         }
@@ -139,7 +139,7 @@ namespace DigitService.Controllers
             if (requestLocation)
             {
                 var res = await pushSyncService.RequestSync(userId,
-                    new LegacyLocationPushSyncRequest(requestTime.Add(FocusConstants.LocationRequestExpectedTime)),
+                    new LocationPushSyncRequest(requestTime.Add(FocusConstants.LocationRequestExpectedTime)),
                     requestTime);
                 return new LocationRequestResult()
                 {

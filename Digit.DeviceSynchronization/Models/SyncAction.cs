@@ -13,7 +13,6 @@ namespace Digit.DeviceSynchronization.Models
     {
         string Id { get; }
         Dictionary<string, string> GetChannelOptions();
-        string GetPayload();
         DateTimeOffset Deadline { get; }
         TimeSpan AllowMissed { get; }
     }
@@ -49,25 +48,20 @@ namespace Digit.DeviceSynchronization.Models
             };
         }
 
-        public string GetPayload()
-        {
-            return "{\"action\" : \"digit.sync\"}";
-        }
-
         public override string ToString()
         {
             return $"DeviceSync: {deviceId}";
         }
     }
 
-    public class LegacyLocationPushSyncRequest : SyncRequestBase, ISyncRequest
+    public class LocationPushSyncRequest : SyncRequestBase, ISyncRequest
     {
-        public LegacyLocationPushSyncRequest(DateTimeOffset deadline) :
+        public LocationPushSyncRequest(DateTimeOffset deadline) :
             base(deadline)
         {
         }
 
-        public string Id => "legacyLocationSync";
+        public string Id => "locationSync";
 
         public Dictionary<string, string> GetChannelOptions()
         {
@@ -77,14 +71,9 @@ namespace Digit.DeviceSynchronization.Models
             };
         }
 
-        public string GetPayload()
-        {
-            return "{\"action\" : \"send_location\"}";
-        }
-
         public override string ToString()
         {
-            return $"Legacy sync location";
+            return $"Sync location";
         }
     }
 }

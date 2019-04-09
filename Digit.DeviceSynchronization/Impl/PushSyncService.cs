@@ -1,26 +1,20 @@
-﻿using Digit.Abstractions.Service;
-using Digit.DeviceSynchronization.Models;
+﻿using Digit.DeviceSynchronization.Models;
 using Digit.DeviceSynchronization.Service;
-using DigitPushService.Client;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Digit.DeviceSynchronization.Impl
 {
-
     public class PushSyncService : IPushSyncService
     {
         private readonly IPushSyncStore pushSyncStore;
-        private readonly IDigitPushServiceClient digitPushServiceClient;
-        private readonly IDigitLogger logger;
+        private readonly IDebouncedPushService _debouncedPushService;
 
-        public PushSyncService(IPushSyncStore pushSyncStore,
-            IDigitPushServiceClient digitPushServiceClient, IDigitLogger logger)
+        public PushSyncService(IPushSyncStore pushSyncStore, IDebouncedPushService debouncedPushService)
         {
             this.pushSyncStore = pushSyncStore;
-            this.digitPushServiceClient = digitPushServiceClient;
-            this.logger = logger;
+            _debouncedPushService = debouncedPushService;
         }
 
         public async Task<SyncAction[]> GetPendingSyncActions(string userId, DateTimeOffset now)
@@ -30,27 +24,7 @@ namespace Digit.DeviceSynchronization.Impl
 
         private async Task Push(string userId, ISyncRequest syncRequest)
         {
-            try
-            {
-                await digitPushServiceClient.Push[userId].Create(new DigitPushService.Models.PushRequest()
-                {
-                    Options = new PushServer.Models.PushOptions()
-                    {
-                        Urgency = PushServer.Models.PushUrgency.High
-                    },
-                    ChannelOptions = syncRequest.GetChannelOptions(),
-                    Payload = syncRequest.GetPayload()
-                });
-                await logger.Log(userId, $"Pushed {syncRequest}", 1);
-            }
-            catch (PushChannelNotFoundException)
-            {
-                await logger.Log(userId, $"Could not find channel for {syncRequest}", 3);
-            }
-            catch (Exception e)
-            {
-                await logger.Log(userId, $"Could not push {syncRequest}; Error: {e.Message}", 3);
-            }
+            await _debouncedPushService.PushDebounced(userId, syncRequest);
         }
 
         public async Task<SyncResult> RequestSync(string userId, ISyncRequest syncRequest, DateTimeOffset now)

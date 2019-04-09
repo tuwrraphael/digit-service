@@ -24,7 +24,7 @@ namespace DigitService.Test
         {
             var syncActions = null == locationRequestTime ? new SyncAction[0] :
                 new[] { new SyncAction() {
-                    Id = new LegacyLocationPushSyncRequest(DateTimeOffset.Now).Id,
+                    Id = new LocationPushSyncRequest(DateTimeOffset.Now).Id,
                     Deadline = locationRequestTime
                 }  };
             var pushSyncStoreMock = new Mock<IPushSyncStore>(MockBehavior.Strict);
@@ -32,7 +32,7 @@ namespace DigitService.Test
                 .Returns(Task.FromResult(syncActions));
             pushSyncStoreMock.Setup(v => v.AddSyncAction(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>()))
                 .Returns(Task.FromResult(syncActions));
-            return new PushSyncService(pushSyncStoreMock.Object, Mock.Of<IDigitPushServiceClient>(), Mock.Of<IDigitLogger>());
+            return new PushSyncService(pushSyncStoreMock.Object, Mock.Of<IDebouncedPushService>());
         }
 
         public class RequestLocation
