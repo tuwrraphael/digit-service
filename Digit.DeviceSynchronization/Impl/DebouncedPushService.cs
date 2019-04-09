@@ -95,7 +95,7 @@ namespace Digit.DeviceSynchronization.Impl
                                                 Urgency = PushServer.Models.PushUrgency.High
                                             },
                                             ChannelId = group.Key,
-                                            Payload = "requestSync"
+                                            Payload = "{\"action\" : \"digit.sync\"}"
                                         });
                                         await logger.Log(userId, $"Pushed {string.Join(", ", group.Select(d => d.Id))}", 1);
                                     }
