@@ -41,7 +41,7 @@ namespace Digit.DeviceSynchronization.Impl
             private readonly IDigitPushServiceClient digitPushServiceClient;
             private readonly IDigitLogger logger;
             private Timer _timer;
-            private static readonly TimeSpan DebounceTime = TimeSpan.FromSeconds(4);
+            private static readonly TimeSpan DebounceTime = TimeSpan.FromSeconds(15);
 
             public DebouncedPushUserService(string userId,
                 IDigitPushServiceClient digitPushServiceClient,
