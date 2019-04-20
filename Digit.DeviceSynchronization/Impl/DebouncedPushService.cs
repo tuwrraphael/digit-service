@@ -34,14 +34,14 @@ namespace Digit.DeviceSynchronization.Impl
 
         private class DebouncedPushUserService
         {
-            private static readonly Queue<ISyncRequest> syncRequests = new Queue<ISyncRequest>();
+            private static readonly List<ISyncRequest> syncRequests = new List<ISyncRequest>();
             private static readonly SemaphoreSlim sem = new SemaphoreSlim(1);
 
             private readonly string userId;
             private readonly IDigitPushServiceClient digitPushServiceClient;
             private readonly IDigitLogger logger;
             private Timer _timer;
-            private static readonly TimeSpan DebounceTime = TimeSpan.FromSeconds(4);
+            private static readonly TimeSpan DebounceTime = TimeSpan.FromSeconds(15);
 
             public DebouncedPushUserService(string userId,
                 IDigitPushServiceClient digitPushServiceClient,
@@ -63,10 +63,12 @@ namespace Digit.DeviceSynchronization.Impl
                         await sem.WaitAsync();
                         try
                         {
-                            if (syncRequests.Count > 0)
+                            var reqs = syncRequests.ToArray();
+                            await logger.Log(userId, $"Enqueued {reqs.Length}", 0);
+                            if (reqs.Length > 0)
                             {
                                 var channels = await digitPushServiceClient.PushChannels[userId].GetAllAsync();
-                                var grouped = syncRequests.GroupBy(s =>
+                                var grouped = reqs.GroupBy(s =>
                                 {
                                     var channelOptions = s.GetChannelOptions();
                                     IQueryable<PushChannelConfiguration> query = channels.AsQueryable();
@@ -118,7 +120,8 @@ namespace Digit.DeviceSynchronization.Impl
                         }
                     }, null, (int)DebounceTime.TotalMilliseconds, Timeout.Infinite);
                 }
-                syncRequests.Enqueue(req);
+                syncRequests.Add(req);
+                await logger.Log(userId, $"Enqueued {req}", 0);
                 sem.Release();
             }
         }
