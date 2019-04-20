@@ -8,6 +8,8 @@
   <ItemGroup>
     <Compile Remove="Migrations\20190321145017_DeviceSync.cs" />
     <Compile Remove="Migrations\20190327151911_DeviceSync.cs" />
+    <Compile Remove="Migrations\20190420001916_ActiveEnd.cs" />
+    <Compile Remove="Migrations\20190420001916_ActiveEnd.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

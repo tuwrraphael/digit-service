@@ -1,5 +1,6 @@
 ﻿using CalendarService.Models;
 using Digit.Abstractions.Service;
+using Digit.Focus;
 using DigitService.Models;
 using DigitService.Service;
 using System;
@@ -57,7 +58,7 @@ namespace DigitService.Impl
             {
                 await logger.Log(userId, $"Received reminder removed");
             }
-            var syncResult = await focusCalendarSyncService.SyncAsync(userId);
+            var syncResult = await focusCalendarSyncService.SyncAsync(userId, DateTimeOffset.Now, DateTimeOffset.Now + FocusConstants.FocusScanTime);
             var lastLocation = await locationService.GetLastLocationAsync(userId);
             var res = await focusUpdateService.Update(userId, new FocusUpdateRequest()
             {

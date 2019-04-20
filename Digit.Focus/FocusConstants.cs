@@ -5,7 +5,7 @@ namespace Digit.Focus
     public static class FocusConstants
     {
         public static readonly TimeSpan FocusScanTime = new TimeSpan(2, 0, 0);
-        public static readonly TimeSpan CalendarServiceInacurracy = new TimeSpan(0, 10, 0);
+        public static readonly TimeSpan CalendarServiceInacurracy = new TimeSpan(0, 5, 0);
 
         public static readonly TimeSpan LastLocationCacheTime = new TimeSpan(0, 5, 0);
         public static readonly TimeSpan LocationRequestExpectedTime = new TimeSpan(0, 5, 0);

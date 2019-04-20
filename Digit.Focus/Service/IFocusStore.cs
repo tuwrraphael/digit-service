@@ -15,7 +15,7 @@ namespace Digit.Focus.Service
         Task UpdateDirections(string itemId, string directionsKey);
         Task<bool> UpdateActiveItem(string userId, string itemId);
         Task<FocusItem[]> GetActiveAsync(string userId);
-        Task<FocusItem[]> GetCalendarItemsAsync(string userId);
+        Task<FocusItem[]> GetCalendarItemsAsync(string userId, DateTimeOffset from, DateTimeOffset to);
         Task RemoveAsync(FocusItem evt);
     }
 }

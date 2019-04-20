@@ -3,7 +3,6 @@ using CalendarService.Models;
 using Digit.Focus.Models;
 using Digit.Focus.Service;
 using DigitService.Controllers;
-using DigitService.Models;
 using DigitService.Service;
 using Moq;
 using System;
@@ -19,7 +18,7 @@ namespace DigitService.Test
         public async void NewEvent_Added()
         {
             var focusStore = new Mock<IFocusStore>(MockBehavior.Strict);
-            focusStore.Setup(v => v.GetCalendarItemsAsync(userId)).Returns(Task.FromResult(new FocusItem[0]));
+            focusStore.Setup(v => v.GetCalendarItemsAsync(userId, It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>())).Returns(Task.FromResult(new FocusItem[0]));
             focusStore.Setup(v => v.StoreCalendarEventAsync(userId, It.IsAny<Event>())).Returns<string, Event>(async (v, e) => new FocusItem()
             {
                 CalendarEventId = e.Id
@@ -34,7 +33,7 @@ namespace DigitService.Test
                }
             }));
             IFocusCalendarSyncService focusCalendarSyncService = new FocusCalendarSyncService(calendarService.Object, focusStore.Object);
-            var res = await focusCalendarSyncService.SyncAsync(userId);
+            var res = await focusCalendarSyncService.SyncAsync(userId, DateTimeOffset.Now, DateTimeOffset.Now.AddHours(2));
             Assert.Collection(res.AddedItems, v => Assert.Equal("Test1", v.CalendarEventId));
             Assert.Empty(res.ChangedItems);
             Assert.Empty(res.RemovedItems);
@@ -43,7 +42,7 @@ namespace DigitService.Test
         public async void Events_Added_Removed()
         {
             var focusStore = new Mock<IFocusStore>(MockBehavior.Strict);
-            focusStore.Setup(v => v.GetCalendarItemsAsync(userId)).Returns(Task.FromResult(new FocusItem[] {
+            focusStore.Setup(v => v.GetCalendarItemsAsync(userId, It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>())).Returns(Task.FromResult(new FocusItem[] {
                 new FocusItem()
                 {
                     CalendarEventId = "Test2"
@@ -64,7 +63,7 @@ namespace DigitService.Test
                }
             }));
             IFocusCalendarSyncService focusCalendarSyncService = new FocusCalendarSyncService(calendarService.Object, focusStore.Object);
-            var res = await focusCalendarSyncService.SyncAsync(userId);
+            var res = await focusCalendarSyncService.SyncAsync(userId, DateTimeOffset.Now, DateTimeOffset.Now.AddHours(2));
             Assert.Collection(res.AddedItems, v => Assert.Equal("Test1", v.CalendarEventId));
             Assert.Collection(res.RemovedItems, v => Assert.Equal("Test2", v.CalendarEventId));
             Assert.Empty(res.ChangedItems);
@@ -83,7 +82,7 @@ namespace DigitService.Test
                     Text = "Location1"
                 }
             };
-            focusStore.Setup(v => v.GetCalendarItemsAsync(userId)).Returns(Task.FromResult(new FocusItem[] {
+            focusStore.Setup(v => v.GetCalendarItemsAsync(userId, It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>())).Returns(Task.FromResult(new FocusItem[] {
                 new FocusItem()
                 {
                     CalendarEventId = "Test1",
@@ -97,7 +96,7 @@ namespace DigitService.Test
                     event1
             }));
             IFocusCalendarSyncService focusCalendarSyncService = new FocusCalendarSyncService(calendarService.Object, focusStore.Object);
-            var res = await focusCalendarSyncService.SyncAsync(userId);
+            var res = await focusCalendarSyncService.SyncAsync(userId, DateTimeOffset.Now, DateTimeOffset.Now.AddHours(2));
             Assert.Empty(res.AddedItems);
             Assert.Empty(res.RemovedItems);
             Assert.Empty(res.ChangedItems);
@@ -116,7 +115,7 @@ namespace DigitService.Test
                     Text = "Location1"
                 }
             };
-            focusStore.Setup(v => v.GetCalendarItemsAsync(userId)).Returns(Task.FromResult(new FocusItem[] {
+            focusStore.Setup(v => v.GetCalendarItemsAsync(userId, It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>())).Returns(Task.FromResult(new FocusItem[] {
                 new FocusItem()
                 {
                     CalendarEventId = "Test1",
@@ -144,7 +143,7 @@ namespace DigitService.Test
             }
             }));
             IFocusCalendarSyncService focusCalendarSyncService = new FocusCalendarSyncService(calendarService.Object, focusStore.Object);
-            var res = await focusCalendarSyncService.SyncAsync(userId);
+            var res = await focusCalendarSyncService.SyncAsync(userId, DateTimeOffset.Now, DateTimeOffset.Now.AddHours(2));
             Assert.Empty(res.AddedItems);
             Assert.Empty(res.RemovedItems);
             Assert.Collection(res.ChangedItems, v => Assert.Equal("Test1", v.Id));

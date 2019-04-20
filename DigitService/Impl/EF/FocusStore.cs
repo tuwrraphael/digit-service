@@ -1,7 +1,7 @@
 ﻿using CalendarService.Models;
+using Digit.Focus;
 using Digit.Focus.Models;
 using Digit.Focus.Service;
-using DigitService.Models;
 using DigitService.Service;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -55,16 +55,19 @@ namespace DigitService.Impl.EF
         {
             return (await digitServiceContext.FocusItems
                 .Include(v => v.CalendarEvent)
-                .Where(v => v.UserId == userId && DateTime.UtcNow <= v.ActiveEnd)
+                .Where(v => v.UserId == userId
+                    && DateTime.UtcNow <= v.ActiveEnd
+                    && DateTime.UtcNow >= v.ActiveStart)
                 .ToArrayAsync())
                 .Select(v => v.MapToFocusItem()).ToArray();
         }
 
-        public async Task<FocusItem[]> GetCalendarItemsAsync(string userId)
+        public async Task<FocusItem[]> GetCalendarItemsAsync(string userId, DateTimeOffset from, DateTimeOffset to)
         {
             return (await digitServiceContext.FocusItems
                 .Include(v => v.CalendarEvent)
-                .Where(v => v.UserId == userId && null != v.CalendarEventFeedId && null != v.CalendarEventId)
+                .Where(v => v.UserId == userId && null != v.CalendarEventFeedId && null != v.CalendarEventId
+                    && from.UtcDateTime <= v.ActiveEnd && v.ActiveStart < to.UtcDateTime)
             .ToArrayAsync())
             .Select(v => v.MapToFocusItem()).ToArray();
         }
@@ -97,6 +100,7 @@ namespace DigitService.Impl.EF
                 User = user,
                 UserNotified = false,
                 ActiveEnd = evt.End.UtcDateTime,
+                ActiveStart = (evt.Start - FocusConstants.CalendarServiceInacurracy).UtcDateTime,
                 IndicateAt = evt.Start.UtcDateTime,
                 DirectionsKey = null
             };
@@ -133,6 +137,7 @@ namespace DigitService.Impl.EF
                         .SingleOrDefaultAsync();
             item.UserNotified = false;
             item.ActiveEnd = evt.End.UtcDateTime;
+            item.ActiveStart = (evt.Start - FocusConstants.CalendarServiceInacurracy).UtcDateTime;
             item.CalendarEvent.CalendarEventHash = evt.GenerateHash();
             await digitServiceContext.SaveChangesAsync();
             return item.MapToFocusItem();
