@@ -18,7 +18,7 @@ namespace DigitService.Test
         public async void NewEvent_Added()
         {
             var focusStore = new Mock<IFocusStore>(MockBehavior.Strict);
-            focusStore.Setup(v => v.GetCalendarItemsAsync(userId, It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>())).Returns(Task.FromResult(new FocusItem[0]));
+            focusStore.Setup(v => v.GetCalendarItemsAsync(userId)).Returns(Task.FromResult(new FocusItem[0]));
             focusStore.Setup(v => v.StoreCalendarEventAsync(userId, It.IsAny<Event>())).Returns<string, Event>(async (v, e) => new FocusItem()
             {
                 CalendarEventId = e.Id
@@ -42,10 +42,12 @@ namespace DigitService.Test
         public async void Events_Added_Removed()
         {
             var focusStore = new Mock<IFocusStore>(MockBehavior.Strict);
-            focusStore.Setup(v => v.GetCalendarItemsAsync(userId, It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>())).Returns(Task.FromResult(new FocusItem[] {
+            focusStore.Setup(v => v.GetCalendarItemsAsync(userId)).Returns(Task.FromResult(new FocusItem[] {
                 new FocusItem()
                 {
-                    CalendarEventId = "Test2"
+                    CalendarEventId = "Test2",
+                    Start = DateTimeOffset.Now.AddHours(1),
+                    End = DateTimeOffset.Now.AddHours(1.5),
                 }
             }));
             focusStore.Setup(v => v.StoreCalendarEventAsync(userId, It.IsAny<Event>())).Returns<string, Event>(async (v, e) => new FocusItem()
@@ -82,7 +84,7 @@ namespace DigitService.Test
                     Text = "Location1"
                 }
             };
-            focusStore.Setup(v => v.GetCalendarItemsAsync(userId, It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>())).Returns(Task.FromResult(new FocusItem[] {
+            focusStore.Setup(v => v.GetCalendarItemsAsync(userId)).Returns(Task.FromResult(new FocusItem[] {
                 new FocusItem()
                 {
                     CalendarEventId = "Test1",
@@ -115,7 +117,7 @@ namespace DigitService.Test
                     Text = "Location1"
                 }
             };
-            focusStore.Setup(v => v.GetCalendarItemsAsync(userId, It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>())).Returns(Task.FromResult(new FocusItem[] {
+            focusStore.Setup(v => v.GetCalendarItemsAsync(userId)).Returns(Task.FromResult(new FocusItem[] {
                 new FocusItem()
                 {
                     CalendarEventId = "Test1",
