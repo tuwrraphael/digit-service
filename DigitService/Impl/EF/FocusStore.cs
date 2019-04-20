@@ -58,7 +58,7 @@ namespace DigitService.Impl.EF
             return (await digitServiceContext.FocusItems
                 .Include(v => v.CalendarEvent)
                 .Where(v => v.UserId == userId &&
-                 DateTimeOffset.Now.AddHours(-2).UtcDateTime <= v.ActiveStart && v.ActiveEnd <= DateTimeOffset.Now.UtcDateTime)
+                 DateTimeOffset.Now.AddHours(-2).UtcDateTime <= v.ActiveStart && DateTimeOffset.Now.UtcDateTime <= v.ActiveEnd)
                 .ToArrayAsync())
                 .Select(v => v.MapToFocusItem()).ToArray();
         }
