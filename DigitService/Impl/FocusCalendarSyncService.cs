@@ -28,9 +28,10 @@ namespace DigitService.Controllers
         {
             var events = await calendarServiceClient.Users[userId].Events.Get(from, to) ?? new Event[0];
             var notAllDay = events.Where(v => !v.IsAllDay).ToArray();
-            var focusItems = new List<FocusItem>(await focusStore.GetCalendarItemsAsync(userId, from, to));
+            var focusItems = new List<FocusItem>(await focusStore.GetCalendarItemsAsync(userId));
             var newItems = new List<FocusItem>();
             var changedItems = new List<FocusItem>();
+            var removedItems = new List<FocusItem>();
             foreach (var evt in notAllDay)
             {
                 var focusItem = focusItems.FirstOrDefault(v => v.CalendarEventId == evt.Id && v.CalendarEventFeedId == evt.FeedId);
@@ -50,13 +51,17 @@ namespace DigitService.Controllers
             }
             foreach (var evt in focusItems)
             {
-                await focusStore.RemoveAsync(evt);
+                if (evt.Start > from && evt.End <= to)
+                {
+                    await focusStore.RemoveAsync(evt);
+                    removedItems.Add(evt);
+                }
             }
             return new FocusItemSyncResult()
             {
                 AddedItems = newItems.ToArray(),
                 ChangedItems = changedItems.ToArray(),
-                RemovedItems = focusItems.ToArray()
+                RemovedItems = removedItems.ToArray()
             };
         }
     }

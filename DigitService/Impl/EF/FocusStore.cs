@@ -26,7 +26,9 @@ namespace DigitService.Impl.EF
                 DirectionsKey = storedFocusItem.DirectionsKey,
                 CalendarEventId = storedFocusItem.CalendarEventId,
                 CalendarEventFeedId = storedFocusItem.CalendarEventFeedId,
-                CalendarEventHash = storedFocusItem.CalendarEvent.CalendarEventHash
+                CalendarEventHash = storedFocusItem.CalendarEvent.CalendarEventHash,
+                Start = storedFocusItem.ActiveStart,
+                End = storedFocusItem.ActiveEnd
             };
         }
     }
@@ -56,17 +58,16 @@ namespace DigitService.Impl.EF
             return (await digitServiceContext.FocusItems
                 .Include(v => v.CalendarEvent)
                 .Where(v => v.UserId == userId &&
-                  v.ActiveStart <=  DateTime.UtcNow && DateTime.UtcNow <= v.ActiveEnd)
+                 DateTimeOffset.Now.AddHours(-2).UtcDateTime <= v.ActiveStart && v.ActiveEnd <= DateTimeOffset.Now.UtcDateTime)
                 .ToArrayAsync())
                 .Select(v => v.MapToFocusItem()).ToArray();
         }
 
-        public async Task<FocusItem[]> GetCalendarItemsAsync(string userId, DateTimeOffset from, DateTimeOffset to)
+        public async Task<FocusItem[]> GetCalendarItemsAsync(string userId)
         {
             return (await digitServiceContext.FocusItems
                 .Include(v => v.CalendarEvent)
-                .Where(v => v.UserId == userId && null != v.CalendarEventFeedId && null != v.CalendarEventId
-                    && from.UtcDateTime <= v.ActiveEnd && v.ActiveStart < to.UtcDateTime)
+                .Where(v => v.UserId == userId && null != v.CalendarEventFeedId && null != v.CalendarEventId)
             .ToArrayAsync())
             .Select(v => v.MapToFocusItem()).ToArray();
         }

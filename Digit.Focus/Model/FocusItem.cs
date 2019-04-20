@@ -10,5 +10,7 @@ namespace Digit.Focus.Models
         public string CalendarEventId { get; set; }
         public string CalendarEventFeedId { get; set; }
         public string CalendarEventHash { get; set; }
+        public DateTimeOffset Start { get; set; }
+        public DateTimeOffset End { get; set; }
     }
 }
