@@ -17,7 +17,7 @@ namespace Digit.DeviceSynchronization.Impl
             _debouncedPushService = debouncedPushService;
         }
 
-        public async Task<SyncAction[]> GetPendingSyncActions(string userId, DateTimeOffset now)
+        public async Task<SyncActions> GetPendingSyncActions(string userId, DateTimeOffset now)
         {
             return await pushSyncStore.GetPendingSyncActions(userId);
         }
@@ -25,6 +25,22 @@ namespace Digit.DeviceSynchronization.Impl
         private async Task Push(string userId, ISyncRequest syncRequest)
         {
             await _debouncedPushService.PushDebounced(userId, syncRequest);
+        }
+
+        public async Task RequestLocation(DateTimeOffset requiredAt)
+        {
+            LocationSyncAction pending; //TODO get from store
+            if (null != pending)
+            {
+                if (requiredAt >= pending.RequiredAt)
+                {
+                    // forget
+                }
+                if (existing.RequiredAt < requiredAt &&)
+                {
+                    if (existing.)
+                }
+            }
         }
 
         public async Task<SyncResult> RequestSync(string userId, ISyncRequest syncRequest, DateTimeOffset now)

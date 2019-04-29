@@ -9,6 +9,20 @@ namespace Digit.DeviceSynchronization.Models
         public DateTimeOffset? Deadline { get; set; }
     }
 
+    public class SyncActions
+    {
+        public LocationSyncAction Location { get; set; }
+        public string[] Devices { get; set; }
+    }
+
+    public class LocationSyncAction
+    {
+        public DateTimeOffset RequiredAt { get; set; }
+        public DateTimeOffset ExpectedUntil { get; set; }
+        public bool Scheduled { get; set; }
+        public bool Requested { get; set; }
+    }
+
     public interface ISyncRequest
     {
         string Id { get; }

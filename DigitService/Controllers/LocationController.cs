@@ -22,7 +22,7 @@ namespace DigitService.Controllers
 
         [Authorize("User")]
         [HttpPost("me/location")]
-        public async Task<IActionResult> Post([FromBody]Location location)
+        public async Task<IActionResult> Post([FromBody]Location location, )
         {
             var userId = User.GetId();
             var res = await focusService.LocationUpdateReceivedAsync(userId, location);
