@@ -61,7 +61,8 @@ namespace DigitService.Controllers
             {
                 AddedItems = newItems.ToArray(),
                 ChangedItems = changedItems.ToArray(),
-                RemovedItems = removedItems.ToArray()
+                RemovedItems = removedItems.ToArray(),
+                Events = events
             };
         }
     }

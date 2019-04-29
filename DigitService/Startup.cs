@@ -99,6 +99,7 @@ namespace DigitService
             services.AddTransient<IFocusStore, FocusStore>();
             services.AddTransient<IFocusCalendarSyncService, FocusCalendarSyncService>();
             services.AddTransient<ILocationService, LocationService>();
+            services.AddTransient<IPlannerService, PlannerService>();
             services.AddDeviceSynchronization(builder => builder.UseSqlite(connectionString,
                                 sql => sql.MigrationsAssembly(migrationsAssembly)));
 

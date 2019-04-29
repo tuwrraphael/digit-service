@@ -1,4 +1,5 @@
-﻿using Digit.Focus.Models;
+﻿using CalendarService.Models;
+using Digit.Focus.Models;
 
 namespace DigitService.Models
 {
@@ -7,6 +8,7 @@ namespace DigitService.Models
         public FocusItem[] AddedItems { get; set; }
         public FocusItem[] RemovedItems { get; set; }
         public FocusItem[] ChangedItems { get; set; }
+        public Event[] Events { get; set; }
     }
 
     public static class FocusItemSyncResultExtensions

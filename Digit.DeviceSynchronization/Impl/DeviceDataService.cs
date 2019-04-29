@@ -68,8 +68,8 @@ namespace Digit.DeviceSynchronization.Impl
                 },
                 Directions = null != route ? new DirectionsData
                 {
-                    ArrivalTime = route.ArrivalTime.Value,
-                    DepartureTime = route.DepatureTime.Value,
+                    ArrivalTime = route.ArrivalTime,
+                    DepartureTime = route.DepatureTime,
                     Legs = route.Steps.Select(v => new LegData()
                     {
                         ArrivalStop = v.ArrivalStop.Name,

@@ -73,16 +73,16 @@ namespace DigitService.Impl
                     DirectionsResult directionsResult = null;
                     if (!requestWithNow)
                     {
-                        directionsResult = await travelServiceClient.Directions.Transit.Get(start, address, evt.Start);
+                        directionsResult = await travelServiceClient.Users[userId].Directions.Transit.Get(start, address, evt.Start);
                         route = DirectionUtils.SelectRoute(directionsResult);
-                        if (null != route && route.DepatureTime.Value < DateTimeOffset.Now)
+                        if (null != route && route.DepatureTime < DateTimeOffset.Now)
                         {
                             requestWithNow = true;
                         }
                     }
                     if (requestWithNow)
                     {
-                        directionsResult = await travelServiceClient.Directions.Transit.Get(start, address, null, DateTimeOffset.Now);
+                        directionsResult = await travelServiceClient.Users[userId].Directions.Transit.Get(start, address, null, DateTimeOffset.Now);
                         route = DirectionUtils.SelectRoute(directionsResult);
                     }
                     directionsKey = directionsResult?.CacheKey;
@@ -197,7 +197,7 @@ namespace DigitService.Impl
                 }
                 else
                 {
-                    departureTime = route.DepatureTime.Value;
+                    departureTime = route.DepatureTime;
                     res.Departures.Add(new FocusDeparture()
                     {
                         DepartureTime = departureTime,
