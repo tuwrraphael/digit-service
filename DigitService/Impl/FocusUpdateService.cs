@@ -53,7 +53,7 @@ namespace DigitService.Impl
             options = optionsAccessor.Value;
         }
 
-       
+
 
         private async Task<Route> GetNewRoute(string userId, Event evt, FocusItem item, Location location)
         {
@@ -99,6 +99,39 @@ namespace DigitService.Impl
             return route;
         }
 
+        private bool RouteUpdateRequired(Route route, Location location, DateTimeOffset now)
+        {
+            if (route.DepatureTime > now)
+            {
+                return false;
+            }
+            Step relevantStep = route.Steps.Where(s => s.DepartureTime <= now && now < s.ArrivalTime)
+                .FirstOrDefault();
+            if (null == relevantStep)
+            {
+                return true;
+            }
+            var distanceToDeparture = Geolocation.GeoCalculator.GetDistance(location.Latitude,
+                        location.Longitude,
+                        relevantStep.DepartureStop.Location.Lat,
+                        relevantStep.DepartureStop.Location.Lng, 2, Geolocation.DistanceUnit.Meters);
+            var distanceToArrival = Geolocation.GeoCalculator.GetDistance(location.Latitude,
+                location.Longitude,
+                relevantStep.ArrivalStop.Location.Lat,
+                relevantStep.ArrivalStop.Location.Lng, 2, Geolocation.DistanceUnit.Meters);
+            var distanceDepartureArrival =
+                Geolocation.GeoCalculator.GetDistance(relevantStep.DepartureStop.Location.Lat,
+                        relevantStep.DepartureStop.Location.Lng,
+                relevantStep.ArrivalStop.Location.Lat,
+                relevantStep.ArrivalStop.Location.Lng, 2, Geolocation.DistanceUnit.Meters);
+
+            var timePercentage = (now - relevantStep.DepartureTime) / (relevantStep.ArrivalTime - relevantStep.DepartureTime);
+            var wayPercentage = distanceToDeparture / distanceDepartureArrival;
+            var inellipse = (distanceToArrival + distanceToDeparture) < 1.4 * distanceDepartureArrival;
+            var similartravel = Math.Abs(timePercentage - wayPercentage) < 0.2;
+            return similartravel && inellipse;
+        }
+
         private async Task<RouteUpdateResult> GetUpdatedOrNew(string userId, Event evt, FocusItem item, Location location)
         {
             if (null != item.DirectionsKey)
@@ -107,7 +140,7 @@ namespace DigitService.Impl
                 if (null != directionsResult)
                 {
                     var route = DirectionUtils.SelectRoute(directionsResult);
-                    if (null != route && route.DepatureTime >= DateTimeOffset.Now)
+                    if (null != route && !RouteUpdateRequired(route, location, DateTimeOffset.Now))
                     {
                         return new RouteUpdateResult()
                         {
