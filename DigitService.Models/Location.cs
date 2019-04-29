@@ -19,6 +19,7 @@ namespace DigitService.Models
         public double Longitude { get; set; }
         public double Accuracy { get; set; }
         public DateTimeOffset Timestamp { get; set; }
+        public bool? RequestSupport { get; set; }
     }
 
     public class LocationResponse

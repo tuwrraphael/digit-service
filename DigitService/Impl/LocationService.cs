@@ -109,6 +109,10 @@ namespace DigitService.Controllers
             await pushSyncService.SetDone(userId, new LocationPushSyncRequest(now));
             await CheckGeofenceTriggeredAsync(userId, location, now);
             await locationStore.UpdateLocationAsync(userId, location);
+            if (location.RequestSupport.HasValue && !location.RequestSupport.Value)
+            {
+                return new LocationResponse();
+            }
             var response = new LocationResponse()
             {
                 NextUpdateRequiredAt = await RequestLocationForDepartures(userId, focusManageResult, now, location.Timestamp),
