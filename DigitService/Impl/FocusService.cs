@@ -58,7 +58,8 @@ namespace DigitService.Impl
             {
                 await logger.Log(userId, $"Received reminder removed");
             }
-            var syncResult = await focusCalendarSyncService.SyncAsync(userId, DateTimeOffset.Now, DateTimeOffset.Now + FocusConstants.FocusScanTime);
+            var syncResult = await focusCalendarSyncService.SyncAsync(userId, DateTimeOffset.Now,
+                DateTimeOffset.Now + FocusConstants.FocusScanTime + FocusConstants.CalendarServiceInacurracy);
             var lastLocation = await locationService.GetLastLocationAsync(userId);
             var res = await focusUpdateService.Update(userId, new FocusUpdateRequest()
             {
