@@ -55,7 +55,7 @@ namespace DigitService.Impl.EF
 
         public async Task<FocusItem[]> GetActiveAsync(string userId)
         {
-            return await GetTimeRangeAsync(userId, DateTimeOffset.Now.AddHours(-2).UtcDateTime, DateTimeOffset.Now.UtcDateTime);
+            return await GetTimeRangeAsync(userId, DateTimeOffset.Now, DateTimeOffset.Now.AddHours(2));
         }
 
         public async Task<FocusItem[]> GetCalendarItemsAsync(string userId)
@@ -72,7 +72,7 @@ namespace DigitService.Impl.EF
             return (await digitServiceContext.FocusItems
                 .Include(v => v.CalendarEvent)
                 .Where(v => v.UserId == userId &&
-                 from <= v.ActiveStart && to <= v.ActiveEnd)
+                    v.ActiveStart < to.UtcDateTime && from.UtcDateTime < v.ActiveEnd)
                 .ToArrayAsync())
                 .Select(v => v.MapToFocusItem()).ToArray();
         }

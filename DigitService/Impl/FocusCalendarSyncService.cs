@@ -51,7 +51,7 @@ namespace DigitService.Controllers
             }
             foreach (var evt in focusItems)
             {
-                if (evt.Start > from && evt.End <= to)
+                if (evt.Start < to && from < evt.End)
                 {
                     await focusStore.RemoveAsync(evt);
                     removedItems.Add(evt);
