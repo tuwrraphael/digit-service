@@ -5,6 +5,7 @@ using Digit.Focus;
 using Digit.Focus.Service;
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TravelService.Client;
 using TravelService.Models.Directions;
@@ -75,7 +76,7 @@ namespace Digit.DeviceSynchronization.Impl
                         ArrivalStop = v.ArrivalStop.Name,
                         DepartureStop = v.DepartureStop.Name,
                         DepartureTime = v.DepartureTime,
-                        Direction = v.Headsign,
+                        Direction = new Regex("^Wien\\s").Replace(v.Headsign ?? "", ""),
                         Line = v.Line.ShortName
                     }).ToArray()
                 } : null
