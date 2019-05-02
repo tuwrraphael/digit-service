@@ -105,31 +105,39 @@ namespace DigitService.Impl
             {
                 return false;
             }
-            Step relevantStep = route.Steps.Where(s => s.DepartureTime <= now && now < s.ArrivalTime)
-                .FirstOrDefault();
+            var relevantStep = route.Steps.Select(step =>
+            {
+                var distanceToDeparture = Geolocation.GeoCalculator.GetDistance(location.Latitude,
+                            location.Longitude,
+                            step.DepartureStop.Location.Lat,
+                            step.DepartureStop.Location.Lng, 2, Geolocation.DistanceUnit.Meters);
+                var distanceToArrival = Geolocation.GeoCalculator.GetDistance(location.Latitude,
+                    location.Longitude,
+                    step.ArrivalStop.Location.Lat,
+                    step.ArrivalStop.Location.Lng, 2, Geolocation.DistanceUnit.Meters);
+                var distanceDepartureArrival =
+                    Geolocation.GeoCalculator.GetDistance(step.DepartureStop.Location.Lat,
+                            step.DepartureStop.Location.Lng,
+                    step.ArrivalStop.Location.Lat,
+                    step.ArrivalStop.Location.Lng, 2, Geolocation.DistanceUnit.Meters);
+
+                var timePercentage = (now - step.DepartureTime) / (step.ArrivalTime - step.DepartureTime);
+                var wayPercentage = distanceToDeparture / distanceDepartureArrival;
+                var inellipse = (distanceToArrival + distanceToDeparture) < 1.6 * distanceDepartureArrival;
+                var similartravel = timePercentage - wayPercentage < 0.2;
+                return new
+                {
+                    step,
+                    similartravel,
+                    inellipse,
+                    departureArrivalDistance = distanceToArrival + distanceToDeparture
+                };
+            }).OrderBy(s => s.departureArrivalDistance).FirstOrDefault();
             if (null == relevantStep)
             {
                 return true;
             }
-            var distanceToDeparture = Geolocation.GeoCalculator.GetDistance(location.Latitude,
-                        location.Longitude,
-                        relevantStep.DepartureStop.Location.Lat,
-                        relevantStep.DepartureStop.Location.Lng, 2, Geolocation.DistanceUnit.Meters);
-            var distanceToArrival = Geolocation.GeoCalculator.GetDistance(location.Latitude,
-                location.Longitude,
-                relevantStep.ArrivalStop.Location.Lat,
-                relevantStep.ArrivalStop.Location.Lng, 2, Geolocation.DistanceUnit.Meters);
-            var distanceDepartureArrival =
-                Geolocation.GeoCalculator.GetDistance(relevantStep.DepartureStop.Location.Lat,
-                        relevantStep.DepartureStop.Location.Lng,
-                relevantStep.ArrivalStop.Location.Lat,
-                relevantStep.ArrivalStop.Location.Lng, 2, Geolocation.DistanceUnit.Meters);
-
-            var timePercentage = (now - relevantStep.DepartureTime) / (relevantStep.ArrivalTime - relevantStep.DepartureTime);
-            var wayPercentage = distanceToDeparture / distanceDepartureArrival;
-            var inellipse = (distanceToArrival + distanceToDeparture) < 1.4 * distanceDepartureArrival;
-            var similartravel = Math.Abs(timePercentage - wayPercentage) < 0.2;
-            return similartravel && inellipse;
+            return relevantStep.inellipse && relevantStep.similartravel;
         }
 
         private async Task<RouteUpdateResult> GetUpdatedOrNew(string userId, Event evt, FocusItem item, Location location)
