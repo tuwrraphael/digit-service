@@ -103,7 +103,7 @@ namespace DigitService.Impl
         {
             if (route.DepatureTime > now)
             {
-                return false;
+                return true;
             }
             var relevantStep = route.Steps.Select(step =>
             {
