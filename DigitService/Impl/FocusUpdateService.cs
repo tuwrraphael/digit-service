@@ -75,14 +75,14 @@ namespace DigitService.Impl
                     {
                         directionsResult = await travelServiceClient.Users[userId].Directions.Transit.Get(start, address, evt.Start);
                         route = DirectionUtils.SelectRoute(directionsResult);
-                        if (null != route && route.DepatureTime < DateTimeOffset.Now)
+                        if (null != route && route.DepatureTime < location.Timestamp)
                         {
                             requestWithNow = true;
                         }
                     }
                     if (requestWithNow)
                     {
-                        directionsResult = await travelServiceClient.Users[userId].Directions.Transit.Get(start, address, null, DateTimeOffset.Now);
+                        directionsResult = await travelServiceClient.Users[userId].Directions.Transit.Get(start, address, null, location.Timestamp);
                         route = DirectionUtils.SelectRoute(directionsResult);
                     }
                     directionsKey = directionsResult?.CacheKey;
