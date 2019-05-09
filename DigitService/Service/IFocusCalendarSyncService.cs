@@ -1,4 +1,5 @@
-﻿using DigitService.Models;
+﻿using Digit.Focus.Model;
+using DigitService.Models;
 using System;
 using System.Threading.Tasks;
 

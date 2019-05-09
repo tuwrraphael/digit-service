@@ -1,4 +1,5 @@
 ﻿using Digit.Abstractions.Service;
+using Digit.Focus.Model;
 using DigitService.Controllers;
 using DigitService.Models;
 using DigitService.Service;

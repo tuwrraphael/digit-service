@@ -48,6 +48,12 @@ namespace DigitService.Impl.EF
                 .HasForeignKey<StoredFocusItem>(v => new { v.CalendarEventId, v.CalendarEventFeedId })
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<StoredFocusItem>()
+               .HasOne(v => v.Directions)
+               .WithOne(v => v.FocusItem)
+               .HasForeignKey<StoredDirectionsInfo>(v => v.FocusItemId)
+               .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<StoredCalendarEvent>()
                 .HasKey(v => new { v.Id, v.FeedId });
 
@@ -64,6 +70,9 @@ namespace DigitService.Impl.EF
 
             modelBuilder.Entity<StoredBatteryMeasurement>()
                 .HasKey(p => p.Id);
+
+            modelBuilder.Entity<StoredDirectionsInfo>()
+                .HasKey(d => d.FocusItemId);
         }
     }
 }

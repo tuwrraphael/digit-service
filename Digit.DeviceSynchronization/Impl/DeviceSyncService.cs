@@ -2,7 +2,6 @@
 using Digit.DeviceSynchronization.Service;
 using DigitPushService.Client;
 using PushServer.PushConfiguration.Abstractions.Models;
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 

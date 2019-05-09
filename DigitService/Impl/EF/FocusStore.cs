@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using TravelService.Models.Directions;
 
 namespace DigitService.Impl.EF
 {
@@ -23,7 +24,7 @@ namespace DigitService.Impl.EF
             {
                 Id = storedFocusItem.Id,
                 IndicateTime = new DateTimeOffset(storedFocusItem.IndicateAt, TimeSpan.Zero),
-                DirectionsKey = storedFocusItem.DirectionsKey,
+                DirectionsKey = storedFocusItem.Directions?.DirectionsKey,
                 CalendarEventId = storedFocusItem.CalendarEventId,
                 CalendarEventFeedId = storedFocusItem.CalendarEventFeedId,
                 CalendarEventHash = storedFocusItem.CalendarEvent.CalendarEventHash,
@@ -32,7 +33,6 @@ namespace DigitService.Impl.EF
             };
         }
     }
-
 
     public class FocusStore : IFocusStore
     {
@@ -62,6 +62,7 @@ namespace DigitService.Impl.EF
         {
             return (await digitServiceContext.FocusItems
                 .Include(v => v.CalendarEvent)
+                .Include(v => v.Directions)
                 .Where(v => v.UserId == userId && null != v.CalendarEventFeedId && null != v.CalendarEventId)
             .ToArrayAsync())
             .Select(v => v.MapToFocusItem()).ToArray();
@@ -71,6 +72,7 @@ namespace DigitService.Impl.EF
         {
             return (await digitServiceContext.FocusItems
                 .Include(v => v.CalendarEvent)
+                .Include(v => v.Directions)
                 .Where(v => v.UserId == userId &&
                     v.ActiveStart < to.UtcDateTime && from.UtcDateTime < v.ActiveEnd)
                 .ToArrayAsync())
@@ -91,6 +93,20 @@ namespace DigitService.Impl.EF
             await digitServiceContext.SaveChangesAsync();
         }
 
+        public async Task SetPlaceForItem(string userId, string itemId, Place place)
+        {
+            var item = await digitServiceContext.FocusItems
+                .Include(f => f.Directions)
+                .Where(v => v.Id == itemId).SingleAsync();
+            if (null == item.Directions)
+            {
+                item.Directions = new StoredDirectionsInfo();
+            }
+            item.Directions.Lat = place.Lat;
+            item.Directions.Lng = place.Lng;
+            await digitServiceContext.SaveChangesAsync();
+        }
+
         public async Task<FocusItem> StoreCalendarEventAsync(string userId, Event evt)
         {
             var user = await userRepository.GetOrCreateAsync(userId);
@@ -108,7 +124,7 @@ namespace DigitService.Impl.EF
                 ActiveEnd = evt.End.UtcDateTime,
                 ActiveStart = (evt.Start - FocusConstants.CalendarServiceInacurracy).UtcDateTime,
                 IndicateAt = evt.Start.UtcDateTime,
-                DirectionsKey = null
+                Directions = null
             };
             await digitServiceContext.FocusItems.AddAsync(focusItem);
             await digitServiceContext.SaveChangesAsync();
@@ -137,6 +153,7 @@ namespace DigitService.Impl.EF
         {
             var item = await digitServiceContext.FocusItems
                 .Include(v => v.CalendarEvent)
+                .Include(v => v.Directions)
                 .Where(v => v.UserId == userId
                         && v.CalendarEventFeedId == evt.FeedId
                         && v.CalendarEventId == evt.Id)
@@ -149,10 +166,16 @@ namespace DigitService.Impl.EF
             return item.MapToFocusItem();
         }
 
-        public async Task UpdateDirections(string itemId, string directionsKey)
+        public async Task UpdateDirections(string itemId, DirectionsResult directionsResult, int preferredRoute)
         {
-            var item = await digitServiceContext.FocusItems.Where(v => v.Id == itemId).SingleOrDefaultAsync();
-            item.DirectionsKey = directionsKey;
+            var item = await digitServiceContext.FocusItems
+                .Include(v => v.Directions)
+                .Where(v => v.Id == itemId).SingleOrDefaultAsync();
+            item.Directions = item.Directions ?? new StoredDirectionsInfo();
+            item.Directions.DirectionsKey = directionsResult.CacheKey;
+            item.Directions.PreferredRoute = null != directionsResult.TransitDirections ? (int?)preferredRoute : null;
+            item.Directions.PlaceNotFound = null != directionsResult.NotFound && directionsResult.NotFound.Reason == TravelService.Models.DirectionsNotFoundReason.AddressNotFound;
+            item.Directions.DirectionsNotFound = null != directionsResult.NotFound && directionsResult.NotFound.Reason == TravelService.Models.DirectionsNotFoundReason.RouteNotFound;
             await digitServiceContext.SaveChangesAsync();
         }
 

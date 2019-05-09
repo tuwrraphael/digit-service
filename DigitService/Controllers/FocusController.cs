@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Digit.Focus.Models;
 using Digit.Focus.Service;
 using DigitService.Service;
 using Microsoft.AspNetCore.Authorization;
@@ -32,6 +33,14 @@ namespace DigitService.Controllers
         public async Task<IActionResult> Patch()
         {
             await focusService.PatchAsync(User.GetId());
+            var active = await focusStore.GetActiveAsync(User.GetId());
+            return Ok(active);
+        }
+
+        [Authorize("User")]
+        [HttpPut("me/focus/{id}/directions/place")]
+        public async Task<IActionResult> SetPlace(SetPlaceRequest putPlace)
+        {
             var active = await focusStore.GetActiveAsync(User.GetId());
             return Ok(active);
         }

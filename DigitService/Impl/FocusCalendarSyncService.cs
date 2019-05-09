@@ -1,5 +1,6 @@
 ﻿using CalendarService.Client;
 using CalendarService.Models;
+using Digit.Focus.Model;
 using Digit.Focus.Models;
 using Digit.Focus.Service;
 using DigitService.Models;

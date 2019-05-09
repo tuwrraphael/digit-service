@@ -10,22 +10,21 @@
     <Compile Remove="Migrations\20190327151911_DeviceSync.cs" />
     <Compile Remove="Migrations\20190420001916_ActiveEnd.cs" />
     <Compile Remove="Migrations\20190420001916_ActiveEnd.Designer.cs" />
+    <Compile Remove="Migrations\20190509135243_DirectionsInfo.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="ButlerClient" Version="1.0.1" />
     <PackageReference Include="CalendarService.Client" Version="2.1.2" />
-    <PackageReference Include="CalendarService.Extensions" Version="1.0.0" />
+    <PackageReference Include="CalendarService.Extensions" Version="1.1.0" />
     <PackageReference Include="DigitPushService.Client" Version="1.1.1" />
     <PackageReference Include="FileStore.tiscca-raphael" Version="1.0.0" />
-    <PackageReference Include="Geolocation.NetStandard" Version="1.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.4" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.3" />
     <PackageReference Include="OAuthApiClient" Version="1.0.4" />
-    <PackageReference Include="TravelService.Client" Version="2.3.0" />
-    <PackageReference Include="TravelService.Models" Version="2.1.0" />
+    <PackageReference Include="TravelService.Client" Version="2.6.0" />
   </ItemGroup>
 
 

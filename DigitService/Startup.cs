@@ -28,6 +28,7 @@ using Digit.DeviceSynchronization;
 using System.Reflection;
 using System.Threading.Tasks;
 using Digit.DeviceSynchronization.Impl;
+using Digit.Focus.Impl;
 
 namespace DigitService
 {
@@ -97,6 +98,7 @@ namespace DigitService
             services.AddTransient<IFocusSubscriber, SignalRFocusSubscriber>();
             services.AddTransient<IFocusSubscriber, DeviceSyncFocusSubscriber>();
             services.AddTransient<IFocusStore, FocusStore>();
+            services.AddTransient<IFocusDirectionsService, FocusDirectionsService>();
             services.AddTransient<IFocusCalendarSyncService, FocusCalendarSyncService>();
             services.AddTransient<ILocationService, LocationService>();
             services.AddTransient<IPlannerService, PlannerService>();

@@ -14,6 +14,6 @@ namespace DigitService.Models
         public List<StoredFocusItem> FocusItems { get; set; }
         public DateTime? GeofenceFrom { get; set; }
         public DateTime? GeofenceTo { get; set; }
-        public string ActiveFocusItem { get;  set; }
+        public string ActiveFocusItem { get; set; }
     }
 }

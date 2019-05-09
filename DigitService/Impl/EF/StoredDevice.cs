@@ -41,12 +41,26 @@ namespace DigitService.Impl.EF
         public User User { get; set; }
         public StoredCalendarEvent CalendarEvent { get; set; }
         public string CalendarEventId { get; set; }
-        public string CalendarEventFeedId { get; set; }        
+        public string CalendarEventFeedId { get; set; }
         public bool UserNotified { get; set; }
         public DateTime ActiveEnd { get; set; }
         public DateTime ActiveStart { get; set; }
         public DateTime IndicateAt { get; set; }
+        [Obsolete]
         public string DirectionsKey { get; set; }
+        public StoredDirectionsInfo Directions { get; set; }
+    }
+
+    public class StoredDirectionsInfo
+    {
+        public string FocusItemId { get; set; }
+        public StoredFocusItem FocusItem { get; set; }
+        public string DirectionsKey { get; set; }
+        public int? PreferredRoute { get; set; }
+        public bool? DirectionsNotFound { get; set; }
+        public bool? PlaceNotFound { get; set; }
+        public double? Lat { get; set; }
+        public double? Lng { get; set; }
     }
 
     public class StoredCalendarEvent

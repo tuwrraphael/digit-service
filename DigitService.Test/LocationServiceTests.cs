@@ -3,6 +3,7 @@ using Digit.Abstractions.Service;
 using Digit.DeviceSynchronization.Impl;
 using Digit.DeviceSynchronization.Models;
 using Digit.DeviceSynchronization.Service;
+using Digit.Focus.Model;
 using DigitPushService.Client;
 using DigitService.Controllers;
 using DigitService.Models;

@@ -1,7 +1,7 @@
-﻿using System.Threading.Tasks;
-using DigitService.Models;
+﻿using Digit.Focus.Model;
+using System.Threading.Tasks;
 
-namespace DigitService.Service
+namespace Digit.Focus.Service
 {
     public interface IFocusUpdateService
     {

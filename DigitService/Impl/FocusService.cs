@@ -1,6 +1,8 @@
 ﻿using CalendarService.Models;
 using Digit.Abstractions.Service;
 using Digit.Focus;
+using Digit.Focus.Model;
+using Digit.Focus.Service;
 using DigitService.Models;
 using DigitService.Service;
 using System;

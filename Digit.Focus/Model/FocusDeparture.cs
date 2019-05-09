@@ -1,8 +1,8 @@
-﻿using CalendarService.Models;
+using CalendarService.Models;
 using System;
 using TravelService.Models.Directions;
 
-namespace DigitService.Models
+namespace Digit.Focus.Model
 {
     public class FocusDeparture
     {

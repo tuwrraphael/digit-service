@@ -1,7 +1,7 @@
-﻿using CalendarService.Models;
+using CalendarService.Models;
 using Digit.Focus.Models;
 
-namespace DigitService.Models
+namespace Digit.Focus.Model
 {
     public class FocusItemSyncResult
     {

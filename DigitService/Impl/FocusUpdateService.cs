@@ -3,11 +3,11 @@ using CalendarService.Client;
 using CalendarService.Models;
 using Digit.Abstractions.Service;
 using Digit.Focus;
+using Digit.Focus.Model;
 using Digit.Focus.Models;
 using Digit.Focus.Service;
 using DigitPushService.Client;
 using DigitService.Models;
-using DigitService.Service;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
@@ -54,12 +54,21 @@ namespace DigitService.Impl
         }
 
 
+        private async Task<string> ResolveAddress(string userId, Event evt)
+        {
+            string bySubject = $"#event:{evt.Subject}";
+            if (await travelServiceClient.Users[userId].Locations[bySubject].Resolve())
+            {
+                return bySubject;
+            }
+            return evt.GetFormattedAddress();
+        }
 
         private async Task<Route> GetNewRoute(string userId, Event evt, FocusItem item, Location location)
         {
             Route route = null;
             string directionsKey = null;
-            var address = evt.GetFormattedAddress();
+            var address = await ResolveAddress(userId, evt);
             if (null != address && null != location)
             {
                 try
@@ -75,20 +84,20 @@ namespace DigitService.Impl
                     {
                         directionsResult = await travelServiceClient.Users[userId].Directions.Transit.Get(start, address, evt.Start);
                         route = DirectionUtils.SelectRoute(directionsResult);
-                        if (null != route && route.DepatureTime < location.Timestamp)
+                        if (null != route && route.DepatureTime < DateTimeOffset.Now)
                         {
                             requestWithNow = true;
                         }
                     }
                     if (requestWithNow)
                     {
-                        directionsResult = await travelServiceClient.Users[userId].Directions.Transit.Get(start, address, null, location.Timestamp);
+                        directionsResult = await travelServiceClient.Users[userId].Directions.Transit.Get(start, address, null, DateTimeOffset.Now);
                         route = DirectionUtils.SelectRoute(directionsResult);
                     }
                     directionsKey = directionsResult?.CacheKey;
                     if (null != route)
                     {
-                        await focusStore.UpdateDirections(item.Id, directionsKey);
+                        await focusStore.UpdateDirections(item.Id, directionsResult, 0);
                     }
                 }
                 catch (TravelServiceException ex)
@@ -99,63 +108,39 @@ namespace DigitService.Impl
             return route;
         }
 
-        private bool RouteUpdateRequired(Route route, Location location, DateTimeOffset now)
+        private async Task<bool> RouteUpdateRequired(DirectionsResult res, int preferredRoute,
+            Location location, DateTimeOffset now)
         {
-            if (route.DepatureTime > now)
+            if (res.TransitDirections.Routes[preferredRoute].DepatureTime > now)
             {
                 return true;
             }
-            var relevantStep = route.Steps.Select(step =>
-            {
-                var distanceToDeparture = Geolocation.GeoCalculator.GetDistance(location.Latitude,
-                            location.Longitude,
-                            step.DepartureStop.Location.Lat,
-                            step.DepartureStop.Location.Lng, 2, Geolocation.DistanceUnit.Meters);
-                var distanceToArrival = Geolocation.GeoCalculator.GetDistance(location.Latitude,
-                    location.Longitude,
-                    step.ArrivalStop.Location.Lat,
-                    step.ArrivalStop.Location.Lng, 2, Geolocation.DistanceUnit.Meters);
-                var distanceDepartureArrival =
-                    Geolocation.GeoCalculator.GetDistance(step.DepartureStop.Location.Lat,
-                            step.DepartureStop.Location.Lng,
-                    step.ArrivalStop.Location.Lat,
-                    step.ArrivalStop.Location.Lng, 2, Geolocation.DistanceUnit.Meters);
-
-                var timePercentage = (now - step.DepartureTime) / (step.ArrivalTime - step.DepartureTime);
-                var wayPercentage = distanceToDeparture / distanceDepartureArrival;
-                var inellipse = (distanceToArrival + distanceToDeparture) < 1.6 * distanceDepartureArrival;
-                var similartravel = timePercentage - wayPercentage < 0.2;
-                return new
+            var traceMeasures = await travelServiceClient.Directions[res.CacheKey].Itineraries[preferredRoute]
+                .Trace(new TraceLocation()
                 {
-                    step,
-                    similartravel,
-                    inellipse,
-                    departureArrivalDistance = distanceToArrival + distanceToDeparture
-                };
-            }).OrderBy(s => s.departureArrivalDistance).FirstOrDefault();
-            if (null == relevantStep)
-            {
-                return true;
-            }
-            return relevantStep.inellipse && relevantStep.similartravel;
+                    Accuracy = new TraceLocationAccuracy()
+                    {
+                        Confidence = 0.68,
+                        Radius = location.Accuracy
+                    },
+                    Coordinate = new Coordinate(location.Latitude, location.Longitude),
+                    Timestamp = location.Timestamp
+                });
+            return traceMeasures.ConfidenceOnRoute < 0.3;
         }
 
         private async Task<RouteUpdateResult> GetUpdatedOrNew(string userId, Event evt, FocusItem item, Location location)
         {
-            if (null != item.DirectionsKey)
+            var directionsResult = await travelServiceClient.Directions[item.DirectionsKey].GetAsync();
+            if (null != directionsResult)
             {
-                var directionsResult = await travelServiceClient.Directions[item.DirectionsKey].GetAsync();
-                if (null != directionsResult)
+                if (!await RouteUpdateRequired(directionsResult, 0, location, DateTimeOffset.Now))
                 {
-                    var route = DirectionUtils.SelectRoute(directionsResult);
-                    if (null != route && !RouteUpdateRequired(route, location, DateTimeOffset.Now))
+                    return new RouteUpdateResult()
                     {
-                        return new RouteUpdateResult()
-                        {
-                            Route = route,
-                            IsNew = false
-                        };
-                    }
+                        Route = DirectionUtils.SelectRoute(directionsResult),
+                        IsNew = false
+                    };
                 }
             }
             return new RouteUpdateResult()
@@ -184,7 +169,8 @@ namespace DigitService.Impl
                 Route route;
                 if (null != focusUpdateRequest.ItemSyncResult && (
                     focusUpdateRequest.ItemSyncResult.AddedItems.Any(v => v.Id == item.Id) ||
-                    focusUpdateRequest.ItemSyncResult.ChangedItems.Any(v => v.Id == item.Id)))
+                    focusUpdateRequest.ItemSyncResult.ChangedItems.Any(v => v.Id == item.Id))
+                    || null == item.DirectionsKey)
                 {
                     route = await GetNewRoute(userId, evt, item, focusUpdateRequest.Location);
                 }

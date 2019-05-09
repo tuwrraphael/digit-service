@@ -2,6 +2,7 @@
 using Digit.DeviceSynchronization.Models;
 using Digit.DeviceSynchronization.Service;
 using Digit.Focus;
+using Digit.Focus.Model;
 using DigitService.Impl;
 using DigitService.Models;
 using DigitService.Service;
@@ -109,10 +110,10 @@ namespace DigitService.Controllers
             await pushSyncService.SetDone(userId, new LocationPushSyncRequest(now));
             await CheckGeofenceTriggeredAsync(userId, location, now);
             await locationStore.UpdateLocationAsync(userId, location);
-            if (location.RequestSupport.HasValue && !location.RequestSupport.Value)
-            {
-                return new LocationResponse();
-            }
+            //if (location.RequestSupport.HasValue && !location.RequestSupport.Value)
+            //{
+            //    return new LocationResponse();
+            //}
             var response = new LocationResponse()
             {
                 NextUpdateRequiredAt = await RequestLocationForDepartures(userId, focusManageResult, now, location.Timestamp),

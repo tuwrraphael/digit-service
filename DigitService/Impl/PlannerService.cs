@@ -59,7 +59,7 @@ namespace DigitService.Impl
                             getup = route.DepatureTime - TimeSpan.FromHours(1);
                         }
                         directionsList.Add(directions);
-                        await _focusStore.UpdateDirections(e.Id, directions.CacheKey);
+                        await _focusStore.UpdateDirections(e.Id, directions, 0);
                         await _focusStore.UpdateIndicateTime(e.Id, route.DepatureTime);
                         e.IndicateTime = route.DepatureTime;
                         e.DirectionsKey = directions.CacheKey;
