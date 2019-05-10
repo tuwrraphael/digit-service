@@ -29,7 +29,13 @@ namespace DigitService.Impl.EF
                 CalendarEventFeedId = storedFocusItem.CalendarEventFeedId,
                 CalendarEventHash = storedFocusItem.CalendarEvent.CalendarEventHash,
                 Start = storedFocusItem.ActiveStart,
-                End = storedFocusItem.ActiveEnd
+                End = storedFocusItem.ActiveEnd,
+                Directions = null != storedFocusItem.Directions ? new Directions()
+                {
+                    DirectionsError = storedFocusItem.Directions.PlaceNotFound.GetValueOrDefault(false) ? TravelService.Models.DirectionsNotFoundReason.AddressNotFound : (
+                    storedFocusItem.Directions.DirectionsNotFound.GetValueOrDefault(false) ? (TravelService.Models.DirectionsNotFoundReason?)TravelService.Models.DirectionsNotFoundReason.RouteNotFound : null),
+                    DirectionsKey = storedFocusItem.Directions.DirectionsKey
+                } : null
             };
         }
     }

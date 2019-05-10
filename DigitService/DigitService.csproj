@@ -25,7 +25,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.4" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.3" />
     <PackageReference Include="OAuthApiClient" Version="1.0.4" />
-    <PackageReference Include="TravelService.Client" Version="2.6.0" />
+    <PackageReference Include="TravelService.Client" Version="2.7.0" />
   </ItemGroup>
 
 

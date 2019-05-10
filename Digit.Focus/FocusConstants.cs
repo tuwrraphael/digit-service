@@ -22,5 +22,8 @@ namespace Digit.Focus
 
         public static readonly TimeSpan ItemActiveBeforeIndicateAlone = new TimeSpan(0, 30, 0);
         public static readonly TimeSpan ItemActiveBeforeIndicateMultiple = new TimeSpan(0, 10, 0);
+
+        public static readonly TimeSpan MaxAllowedDelay = TimeSpan.FromMinutes(5);
+        public static readonly TimeSpan MaxAllowedEarly = TimeSpan.FromMinutes(10);
     }
 }
