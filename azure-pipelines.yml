@@ -10,7 +10,7 @@ pool:
   vmImage: 'Ubuntu-16.04'
 
 variables:
-  buildConfiguration: 'Release'
+  buildConfiguration: 'Debug'
 
 steps:
 - script: dotnet restore
