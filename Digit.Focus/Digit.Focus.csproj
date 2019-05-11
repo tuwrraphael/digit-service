@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="CalendarService.Models" Version="1.1.2" />
-    <PackageReference Include="TravelService.Client" Version="2.7.1" />
+    <PackageReference Include="TravelService.Client" Version="2.7.2" />
   </ItemGroup>
 
 </Project>
