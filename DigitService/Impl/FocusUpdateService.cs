@@ -90,7 +90,7 @@ namespace DigitService.Impl
                         directionsResult = await travelServiceClient.Users[userId].Directions.Transit.Get(start, address, null, DateTimeOffset.Now);
                     }
                     directionsKey = directionsResult?.CacheKey;
-                    if (null != directionsResult.NotFound)
+                    if (null == directionsResult.NotFound)
                     {
                         await focusStore.UpdateDirections(item.Id, directionsResult, preferredRoute);
                         item.Directions = new DirectionsMetadata()
