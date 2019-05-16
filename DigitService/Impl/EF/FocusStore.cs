@@ -24,17 +24,16 @@ namespace DigitService.Impl.EF
             {
                 Id = storedFocusItem.Id,
                 IndicateTime = new DateTimeOffset(storedFocusItem.IndicateAt, TimeSpan.Zero),
-                DirectionsKey = storedFocusItem.Directions?.DirectionsKey,
                 CalendarEventId = storedFocusItem.CalendarEventId,
                 CalendarEventFeedId = storedFocusItem.CalendarEventFeedId,
                 CalendarEventHash = storedFocusItem.CalendarEvent.CalendarEventHash,
                 Start = storedFocusItem.ActiveStart,
                 End = storedFocusItem.ActiveEnd,
-                Directions = null != storedFocusItem.Directions ? new Directions()
+                Directions = null != storedFocusItem.Directions ? new DirectionsMetadata()
                 {
-                    DirectionsError = storedFocusItem.Directions.PlaceNotFound.GetValueOrDefault(false) ? TravelService.Models.DirectionsNotFoundReason.AddressNotFound : (
+                    Error = storedFocusItem.Directions.PlaceNotFound.GetValueOrDefault(false) ? TravelService.Models.DirectionsNotFoundReason.AddressNotFound : (
                     storedFocusItem.Directions.DirectionsNotFound.GetValueOrDefault(false) ? (TravelService.Models.DirectionsNotFoundReason?)TravelService.Models.DirectionsNotFoundReason.RouteNotFound : null),
-                    DirectionsKey = storedFocusItem.Directions.DirectionsKey
+                    Key = storedFocusItem.Directions.DirectionsKey
                 } : null
             };
         }
@@ -57,6 +56,15 @@ namespace DigitService.Impl.EF
             var item = await digitServiceContext.FocusItems.Where(v => v.Id == itemId).SingleOrDefaultAsync();
             await digitServiceContext.Entry(item).ReloadAsync();
             return item.UserNotified;
+        }
+
+        public async Task<FocusItem> Get(string userId, string id)
+        {
+            return await digitServiceContext.FocusItems
+                .Include(v => v.CalendarEvent)
+                .Include(v => v.Directions)
+                .Where(v => v.UserId == userId && v.Id == id)
+                .Select(v => v.MapToFocusItem()).SingleOrDefaultAsync();
         }
 
         public async Task<FocusItem[]> GetActiveAsync(string userId)

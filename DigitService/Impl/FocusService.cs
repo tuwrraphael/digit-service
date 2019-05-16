@@ -17,26 +17,25 @@ namespace DigitService.Impl
         private readonly IFocusCalendarSyncService focusCalendarSyncService;
         private readonly ILocationService locationService;
         private readonly IFocusUpdateService focusUpdateService;
+        private readonly IFocusNotificationService _focusNotificationService;
 
         public FocusService(IDigitLogger logger,
             IFocusCalendarSyncService focusCalendarSyncService,
             ILocationService locationService,
-            IFocusUpdateService focusUpdateService)
+            IFocusUpdateService focusUpdateService,
+            IFocusNotificationService focusNotificationService)
         {
             this.logger = logger;
             this.focusCalendarSyncService = focusCalendarSyncService;
             this.locationService = locationService;
             this.focusUpdateService = focusUpdateService;
+            _focusNotificationService = focusNotificationService;
         }
 
 
         public async Task NotifyCallbackAsync(NotifyUserRequest request)
         {
-            await focusUpdateService.Update(request.UserId, new FocusUpdateRequest()
-            {
-                ItemSyncResult = null,
-                Location = await locationService.GetLastLocationAsync(request.UserId)
-            });
+            await _focusNotificationService.Notify(request);
         }
 
         public async Task<LocationResponse> LocationUpdateReceivedAsync(string userId, Location location)

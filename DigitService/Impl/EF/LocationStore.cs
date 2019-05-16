@@ -1,6 +1,5 @@
 ﻿using Digit.Abstractions.Service;
 using Digit.Focus.Model;
-using DigitService.Controllers;
 using DigitService.Models;
 using DigitService.Service;
 using Microsoft.EntityFrameworkCore;
@@ -46,38 +45,57 @@ namespace DigitService.Impl.EF
             this.logger = logger;
         }
 
-        public async Task ClearGeofenceAsync(string userId)
-        {
-            var user = await userRepository.GetOrCreateAsync(userId);
-            user = await digitServiceContext.Users.Include(v => v.StoredLocation).Where(v => v.Id == userId).SingleAsync();
-            user.GeofenceFrom = null;
-            user.GeofenceTo = null;
-            await digitServiceContext.SaveChangesAsync();
-        }
-
         public async Task<Location> GetLastLocationAsync(string userId)
         {
             var user = await digitServiceContext.Users.Include(v => v.StoredLocation).Where(v => v.Id == userId).SingleOrDefaultAsync();
             return user?.StoredLocation?.MapToLocation();
         }
 
-        public async Task<bool> IsGeofenceActiveAsync(string userId, GeofenceRequest when)
+        public async Task SetGeofenceRequests(string userId, GeofenceRequest[] request)
         {
-            var user = await userRepository.GetOrCreateAsync(userId);
-            user = await digitServiceContext.Users.Include(v => v.StoredLocation).Where(v => v.Id == userId).SingleAsync();
-            return user.GeofenceFrom.HasValue && user.GeofenceTo.HasValue &&
-                new DateTimeOffset(user.GeofenceFrom.Value, TimeSpan.Zero) <= when.Start &&
-                new DateTimeOffset(user.GeofenceTo.Value, TimeSpan.Zero) >= when.End;
-        }
-
-        public async Task SetGeofenceRequestedAsync(string userId, GeofenceRequest request)
-        {
-            var user = await userRepository.GetOrCreateAsync(userId);
-            user = await digitServiceContext.Users.Include(v => v.StoredLocation).Where(v => v.Id == userId).SingleAsync();
-            user.GeofenceFrom = request.Start.UtcDateTime;
-            user.GeofenceTo = request.End.UtcDateTime;
+            foreach (var r in request)
+            {
+                var focusItem = digitServiceContext.FocusItems.Where(v => v.UserId == userId && v.Id == r.FocusItemId)
+                    .Include(v => v.Geofences)
+                    .SingleOrDefault();
+                if (null == focusItem)
+                {
+                    continue;
+                }
+                var gf = focusItem.Geofences.Where(g => g.Id == r.Id).SingleOrDefault();
+                if (null != gf)
+                {
+                    gf.Triggered = (r.Exit == gf.Exit &&
+                        r.Lat == gf.Lat &&
+                        r.Lng == gf.Lng &&
+                        r.Radius == gf.Radius
+                        && r.Start.UtcDateTime == gf.Start) ? gf.Triggered : false;
+                    gf.Lat = r.Lat;
+                    gf.Lng = r.Lng;
+                    gf.Radius = r.Radius;
+                    gf.Start = r.Start.UtcDateTime;
+                    gf.End = r.End.UtcDateTime;
+                    gf.Exit = r.Exit;
+                }
+                else
+                {
+                    focusItem.Geofences.Add(new StoredGeoFence()
+                    {
+                        End = r.End.UtcDateTime,
+                        Exit = r.Exit,
+                        FocusItemId = r.FocusItemId,
+                        Id = r.Id,
+                        Lat = r.Lat,
+                        Lng = r.Lng,
+                        Radius = r.Radius,
+                        Start = r.Start.UtcDateTime,
+                        Triggered = false
+                    });
+                }
+            }
             await digitServiceContext.SaveChangesAsync();
         }
+
 
         public async Task UpdateLocationAsync(string userId, Location location)
         {
@@ -86,6 +104,27 @@ namespace DigitService.Impl.EF
             user.StoredLocation = user.StoredLocation ?? new StoredLocation();
             user.StoredLocation.MapFromLocation(location);
             await digitServiceContext.SaveChangesAsync();
+        }
+
+        public async Task<GeofenceRequest[]> GetNonExpiredGeofenceRequests(string userId, DateTimeOffset now)
+        {
+            return await digitServiceContext.FocusItems
+                .Include(v => v.Geofences)
+                .Where(v => v.UserId == userId)
+                .SelectMany(v => v.Geofences)
+                .Where(v => v.Start <= now.UtcDateTime && now.UtcDateTime <= v.End)
+                .Where(v => !v.Triggered)
+                .Select(v => new GeofenceRequest()
+                {
+                    End = new DateTimeOffset(v.End, TimeSpan.Zero),
+                    Start = new DateTimeOffset(v.Start, TimeSpan.Zero),
+                    Exit = v.Exit,
+                    FocusItemId = v.FocusItemId,
+                    Id = v.Id,
+                    Lat = v.Lat,
+                    Lng = v.Lng,
+                    Radius = v.Radius
+                }).ToArrayAsync();
         }
     }
 }

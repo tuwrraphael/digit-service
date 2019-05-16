@@ -1,5 +1,6 @@
 ﻿using Digit.DeviceSynchronization.Models;
 using Digit.DeviceSynchronization.Service;
+using Digit.Focus.Model;
 using Digit.Focus.Models;
 using Digit.Focus.Service;
 using System;
@@ -18,7 +19,7 @@ namespace Digit.DeviceSynchronization.Impl
             _deviceSyncStore = deviceSyncStore;
         }
 
-        public async Task ActiveItemChanged(string userId, FocusItem currentItem)
+        public async Task ActiveItemChanged(string userId, FocusItemWithExternalData currentItem)
         {
             var devices = await _deviceSyncStore.GetForUserAsync(userId);
             foreach (var device in devices)
@@ -27,7 +28,7 @@ namespace Digit.DeviceSynchronization.Impl
             }
         }
 
-        public Task ActiveItemsChanged(string userId, FocusItem[] items)
+        public Task ActiveItemsChanged(string userId, FocusManageResult res)
         {
             return Task.CompletedTask;
         }

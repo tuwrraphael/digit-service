@@ -12,6 +12,8 @@ namespace Digit.Focus
 
         public static readonly TimeSpan NoUpdateBeforeDepartureMargin = new TimeSpan(0, 10, 0);
 
+        public static readonly TimeSpan DeparturePending = new TimeSpan(0, 10, 0);
+
         public const uint GeofenceRadius = 50;
 
         public const double GeofenceThreshold = 0.95;

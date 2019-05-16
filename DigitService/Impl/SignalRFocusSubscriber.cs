@@ -1,4 +1,5 @@
-﻿using Digit.Focus.Models;
+﻿using Digit.Focus.Model;
+using Digit.Focus.Models;
 using Digit.Focus.Service;
 using DigitService.Hubs;
 using Microsoft.AspNetCore.SignalR;
@@ -15,14 +16,14 @@ namespace DigitService.Impl
             this.hubContext = hubContext;
         }
 
-        public Task ActiveItemChanged(string userId, FocusItem currentItem)
+        public Task ActiveItemChanged(string userId, FocusItemWithExternalData currentItem)
         {
             return Task.CompletedTask;
         }
 
-        public async Task ActiveItemsChanged(string userId, FocusItem[] items)
+        public async Task ActiveItemsChanged(string userId, FocusManageResult res)
         {
-            await hubContext.Clients.User(userId).SendAsync("focusChanged", items);
+            await hubContext.Clients.User(userId).SendAsync("focusChanged", res.ActiveItems);
         }
     }
 }

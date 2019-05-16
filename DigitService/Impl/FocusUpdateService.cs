@@ -9,12 +9,9 @@ using Digit.Focus.Service;
 using DigitPushService.Client;
 using DigitService.Models;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using TravelService.Client;
 using TravelService.Models;
@@ -32,7 +29,6 @@ namespace DigitService.Impl
         private readonly IDigitPushServiceClient digitPushServiceClient;
         private readonly IEnumerable<IFocusSubscriber> focusSubscribers;
         private readonly DigitServiceOptions options;
-        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _notifySempahores = new ConcurrentDictionary<string, SemaphoreSlim>();
 
         public FocusUpdateService(IFocusStore focusStore,
             ICalendarServiceClient calendarServiceClient,
@@ -64,9 +60,8 @@ namespace DigitService.Impl
             return evt.GetFormattedAddress();
         }
 
-        private async Task<Route> GetNewRoute(string userId, Event evt, FocusItem item, Location location)
+        private async Task<TransitDirections> GetFreshDirections(string userId, Event evt, FocusItem item, Location location)
         {
-            Route route = null;
             string directionsKey = null;
             var address = await ResolveAddress(userId, evt);
             if (null != address && null != location)
@@ -80,11 +75,12 @@ namespace DigitService.Impl
                     };
                     bool requestWithNow = evt.Start <= DateTimeOffset.Now;
                     DirectionsResult directionsResult = null;
+                    const int preferredRoute = 0;
                     if (!requestWithNow)
                     {
                         directionsResult = await travelServiceClient.Users[userId].Directions.Transit.Get(start, address, evt.Start);
-                        route = DirectionUtils.SelectRoute(directionsResult);
-                        if (null != route && route.DepatureTime < DateTimeOffset.Now)
+                        if (null == directionsResult.NotFound ||
+                            directionsResult.TransitDirections.Routes[preferredRoute].DepatureTime < DateTimeOffset.Now)
                         {
                             requestWithNow = true;
                         }
@@ -92,29 +88,32 @@ namespace DigitService.Impl
                     if (requestWithNow)
                     {
                         directionsResult = await travelServiceClient.Users[userId].Directions.Transit.Get(start, address, null, DateTimeOffset.Now);
-                        route = DirectionUtils.SelectRoute(directionsResult);
                     }
                     directionsKey = directionsResult?.CacheKey;
-                    if (null != route)
+                    if (null != directionsResult.NotFound)
                     {
-                        await focusStore.UpdateDirections(item.Id, directionsResult, 0);
+                        await focusStore.UpdateDirections(item.Id, directionsResult, preferredRoute);
+                        item.Directions = new DirectionsMetadata()
+                        {
+                            Error = directionsResult.NotFound?.Reason,
+                            Key = directionsResult.CacheKey,
+                            PeferredRoute = preferredRoute
+                        };
                     }
+                    return directionsResult.TransitDirections;
                 }
                 catch (TravelServiceException ex)
                 {
                     await logger.Log(userId, $"Error while retrieving directions for {evt.Subject}: {ex.Message}", 3);
                 }
             }
-            return route;
+            // TODO maybe clear directions with focusStore.UpdateDirections
+            return null;
         }
 
         private async Task<bool> RouteUpdateRequired(string userId, DirectionsResult res, int preferredRoute,
             Location location, DateTimeOffset now)
         {
-            if (res.TransitDirections.Routes[preferredRoute].DepatureTime > now)
-            {
-                return true;
-            }
             var traceMeasures = await travelServiceClient.Directions[res.CacheKey].Itineraries[preferredRoute]
                 .Trace(new TraceLocation()
                 {
@@ -140,30 +139,34 @@ namespace DigitService.Impl
             return true;
         }
 
-        private async Task<RouteUpdateResult> GetUpdatedOrNew(string userId, Event evt, FocusItem item, Location location)
+        private async Task<DirectionsUpdateResult> GetCachedDirectionsOrNew(string userId, Event evt, FocusItem item, Location location)
         {
-            var directionsResult = await travelServiceClient.Directions[item.DirectionsKey].GetAsync();
+            var directionsResult = await travelServiceClient.Directions[item.Directions.Key].GetAsync();
             if (null != directionsResult)
             {
-                if (!await RouteUpdateRequired(userId, directionsResult, 0, location, DateTimeOffset.Now))
+                if (!await RouteUpdateRequired(userId,
+                        directionsResult,
+                        item.Directions.PeferredRoute,
+                        location,
+                        DateTimeOffset.Now))
                 {
-                    return new RouteUpdateResult()
+                    return new DirectionsUpdateResult()
                     {
-                        Route = DirectionUtils.SelectRoute(directionsResult),
+                        Directions = directionsResult.TransitDirections,
                         IsNew = false
                     };
                 }
             }
-            return new RouteUpdateResult()
+            return new DirectionsUpdateResult()
             {
-                Route = await GetNewRoute(userId, evt, item, location),
+                Directions = await GetFreshDirections(userId, evt, item, location),
                 IsNew = true
             };
         }
 
-        private class RouteUpdateResult
+        private class DirectionsUpdateResult
         {
-            public Route Route { get; set; }
+            public TransitDirections Directions { get; set; }
             public bool IsNew { get; set; }
         }
 
@@ -177,109 +180,64 @@ namespace DigitService.Impl
             foreach (var item in activeItems)
             {
                 var evt = await calendarServiceClient.Users[userId].Feeds[item.CalendarEventFeedId].Events.Get(item.CalendarEventId);
-                Route route;
+                TransitDirections directions;
                 if (null != focusUpdateRequest.ItemSyncResult && (
                     focusUpdateRequest.ItemSyncResult.AddedItems.Any(v => v.Id == item.Id) ||
                     focusUpdateRequest.ItemSyncResult.ChangedItems.Any(v => v.Id == item.Id))
-                    || null == item.DirectionsKey)
+                    || null == item.Directions?.Key)
                 {
-                    route = await GetNewRoute(userId, evt, item, focusUpdateRequest.Location);
+                    directions = await GetFreshDirections(userId, evt, item, focusUpdateRequest.Location);
                 }
                 else
                 {
-                    var routeRes = await GetUpdatedOrNew(userId, evt, item, focusUpdateRequest.Location);
-                    route = routeRes.Route;
-                    if (routeRes.IsNew)
+                    var directionsRes = await GetCachedDirectionsOrNew(userId, evt, item, focusUpdateRequest.Location);
+                    directions = directionsRes.Directions;
+                    if (directionsRes.IsNew)
                     {
                         updatedItemIds.Add(item.Id);
                     }
                 }
-                DateTimeOffset departureTime;
-                if (null == route)
+                DateTimeOffset indicateTime;
+                if (null == directions)
                 {
                     await logger.Log(userId, $"No departure time found, using {FocusConstants.DefaultTravelTime.TotalMinutes:0} minutes for {evt.Subject}");
-                    departureTime = evt.Start - FocusConstants.DefaultTravelTime;
+                    indicateTime = evt.Start - FocusConstants.DefaultTravelTime;
                 }
                 else
                 {
-                    departureTime = route.DepatureTime;
-                    res.Departures.Add(new FocusDeparture()
-                    {
-                        DepartureTime = departureTime,
-                        Route = route,
-                        Event = evt
-                    });
+                    indicateTime = directions.Routes[item.Directions.PeferredRoute].DepatureTime;
                 }
-                item.IndicateTime = departureTime;
-                await focusStore.UpdateIndicateTime(item.Id, departureTime);
-                await NotifyOrInstall(userId, item, evt, departureTime);
+                item.IndicateTime = indicateTime;
+                await focusStore.UpdateIndicateTime(item.Id, indicateTime);
+                res.ActiveItems.Add(new FocusItemWithExternalData()
+                {
+                    Start = item.Start,
+                    IndicateTime = item.IndicateTime,
+                    CalendarEvent = evt,
+                    Directions = directions,
+                    DirectionsMetadata = item.Directions,
+                    End = item.End,
+                    Id = item.Id
+                });
             }
             var active = await focusStore.GetActiveItem(userId);
             var activeItemChanged = await focusStore.UpdateActiveItem(userId, active?.Id);
             if (activeItemChanged || (null != active && updatedItemIds.Contains(active.Id)))
             {
-                await Task.WhenAll(focusSubscribers.Select(v => v.ActiveItemChanged(userId, active)));
+                if (null != active)
+                {
+                    await Task.WhenAll(focusSubscribers.Select(v => v.ActiveItemChanged(userId, res.ActiveItems.Where(d => d.Id == active.Id).Single())));
+                }
+                else
+                {
+                    await Task.WhenAll(focusSubscribers.Select(v => v.ActiveItemChanged(userId, null)));
+                }
             }
             if (updatedItemIds.Count > 0)
             {
-                await Task.WhenAll(focusSubscribers.Select(v => v.ActiveItemsChanged(userId, activeItems)));
+                await Task.WhenAll(focusSubscribers.Select(v => v.ActiveItemsChanged(userId, res)));
             }
             return res;
-        }
-
-        private async Task NotifyOrInstall(string userId, FocusItem item, Event evt, DateTimeOffset departureTime)
-        {
-            var timeToDeparture = departureTime - DateTimeOffset.Now;
-            if (timeToDeparture < FocusConstants.NotifyTime.Add(FocusConstants.ButlerInaccuracy))
-            {
-                var notifySemaphore = _notifySempahores.GetOrAdd(userId, s => new SemaphoreSlim(1));
-                await notifySemaphore.WaitAsync();
-                try
-                {
-                    if (!await focusStore.FocusItemNotifiedAsync(item.Id))
-                    {
-                        try
-                        {
-                            await digitPushServiceClient.Push[userId].Create(new DigitPushService.Models.PushRequest()
-                            {
-                                ChannelOptions = new Dictionary<string, string>() { { "digit.notify", null } },
-                                Payload = JsonConvert.SerializeObject(new
-                                {
-                                    notification = new
-                                    {
-                                        title = $"Losgehen zu {evt.Subject}",
-                                        body = $"Mach dich auf den Weg. {evt.Subject} beginnt in {(evt.Start - DateTime.Now).TotalMinutes:0} Minuten."
-                                    }
-                                })
-                            });
-                        }
-                        catch (Exception e)
-                        {
-                            await logger.Log(userId, $"Could notify user ({e.Message}).", 3);
-                        }
-                        await focusStore.SetFocusItemNotifiedAsync(item.Id); // always set notified for now to prevent massive notification spam
-                    }
-                }
-                finally
-                {
-                    notifySemaphore.Release();
-                }
-            }
-            else
-            {
-                // plan the notification anyways, even if the location might be updated, in case no update is received (low phone battery for example)
-                // it will be ignored if any of the conditions (user location, traffic, event start time) changed
-                await butler.InstallAsync(new WebhookRequest()
-                {
-                    When = departureTime.Add(-FocusConstants.NotifyTime).UtcDateTime,
-                    Data = new NotifyUserRequest()
-                    {
-                        UserId = userId,
-                        FocusItemId = item.Id
-                    },
-                    Url = options.NotifyUserCallbackUri
-                });
-            }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace DigitService.Models
+namespace Digit.Focus.Model
 {
     public class NotifyUserRequest
     {

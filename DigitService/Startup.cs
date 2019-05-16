@@ -97,9 +97,12 @@ namespace DigitService
             services.AddTransient<IFocusUpdateService, FocusUpdateService>();
             services.AddTransient<IFocusSubscriber, SignalRFocusSubscriber>();
             services.AddTransient<IFocusSubscriber, DeviceSyncFocusSubscriber>();
+            services.AddTransient<IFocusSubscriber, FocusNotificationService>();
             services.AddTransient<IFocusStore, FocusStore>();
             services.AddTransient<IFocusDirectionsService, FocusDirectionsService>();
             services.AddTransient<IFocusCalendarSyncService, FocusCalendarSyncService>();
+            services.AddTransient<IFocusNotificationService, FocusNotificationService>();
+            services.AddTransient<IFocusExternalDataService, FocusExternalDataService>();
             services.AddTransient<ILocationService, LocationService>();
             services.AddTransient<IPlannerService, PlannerService>();
             services.AddDeviceSynchronization(builder => builder.UseSqlite(connectionString,

@@ -81,7 +81,10 @@ namespace DigitService.Test
                         new FocusItem()
                         {
                             CalendarEventFeedId =feedId,
-                            DirectionsKey = directionsKey,
+                            Directions = new DirectionsMetadata()
+                            {
+                                Key = directionsKey
+                            },
                             CalendarEventId = evtId,
                             IndicateTime = now.AddMinutes(-5)
                         }

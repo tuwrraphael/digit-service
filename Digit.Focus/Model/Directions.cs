@@ -2,11 +2,11 @@
 
 namespace Digit.Focus.Models
 {
-    public class Directions
+    public class DirectionsMetadata
     {
-        public string DirectionsKey { get; set; }
-        public DirectionsNotFoundReason? DirectionsError { get; set; }
-        public int? PeferredRoute { get; set; }
+        public string Key { get; set; }
+        public DirectionsNotFoundReason? Error { get; set; }
+        public int PeferredRoute { get; set; }
     }
 
 

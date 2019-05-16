@@ -62,7 +62,12 @@ namespace DigitService.Impl
                         await _focusStore.UpdateDirections(e.Id, directions, 0);
                         await _focusStore.UpdateIndicateTime(e.Id, route.DepatureTime);
                         e.IndicateTime = route.DepatureTime;
-                        e.DirectionsKey = directions.CacheKey;
+                        e.Directions = new DirectionsMetadata()
+                        {
+                            Error = directions.NotFound?.Reason,
+                            Key = directions.CacheKey,
+                            PeferredRoute = 0
+                        };
                     }
                     start = address;
                     first = false;

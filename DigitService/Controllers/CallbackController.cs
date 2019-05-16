@@ -1,6 +1,7 @@
 ﻿using CalendarService.Client;
 using CalendarService.Models;
 using Digit.Abstractions.Service;
+using Digit.Focus.Model;
 using DigitService.Models;
 using DigitService.Service;
 using Microsoft.AspNetCore.Authorization;

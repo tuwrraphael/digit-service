@@ -49,6 +49,7 @@ namespace DigitService.Impl.EF
         [Obsolete]
         public string DirectionsKey { get; set; }
         public StoredDirectionsInfo Directions { get; set; }
+        public List<StoredGeoFence> Geofences { get; set; }
     }
 
     public class StoredDirectionsInfo
@@ -69,5 +70,19 @@ namespace DigitService.Impl.EF
         public string FeedId { get; set; }
         public string CalendarEventHash { get; set; }
         public StoredFocusItem FocusItem { get; internal set; }
+    }
+
+    public class StoredGeoFence
+    {
+        public string Id { get; set; }
+        public string FocusItemId { get; set; }
+        public StoredFocusItem FocusItem { get; internal set; }
+        public bool Exit { get; set; }
+        public double Radius { get; set; }
+        public double Lat { get; set; }
+        public double Lng { get; set; }
+        public DateTime Start { get; set; }
+        public DateTime End { get; set; }
+        public bool Triggered { get; set; }
     }
 }

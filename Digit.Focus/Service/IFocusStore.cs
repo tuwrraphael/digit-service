@@ -9,6 +9,7 @@ namespace Digit.Focus.Service
     public interface IFocusStore
     {
         Task<FocusItem> StoreCalendarEventAsync(string userId, Event evt);
+        Task<FocusItem> Get(string userId, string id);
         Task<FocusItem> UpdateCalendarEventAsync(string userId, Event evt);
         Task<bool> FocusItemNotifiedAsync(string itemId);
         Task SetFocusItemNotifiedAsync(string itemId);

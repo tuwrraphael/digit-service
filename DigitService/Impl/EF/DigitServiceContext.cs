@@ -73,6 +73,14 @@ namespace DigitService.Impl.EF
 
             modelBuilder.Entity<StoredDirectionsInfo>()
                 .HasKey(d => d.FocusItemId);
+
+            modelBuilder.Entity<StoredGeoFence>()
+                .HasKey(p => p.Id);
+
+            modelBuilder.Entity<StoredGeoFence>()
+                .HasOne(v => v.FocusItem)
+                .WithMany(v => v.Geofences)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
