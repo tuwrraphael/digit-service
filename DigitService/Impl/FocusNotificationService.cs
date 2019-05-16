@@ -24,7 +24,7 @@ namespace DigitService.Impl
         private readonly IDigitLogger _logger;
         private readonly IButler _butler;
         private readonly IDigitPushServiceClient _digitPushServiceClient;
-        private readonly FocusExternalDataService _focusExternalDataService;
+        private readonly IFocusExternalDataService _focusExternalDataService;
         private readonly DigitServiceOptions options;
 
         public FocusNotificationService(IFocusStore focusStore,
@@ -32,7 +32,7 @@ namespace DigitService.Impl
             IButler butler,
             IOptions<DigitServiceOptions> optionsAccessor,
             IDigitPushServiceClient digitPushServiceClient,
-            FocusExternalDataService focusExternalDataService)
+            IFocusExternalDataService focusExternalDataService)
         {
             _focusStore = focusStore;
             _logger = logger;
