@@ -10,6 +10,6 @@ namespace DigitService.Service
         Task UpdateLocationAsync(string userId, Location location);
         Task<Location> GetLastLocationAsync(string userId);
         Task<GeofenceRequest[]> GetNonExpiredGeofenceRequests(string userId, DateTimeOffset now);
-        Task SetGeofenceRequests(string userId, GeofenceRequest[] request);
+        Task<GeofenceRequest[]> SetGeofenceRequests(string userId, GeofenceRequest[] request);
     }
 }

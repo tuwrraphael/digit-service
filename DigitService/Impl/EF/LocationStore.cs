@@ -4,6 +4,7 @@ using DigitService.Models;
 using DigitService.Service;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -51,10 +52,12 @@ namespace DigitService.Impl.EF
             return user?.StoredLocation?.MapToLocation();
         }
 
-        public async Task SetGeofenceRequests(string userId, GeofenceRequest[] request)
+        public async Task<GeofenceRequest[]> SetGeofenceRequests(string userId, GeofenceRequest[] request)
         {
+            List<GeofenceRequest> results = new List<GeofenceRequest>();
             foreach (var r in request)
             {
+                var triggered = false;
                 var focusItem = digitServiceContext.FocusItems.Where(v => v.UserId == userId && v.Id == r.FocusItemId)
                     .Include(v => v.Geofences)
                     .SingleOrDefault();
@@ -70,12 +73,20 @@ namespace DigitService.Impl.EF
                         r.Lng == gf.Lng &&
                         r.Radius == gf.Radius
                         && r.Start.UtcDateTime == gf.Start) ? gf.Triggered : false;
-                    gf.Lat = r.Lat;
-                    gf.Lng = r.Lng;
-                    gf.Radius = r.Radius;
-                    gf.Start = r.Start.UtcDateTime;
-                    gf.End = r.End.UtcDateTime;
-                    gf.Exit = r.Exit;
+
+                    if (gf.Triggered == true)
+                    {
+                        triggered = true;
+                    }
+                    else
+                    {
+                        gf.Lat = r.Lat;
+                        gf.Lng = r.Lng;
+                        gf.Radius = r.Radius;
+                        gf.Start = r.Start.UtcDateTime;
+                        gf.End = r.End.UtcDateTime;
+                        gf.Exit = r.Exit;
+                    }
                 }
                 else
                 {
@@ -92,8 +103,13 @@ namespace DigitService.Impl.EF
                         Triggered = false
                     });
                 }
+                if (!triggered)
+                {
+                    results.Add(r);
+                }
             }
             await digitServiceContext.SaveChangesAsync();
+            return results.ToArray();
         }
 
 
