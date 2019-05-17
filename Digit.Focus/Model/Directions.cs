@@ -7,5 +7,6 @@ namespace Digit.Focus.Models
         public string Key { get; set; }
         public DirectionsNotFoundReason? Error { get; set; }
         public int PeferredRoute { get; set; }
+        public TravelStatus TravelStatus { get; set; }
     }
 }

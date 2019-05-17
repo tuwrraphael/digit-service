@@ -66,7 +66,8 @@ namespace DigitService.Impl
                         {
                             Error = directions.NotFound?.Reason,
                             Key = directions.CacheKey,
-                            PeferredRoute = 0
+                            PeferredRoute = 0,
+                            TravelStatus = TravelStatus.UnStarted
                         };
                     }
                     start = address;

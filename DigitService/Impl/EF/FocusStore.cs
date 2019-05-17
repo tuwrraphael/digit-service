@@ -33,7 +33,8 @@ namespace DigitService.Impl.EF
                 {
                     Error = storedFocusItem.Directions.PlaceNotFound.GetValueOrDefault(false) ? TravelService.Models.DirectionsNotFoundReason.AddressNotFound : (
                     storedFocusItem.Directions.DirectionsNotFound.GetValueOrDefault(false) ? (TravelService.Models.DirectionsNotFoundReason?)TravelService.Models.DirectionsNotFoundReason.RouteNotFound : null),
-                    Key = storedFocusItem.Directions.DirectionsKey
+                    Key = storedFocusItem.Directions.DirectionsKey,
+                    TravelStatus = storedFocusItem.Directions.TravelStatus,
                 } : null
             };
         }

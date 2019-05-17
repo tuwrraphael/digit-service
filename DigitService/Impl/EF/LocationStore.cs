@@ -64,7 +64,7 @@ namespace DigitService.Impl.EF
                     continue;
                 }
                 var gf = focusItem.Geofences.Where(g => g.Id == r.Id).SingleOrDefault();
-                if (null != gf)
+                if (null == gf)
                 {
                     gf = new StoredGeoFence();
                     focusItem.Geofences.Add(gf);
