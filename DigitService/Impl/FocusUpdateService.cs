@@ -80,16 +80,14 @@ namespace DigitService.Impl
                         directionsResult = await travelServiceClient.Users[userId].Directions.Transit.Get(start, address, null, DateTimeOffset.Now);
                     }
                     directionsKey = directionsResult?.CacheKey;
-                    if (null == directionsResult.NotFound)
+                    await focusStore.UpdateDirections(item.Id, directionsResult,
+                        null != directionsResult.NotFound ? null : (int?)preferredRoute);
+                    item.Directions = new DirectionsMetadata()
                     {
-                        await focusStore.UpdateDirections(item.Id, directionsResult, preferredRoute);
-                        item.Directions = new DirectionsMetadata()
-                        {
-                            Error = directionsResult.NotFound?.Reason,
-                            Key = directionsResult.CacheKey,
-                            PeferredRoute = preferredRoute
-                        };
-                    }
+                        Error = directionsResult.NotFound?.Reason,
+                        Key = directionsResult.CacheKey,
+                        PeferredRoute = preferredRoute
+                    };
                     return directionsResult.TransitDirections;
                 }
                 catch (TravelServiceException ex)

@@ -189,18 +189,19 @@ namespace DigitService.Impl.EF
             item.ActiveEnd = evt.End.UtcDateTime;
             item.ActiveStart = (evt.Start - FocusConstants.CalendarServiceInacurracy).UtcDateTime;
             item.CalendarEvent.CalendarEventHash = evt.GenerateHash();
+            item.Directions = null;
             await digitServiceContext.SaveChangesAsync();
             return item.MapToFocusItem();
         }
 
-        public async Task UpdateDirections(string itemId, DirectionsResult directionsResult, int preferredRoute)
+        public async Task UpdateDirections(string itemId, DirectionsResult directionsResult, int? preferredRoute)
         {
             var item = await digitServiceContext.FocusItems
                 .Include(v => v.Directions)
                 .Where(v => v.Id == itemId).SingleOrDefaultAsync();
             item.Directions = item.Directions ?? new StoredDirectionsInfo();
             item.Directions.DirectionsKey = directionsResult.CacheKey;
-            item.Directions.PreferredRoute = null != directionsResult.TransitDirections ? (int?)preferredRoute : null;
+            item.Directions.PreferredRoute = null != directionsResult.TransitDirections ? preferredRoute : null;
             item.Directions.PlaceNotFound = null != directionsResult.NotFound && directionsResult.NotFound.Reason == TravelService.Models.DirectionsNotFoundReason.AddressNotFound;
             item.Directions.DirectionsNotFound = null != directionsResult.NotFound && directionsResult.NotFound.Reason == TravelService.Models.DirectionsNotFoundReason.RouteNotFound;
             item.Directions.TravelStatus = TravelStatus.UnStarted;

@@ -14,7 +14,7 @@ namespace Digit.Focus.Service
         Task<bool> FocusItemNotifiedAsync(string itemId);
         Task SetFocusItemNotifiedAsync(string itemId);
         Task UpdateIndicateTime(string itemId, DateTimeOffset indicateTime);
-        Task UpdateDirections(string itemId, DirectionsResult directionsResult, int preferredRoute);
+        Task UpdateDirections(string itemId, DirectionsResult directionsResult, int? preferredRoute);
         Task<bool> UpdateActiveItem(string userId, string itemId);
         Task<FocusItem[]> GetActiveAsync(string userId);
         Task<FocusItem[]> GetTimeRangeAsync(string userId, DateTimeOffset from, DateTimeOffset to);
