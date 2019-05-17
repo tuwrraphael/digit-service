@@ -69,7 +69,7 @@ namespace DigitService.Impl
                     if (!requestWithNow)
                     {
                         directionsResult = await travelServiceClient.Users[userId].Directions.Transit.Get(start, address, evt.Start);
-                        if (null == directionsResult.NotFound ||
+                        if (null != directionsResult.NotFound ||
                             directionsResult.TransitDirections.Routes[preferredRoute].DepatureTime < DateTimeOffset.Now)
                         {
                             requestWithNow = true;
