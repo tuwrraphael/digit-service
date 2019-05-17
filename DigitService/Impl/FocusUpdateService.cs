@@ -82,7 +82,7 @@ namespace DigitService.Impl
                     directionsKey = directionsResult?.CacheKey;
                     await focusStore.UpdateDirections(item.Id, directionsResult,
                         null != directionsResult.NotFound ? null : (int?)preferredRoute);
-                    item.Directions = new DirectionsMetadata()
+                    item.DirectionsMetadata = new DirectionsMetadata()
                     {
                         Error = directionsResult.NotFound?.Reason,
                         Key = directionsResult.CacheKey,
@@ -129,12 +129,12 @@ namespace DigitService.Impl
 
         private async Task<DirectionsUpdateResult> GetCachedDirectionsOrNew(string userId, Event evt, FocusItem item, Location location)
         {
-            var directionsResult = await travelServiceClient.Directions[item.Directions.Key].GetAsync();
+            var directionsResult = await travelServiceClient.Directions[item.DirectionsMetadata.Key].GetAsync();
             if (null != directionsResult)
             {
                 if (!await RouteUpdateRequired(userId,
                         directionsResult,
-                        item.Directions.PeferredRoute,
+                        item.DirectionsMetadata.PeferredRoute,
                         location,
                         DateTimeOffset.Now))
                 {
@@ -173,7 +173,7 @@ namespace DigitService.Impl
                 if (null != focusUpdateRequest.ItemSyncResult && (
                     focusUpdateRequest.ItemSyncResult.AddedItems.Any(v => v.Id == item.Id) ||
                     focusUpdateRequest.ItemSyncResult.ChangedItems.Any(v => v.Id == item.Id))
-                    || null == item.Directions?.Key)
+                    || null == item.DirectionsMetadata?.Key)
                 {
                     directions = await GetFreshDirections(userId, evt, item, focusUpdateRequest.Location);
                 }
@@ -194,7 +194,7 @@ namespace DigitService.Impl
                 }
                 else
                 {
-                    indicateTime = directions.Routes[item.Directions.PeferredRoute].DepatureTime;
+                    indicateTime = directions.Routes[item.DirectionsMetadata.PeferredRoute].DepatureTime;
                 }
                 item.IndicateTime = indicateTime;
                 await focusStore.UpdateIndicateTime(item.Id, indicateTime);
@@ -204,7 +204,7 @@ namespace DigitService.Impl
                     IndicateTime = item.IndicateTime,
                     CalendarEvent = evt,
                     Directions = directions,
-                    DirectionsMetadata = item.Directions,
+                    DirectionsMetadata = item.DirectionsMetadata,
                     End = item.End,
                     Id = item.Id
                 });

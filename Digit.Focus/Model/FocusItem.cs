@@ -7,8 +7,8 @@ namespace Digit.Focus.Models
         public string Id { get; set; }
         public DateTimeOffset IndicateTime { get; set; }
         [Obsolete]
-        public string DirectionsKey => Directions?.Key;
-        public DirectionsMetadata Directions { get; set; }
+        public string DirectionsKey => DirectionsMetadata?.Key;
+        public DirectionsMetadata DirectionsMetadata { get; set; }
         public string CalendarEventId { get; set; }
         public string CalendarEventFeedId { get; set; }
         public string CalendarEventHash { get; set; }

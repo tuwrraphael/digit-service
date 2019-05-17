@@ -31,9 +31,9 @@ namespace DigitService.Impl
             {
                 CalendarEvent = null == item.CalendarEventId && null == item.CalendarEventFeedId ?
                     null : await _calendarServiceClient.Users[userId].Feeds[item.CalendarEventFeedId].Events.Get(item.CalendarEventId),
-                Directions = null == item.Directions ? null :
-                    (await _travelServiceClient.Directions[item.Directions.Key].GetAsync()).TransitDirections,
-                DirectionsMetadata = item.Directions,
+                Directions = null == item.DirectionsMetadata ? null :
+                    (await _travelServiceClient.Directions[item.DirectionsMetadata.Key].GetAsync()).TransitDirections,
+                DirectionsMetadata = item.DirectionsMetadata,
                 End = item.End,
                 Id = item.Id,
                 IndicateTime = item.IndicateTime,

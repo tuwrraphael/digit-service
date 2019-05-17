@@ -29,7 +29,7 @@ namespace DigitService.Impl.EF
                 CalendarEventHash = storedFocusItem.CalendarEvent.CalendarEventHash,
                 Start = storedFocusItem.ActiveStart,
                 End = storedFocusItem.ActiveEnd,
-                Directions = null != storedFocusItem.Directions ? new DirectionsMetadata()
+                DirectionsMetadata = null != storedFocusItem.Directions ? new DirectionsMetadata()
                 {
                     Error = storedFocusItem.Directions.PlaceNotFound.GetValueOrDefault(false) ? TravelService.Models.DirectionsNotFoundReason.AddressNotFound : (
                     storedFocusItem.Directions.DirectionsNotFound.GetValueOrDefault(false) ? (TravelService.Models.DirectionsNotFoundReason?)TravelService.Models.DirectionsNotFoundReason.RouteNotFound : null),
