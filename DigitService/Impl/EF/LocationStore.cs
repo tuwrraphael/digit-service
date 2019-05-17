@@ -76,6 +76,7 @@ namespace DigitService.Impl.EF
                 gf.Start = r.Start.UtcDateTime;
                 gf.End = r.End.UtcDateTime;
                 gf.Exit = r.Exit;
+                gf.Id = r.Id;
             }
             await digitServiceContext.SaveChangesAsync();
         }
