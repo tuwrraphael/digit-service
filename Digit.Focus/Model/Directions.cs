@@ -8,6 +8,4 @@ namespace Digit.Focus.Models
         public DirectionsNotFoundReason? Error { get; set; }
         public int PeferredRoute { get; set; }
     }
-
-
 }

@@ -121,6 +121,18 @@ namespace DigitService.Impl.EF
             await digitServiceContext.SaveChangesAsync();
         }
 
+        public async Task SetTravelStatus(string userId, string itemId, TravelStatus travelStatus)
+        {
+            var item = await digitServiceContext.FocusItems
+              .Include(f => f.Directions)
+              .Where(v => v.Id == itemId).SingleAsync();
+            if (null != item.Directions)
+            {
+                item.Directions.TravelStatus = travelStatus;
+            }
+            await digitServiceContext.SaveChangesAsync();
+        }
+
         public async Task<FocusItem> StoreCalendarEventAsync(string userId, Event evt)
         {
             var user = await userRepository.GetOrCreateAsync(userId);
@@ -138,7 +150,7 @@ namespace DigitService.Impl.EF
                 ActiveEnd = evt.End.UtcDateTime,
                 ActiveStart = (evt.Start - FocusConstants.CalendarServiceInacurracy).UtcDateTime,
                 IndicateAt = evt.Start.UtcDateTime,
-                Directions = null
+                Directions = null,
             };
             await digitServiceContext.FocusItems.AddAsync(focusItem);
             await digitServiceContext.SaveChangesAsync();
@@ -190,6 +202,7 @@ namespace DigitService.Impl.EF
             item.Directions.PreferredRoute = null != directionsResult.TransitDirections ? (int?)preferredRoute : null;
             item.Directions.PlaceNotFound = null != directionsResult.NotFound && directionsResult.NotFound.Reason == TravelService.Models.DirectionsNotFoundReason.AddressNotFound;
             item.Directions.DirectionsNotFound = null != directionsResult.NotFound && directionsResult.NotFound.Reason == TravelService.Models.DirectionsNotFoundReason.RouteNotFound;
+            item.Directions.TravelStatus = TravelStatus.UnStarted;
             await digitServiceContext.SaveChangesAsync();
         }
 

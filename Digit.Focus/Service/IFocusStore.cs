@@ -21,5 +21,6 @@ namespace Digit.Focus.Service
         Task<FocusItem[]> GetCalendarItemsAsync(string userId);
         Task RemoveAsync(FocusItem evt);
         Task SetPlaceForItem(string userId, string itemId, Place place);
+        Task SetTravelStatus(string userId, string itemId, TravelStatus travelStatus);
     }
 }

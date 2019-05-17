@@ -18,5 +18,15 @@ namespace DigitService.Models
         public double Lng { get; set; }
         public DateTimeOffset Start { get; set; }
         public DateTimeOffset End { get; set; }
+
+        public bool Same(GeofenceRequest gf)
+        {
+            return null != gf &&
+                gf.Id == Id &&
+                gf.FocusItemId == FocusItemId &&
+                gf.Lat == Lat &&
+                gf.Lng == Lng &&
+                gf.Start == Start;
+        }
     }
 }

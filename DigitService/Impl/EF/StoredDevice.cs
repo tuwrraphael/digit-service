@@ -1,4 +1,5 @@
-﻿using DigitService.Models;
+﻿using Digit.Focus.Models;
+using DigitService.Models;
 using System;
 using System.Collections.Generic;
 
@@ -49,7 +50,7 @@ namespace DigitService.Impl.EF
         [Obsolete]
         public string DirectionsKey { get; set; }
         public StoredDirectionsInfo Directions { get; set; }
-        public List<StoredGeoFence> Geofences { get; set; }
+        public List<StoredGeoFence> Geofences { get; set; }   
     }
 
     public class StoredDirectionsInfo
@@ -62,6 +63,7 @@ namespace DigitService.Impl.EF
         public bool? PlaceNotFound { get; set; }
         public double? Lat { get; set; }
         public double? Lng { get; set; }
+        public TravelStatus TravelStatus { get; set; }
     }
 
     public class StoredCalendarEvent

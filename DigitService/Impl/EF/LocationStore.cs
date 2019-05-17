@@ -52,12 +52,10 @@ namespace DigitService.Impl.EF
             return user?.StoredLocation?.MapToLocation();
         }
 
-        public async Task<GeofenceRequest[]> SetGeofenceRequests(string userId, GeofenceRequest[] request)
+        public async Task AddGeofenceRequests(string userId, GeofenceRequest[] request)
         {
-            List<GeofenceRequest> results = new List<GeofenceRequest>();
             foreach (var r in request)
             {
-                var triggered = false;
                 var focusItem = digitServiceContext.FocusItems.Where(v => v.UserId == userId && v.Id == r.FocusItemId)
                     .Include(v => v.Geofences)
                     .SingleOrDefault();
@@ -68,50 +66,19 @@ namespace DigitService.Impl.EF
                 var gf = focusItem.Geofences.Where(g => g.Id == r.Id).SingleOrDefault();
                 if (null != gf)
                 {
-                    gf.Triggered = (r.Exit == gf.Exit &&
-                        r.Lat == gf.Lat &&
-                        r.Lng == gf.Lng &&
-                        r.Radius == gf.Radius
-                        && r.Start.UtcDateTime == gf.Start) ? gf.Triggered : false;
-
-                    if (gf.Triggered == true)
-                    {
-                        triggered = true;
-                    }
-                    else
-                    {
-                        gf.Lat = r.Lat;
-                        gf.Lng = r.Lng;
-                        gf.Radius = r.Radius;
-                        gf.Start = r.Start.UtcDateTime;
-                        gf.End = r.End.UtcDateTime;
-                        gf.Exit = r.Exit;
-                    }
+                    gf = new StoredGeoFence();
+                    focusItem.Geofences.Add(gf);
                 }
-                else
-                {
-                    focusItem.Geofences.Add(new StoredGeoFence()
-                    {
-                        End = r.End.UtcDateTime,
-                        Exit = r.Exit,
-                        FocusItemId = r.FocusItemId,
-                        Id = r.Id,
-                        Lat = r.Lat,
-                        Lng = r.Lng,
-                        Radius = r.Radius,
-                        Start = r.Start.UtcDateTime,
-                        Triggered = false
-                    });
-                }
-                if (!triggered)
-                {
-                    results.Add(r);
-                }
+                gf.Triggered = false;
+                gf.Lat = r.Lat;
+                gf.Lng = r.Lng;
+                gf.Radius = r.Radius;
+                gf.Start = r.Start.UtcDateTime;
+                gf.End = r.End.UtcDateTime;
+                gf.Exit = r.Exit;
             }
             await digitServiceContext.SaveChangesAsync();
-            return results.ToArray();
         }
-
 
         public async Task UpdateLocationAsync(string userId, Location location)
         {
@@ -122,7 +89,7 @@ namespace DigitService.Impl.EF
             await digitServiceContext.SaveChangesAsync();
         }
 
-        public async Task<GeofenceRequest[]> GetNonExpiredGeofenceRequests(string userId, DateTimeOffset now)
+        public async Task<GeofenceRequest[]> GetActiveGeofenceRequests(string userId, DateTimeOffset now)
         {
             return await digitServiceContext.FocusItems
                 .Include(v => v.Geofences)
@@ -141,6 +108,19 @@ namespace DigitService.Impl.EF
                     Lng = v.Lng,
                     Radius = v.Radius
                 }).ToArrayAsync();
+        }
+
+        public async Task SetTriggered(string userId, GeofenceRequest[] request)
+        {
+            foreach (var r in request)
+            {
+                var fence = await digitServiceContext.Geofences.Where(v => v.Id == r.Id).SingleOrDefaultAsync();
+                if (null != fence)
+                {
+                    fence.Triggered = true;
+                }
+            }
+            await digitServiceContext.SaveChangesAsync();
         }
     }
 }

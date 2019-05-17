@@ -105,6 +105,7 @@ namespace DigitService
             services.AddTransient<IFocusExternalDataService, FocusExternalDataService>();
             services.AddTransient<ILocationService, LocationService>();
             services.AddTransient<IPlannerService, PlannerService>();
+            services.AddTransient<IFocusGeofenceService, FocusGeofenceService>();
             services.AddDeviceSynchronization(builder => builder.UseSqlite(connectionString,
                                 sql => sql.MigrationsAssembly(migrationsAssembly)));
 

@@ -14,6 +14,7 @@ namespace DigitService.Impl.EF
         public DbSet<StoredBatteryMeasurement> BatteryMeasurements { get; set; }
         public DbSet<StoredDevice> Devices { get; set; }
         public DbSet<StoredFocusItem> FocusItems { get; set; }
+        public DbSet<StoredGeoFence> Geofences { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

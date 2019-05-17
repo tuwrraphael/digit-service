@@ -1,4 +1,4 @@
-﻿using Digit.Abstractions.Service;
+using Digit.Abstractions.Service;
 using Digit.DeviceSynchronization.Models;
 using Digit.DeviceSynchronization.Service;
 using Digit.Focus;
@@ -7,11 +7,10 @@ using Digit.Focus.Models;
 using DigitService.Models;
 using DigitService.Service;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DigitService.Controllers
+namespace DigitService.Impl
 {
     public class LocationService : ILocationService
     {
@@ -57,90 +56,9 @@ namespace DigitService.Controllers
             return null;
         }
 
-        private const int Radius = 40;
-
-        private IEnumerable<GeofenceRequest> GetGeofences(FocusItemWithExternalData item)
-        {
-            var route = item.Directions.Routes[item.DirectionsMetadata.PeferredRoute];
-            yield return new GeofenceRequest()
-            {
-                Id = $"start#{item.Id}",
-                FocusItemId = item.Id,
-                End = item.End,
-                Start = route.DepatureTime.AddMinutes(-15),
-                Lat = route.StartLocation.Lat,
-                Lng = route.StartLocation.Lng,
-                Exit = true,
-                Radius = Radius
-            };
-            for (var i = 0; i < route.Steps.Length; i++)
-            {
-                var step = route.Steps[i];
-                yield return new GeofenceRequest()
-                {
-                    Id = $"step{i}#{item.Id}",
-                    FocusItemId = item.Id,
-                    End = item.End,
-                    Start = route.DepatureTime.AddMinutes(-15),
-                    Lat = step.DepartureStop.Location.Lat,
-                    Lng = step.DepartureStop.Location.Lat,
-                    Exit = false,
-                    Radius = Radius
-                };
-            }
-            yield return new GeofenceRequest()
-            {
-                Id = $"end#{item.Id}",
-                FocusItemId = item.Id,
-                End = item.End,
-                Start = route.DepatureTime.AddMinutes(-15),
-                Lat = route.EndLocation.Lat,
-                Lng = route.EndLocation.Lng,
-                Exit = false,
-                Radius = Radius
-            };
-        }
-
-        private async Task<GeofenceRequest[]> RequestGeofencesForActiveNavigations(string userId, FocusManageResult manageResult,
-            DateTimeOffset now)
-        {
-            var geofences = manageResult.ActiveItems.Where(v => null != v.DirectionsMetadata && null == v.DirectionsMetadata.Error)
-                .Where(v => v.Directions.Routes[v.DirectionsMetadata.PeferredRoute].DepatureTime - now < FocusConstants.DeparturePending)
-                .SelectMany(item => GetGeofences(item)).ToArray();
-            await locationStore.SetGeofenceRequests(userId, geofences);
-            return geofences;
-        }
-
-        private async Task CheckGeofenceTriggeredAsync(string userId, Location newLocation, DateTimeOffset now)
-        {
-            var gfs = await locationStore.GetNonExpiredGeofenceRequests(userId, now);
-            foreach (var gf in gfs)
-            {
-                var distance = Geolocation.GeoCalculator.GetDistance(gf.Lat,
-                        gf.Lng,
-                        newLocation.Latitude,
-                        newLocation.Longitude, 5, Geolocation.DistanceUnit.Meters);
-                if (gf.Exit)
-                {
-                    if (distance >= gf.Radius)
-                    {
-                        await logger.Log(userId, $"Geofence {gf.Id}/Exit triggered");
-                    }
-                }
-                else
-                {
-                    if (distance <= gf.Radius)
-                    {
-                        await logger.Log(userId, $"Geofence {gf.Id}/Enter triggered");
-                    }
-                }
-            }
-        }
-
         public async Task<LocationResponse> LocationUpdateReceivedAsync(string userId, Location location, DateTimeOffset now, FocusManageResult focusManageResult)
         {
             await pushSyncService.SetDone(userId, new LocationPushSyncRequest(now));
-            await CheckGeofenceTriggeredAsync(userId, location, now);
             await locationStore.UpdateLocationAsync(userId, location);
             //if (location.RequestSupport.HasValue && !location.RequestSupport.Value)
             //{
@@ -149,7 +67,7 @@ namespace DigitService.Controllers
             var response = new LocationResponse()
             {
                 NextUpdateRequiredAt = await RequestLocationForDepartures(userId, focusManageResult, now, location.Timestamp),
-                Geofences = await RequestGeofencesForActiveNavigations(userId, focusManageResult, now)
+                Geofences = await locationStore.GetActiveGeofenceRequests(userId, now)
             };
             if (response.NextUpdateRequiredAt.HasValue)
             {

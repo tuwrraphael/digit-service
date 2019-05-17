@@ -1,14 +1,10 @@
-﻿using ButlerClient;
-using CalendarService.Client;
+﻿using CalendarService.Client;
 using CalendarService.Models;
 using Digit.Abstractions.Service;
 using Digit.Focus;
 using Digit.Focus.Model;
 using Digit.Focus.Models;
 using Digit.Focus.Service;
-using DigitPushService.Client;
-using DigitService.Models;
-using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,28 +21,22 @@ namespace DigitService.Impl
         private readonly ICalendarServiceClient calendarServiceClient;
         private readonly ITravelServiceClient travelServiceClient;
         private readonly IDigitLogger logger;
-        private readonly IButler butler;
-        private readonly IDigitPushServiceClient digitPushServiceClient;
         private readonly IEnumerable<IFocusSubscriber> focusSubscribers;
-        private readonly DigitServiceOptions options;
+        private readonly IFocusGeofenceService _focusGeofenceService;
 
         public FocusUpdateService(IFocusStore focusStore,
             ICalendarServiceClient calendarServiceClient,
             ITravelServiceClient travelServiceClient,
             IDigitLogger logger,
-            IButler butler,
-            IOptions<DigitServiceOptions> optionsAccessor,
-            IDigitPushServiceClient digitPushServiceClient,
-            IEnumerable<IFocusSubscriber> focusSubscribers)
+            IEnumerable<IFocusSubscriber> focusSubscribers,
+            IFocusGeofenceService focusGeofenceService)
         {
             this.focusStore = focusStore;
             this.calendarServiceClient = calendarServiceClient;
             this.travelServiceClient = travelServiceClient;
             this.logger = logger;
-            this.butler = butler;
-            this.digitPushServiceClient = digitPushServiceClient;
             this.focusSubscribers = focusSubscribers;
-            options = optionsAccessor.Value;
+            _focusGeofenceService = focusGeofenceService;
         }
 
 
@@ -172,6 +162,7 @@ namespace DigitService.Impl
 
         public async Task<FocusManageResult> Update(string userId, FocusUpdateRequest focusUpdateRequest)
         {
+            await _focusGeofenceService.UpdateFocusItems(userId, focusUpdateRequest.Location);
             var res = new FocusManageResult();
             var activeItems = await focusStore.GetActiveAsync(userId);
             var updatedItemIds = new HashSet<string>(focusUpdateRequest.ItemSyncResult != null ?
@@ -220,6 +211,7 @@ namespace DigitService.Impl
                     Id = item.Id
                 });
             }
+            await _focusGeofenceService.RefreshGeofencesForActiveNavigations(userId, res, DateTimeOffset.Now);
             var active = await focusStore.GetActiveItem(userId);
             var activeItemChanged = await focusStore.UpdateActiveItem(userId, active?.Id);
             if (activeItemChanged || (null != active && updatedItemIds.Contains(active.Id)))
