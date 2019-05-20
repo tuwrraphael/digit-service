@@ -63,21 +63,26 @@ namespace DigitService.Impl
                         Lat = location.Latitude,
                         Lng = location.Longitude
                     };
-                    bool requestWithNow = evt.Start <= DateTimeOffset.Now;
+                    DateTimeOffset directionRequestTime = DateTimeOffset.Now;
+                    if (item.DirectionsMetadata?.TravelStatus == TravelStatus.OnJourney)
+                    {
+                        directionRequestTime = location.Timestamp;
+                    }
+                    bool requestWithNow = evt.Start <= directionRequestTime;
                     DirectionsResult directionsResult = null;
                     const int preferredRoute = 0;
                     if (!requestWithNow)
                     {
                         directionsResult = await travelServiceClient.Users[userId].Directions.Transit.Get(start, address, evt.Start);
                         if (null != directionsResult.NotFound ||
-                            directionsResult.TransitDirections.Routes[preferredRoute].DepatureTime < DateTimeOffset.Now)
+                            directionsResult.TransitDirections.Routes[preferredRoute].DepatureTime < directionRequestTime)
                         {
                             requestWithNow = true;
                         }
                     }
                     if (requestWithNow)
                     {
-                        directionsResult = await travelServiceClient.Users[userId].Directions.Transit.Get(start, address, null, DateTimeOffset.Now);
+                        directionsResult = await travelServiceClient.Users[userId].Directions.Transit.Get(start, address, null, directionRequestTime);
                     }
                     directionsKey = directionsResult?.CacheKey;
                     await focusStore.UpdateDirections(item.Id, directionsResult,
@@ -99,10 +104,16 @@ namespace DigitService.Impl
             return null;
         }
 
-        private async Task<bool> RouteUpdateRequired(string userId, DirectionsResult res, int preferredRoute,
+        private async Task<bool> RouteUpdateRequired(string userId, DirectionsResult res, FocusItem item,
             Location location, DateTimeOffset now)
         {
-            var traceMeasures = await travelServiceClient.Directions[res.CacheKey].Itineraries[preferredRoute]
+            if (item.DirectionsMetadata.TravelStatus == TravelStatus.Finished)
+            {
+                return false;
+            }
+            var traceMeasures = await travelServiceClient
+                .Directions[res.CacheKey]
+                .Itineraries[item.DirectionsMetadata.PeferredRoute]
                 .Trace(new TraceLocation()
                 {
                     Accuracy = new TraceLocationAccuracy()
@@ -113,7 +124,7 @@ namespace DigitService.Impl
                     Coordinate = new Coordinate(location.Latitude, location.Longitude),
                     Timestamp = location.Timestamp
                 });
-            await logger.Log(userId, $"Traced {Math.Round(traceMeasures.ConfidenceOnRoute * 100)}% on route at accuracy of" +
+            await logger.Log(userId, $"Traced {Math.Round(traceMeasures.ConfidenceOnRoute * 100)}% on route at accuracy of " +
                 $"{location.Accuracy}, " +
                 $" with delay of {traceMeasures.PositionOnRoute.Delay}");
             if (traceMeasures.ConfidenceOnRoute > 0.3)
@@ -134,7 +145,7 @@ namespace DigitService.Impl
             {
                 if (!await RouteUpdateRequired(userId,
                         directionsResult,
-                        item.DirectionsMetadata.PeferredRoute,
+                        item,
                         location,
                         DateTimeOffset.Now))
                 {

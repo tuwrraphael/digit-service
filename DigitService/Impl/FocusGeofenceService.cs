@@ -22,7 +22,7 @@ namespace DigitService.Impl
             _focusStore = focusStore;
         }
 
-        private const int Radius = 40;
+        private const int Radius = 50;
         private readonly IDigitLogger _logger;
         private readonly ILocationStore _locationStore;
         private readonly IFocusStore _focusStore;
@@ -132,6 +132,7 @@ namespace DigitService.Impl
                 {
                     await _focusStore.SetTravelStatus(userId, t.FocusItemId, TravelStatus.Finished);
                 }
+                await _locationStore.SetTriggered(userId, triggered);
             }
         }
     }

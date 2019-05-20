@@ -22,6 +22,7 @@ namespace DigitService.Models
         public bool Same(GeofenceRequest gf)
         {
             return null != gf &&
+                gf.Exit == Exit &&
                 gf.Id == Id &&
                 gf.FocusItemId == FocusItemId &&
                 gf.Lat == Lat &&
