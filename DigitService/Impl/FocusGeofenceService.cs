@@ -21,8 +21,6 @@ namespace DigitService.Impl
             _locationStore = locationStore;
             _focusStore = focusStore;
         }
-
-        private const int Radius = 50;
         private readonly IDigitLogger _logger;
         private readonly ILocationStore _locationStore;
         private readonly IFocusStore _focusStore;
@@ -39,7 +37,7 @@ namespace DigitService.Impl
                 Lat = route.StartLocation.Lat,
                 Lng = route.StartLocation.Lng,
                 Exit = true,
-                Radius = Radius
+                Radius = 50
             };
             for (var i = 0; i < route.Steps.Length; i++)
             {
@@ -53,7 +51,7 @@ namespace DigitService.Impl
                     Lat = step.DepartureStop.Location.Lat,
                     Lng = step.DepartureStop.Location.Lat,
                     Exit = false,
-                    Radius = Radius
+                    Radius = 150
                 };
             }
             yield return new GeofenceRequest()
@@ -65,7 +63,7 @@ namespace DigitService.Impl
                 Lat = route.EndLocation.Lat,
                 Lng = route.EndLocation.Lng,
                 Exit = false,
-                Radius = Radius
+                Radius = 100
             };
         }
 

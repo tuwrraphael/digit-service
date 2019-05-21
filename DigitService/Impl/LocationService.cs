@@ -7,6 +7,7 @@ using Digit.Focus.Models;
 using DigitService.Models;
 using DigitService.Service;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -30,27 +31,80 @@ namespace DigitService.Impl
             return await locationStore.GetLastLocationAsync(userId);
         }
 
-        private bool DepartureIsPending(FocusItemWithExternalData v, DateTimeOffset now) => (v.IndicateTime - now) < FocusConstants.NoUpdateBeforeDepartureMargin && v.IndicateTime > now;
-
-        private async Task<DateTimeOffset?> RequestLocationForDepartures(string userId, FocusManageResult manageResult, DateTimeOffset now, DateTimeOffset locationTimeStamp)
+        private class UpdateRequirement
         {
-            bool departureIsUpcoming(FocusItemWithExternalData v) => (v.IndicateTime - now) >= FocusConstants.NoUpdateBeforeDepartureMargin;
-            DateTimeOffset halfTimeToDeparture(FocusItemWithExternalData v) => locationTimeStamp + ((v.IndicateTime - locationTimeStamp) / 2);
-            var upcomingDeparturesLocationReqiurement = manageResult.ActiveItems
-                .Where(v => null != v.Directions)
-                .Where(departureIsUpcoming)
-                .Select(v => new { Type = "upcoming", Time = halfTimeToDeparture(v), Departure = v });
-            DateTimeOffset halfTimeToFirstStop(FocusItemWithExternalData v) => v.IndicateTime + ((v.Directions.Routes[v.DirectionsMetadata.PeferredRoute].Steps[0].DepartureTime - v.IndicateTime) / 2);
-            var routeLocationRequirement = manageResult.ActiveItems
-                .Where(v => null != v.Directions)
-                .Where(v => DepartureIsPending(v, now))
-                .Select(v => new { Type = "route", Time = halfTimeToFirstStop(v), Departure = v });
+            public DateTimeOffset Time { get; set; }
+            public string Reason { get; set; }
+            public FocusItemWithExternalData FocusItem { get; set; }
+        }
 
-            var requirement = upcomingDeparturesLocationReqiurement.Union(routeLocationRequirement)
-                .OrderBy(v => v.Time).FirstOrDefault();
+
+        private IEnumerable<UpdateRequirement> UpdateTimes(IEnumerable<FocusItemWithExternalData> candidates,
+            DateTimeOffset now, DateTimeOffset locationTimeStamp)
+        {
+            foreach (var item in candidates)
+            {
+                var preferredRoute = item.Directions.Routes[item.DirectionsMetadata.PeferredRoute];
+                if (preferredRoute.DepatureTime - now > FocusConstants.DeparturePending)
+                {
+                    yield return new UpdateRequirement()
+                    {
+                        Time = locationTimeStamp + ((preferredRoute.DepatureTime - locationTimeStamp) / 2.0),
+                        Reason = "departure",
+                        FocusItem = item
+                    };
+                }
+                else
+                {
+                    if (preferredRoute.Steps.Length > 0 && preferredRoute.Steps[0].DepartureTime > now)
+                    {
+                        yield return new UpdateRequirement()
+                        {
+                            Time = preferredRoute.DepatureTime + ((preferredRoute.Steps[0].DepartureTime - preferredRoute.DepatureTime) / 2.0),
+                            Reason = "half time to first step",
+                            FocusItem = item
+                        };
+                    }
+                    else
+                    {
+                        var nextStepDeparture = preferredRoute.Steps.Where(step => step.DepartureTime > now).FirstOrDefault();
+                        if (null != nextStepDeparture)
+                        {
+                            yield return new UpdateRequirement()
+                            {
+                                Time = nextStepDeparture.DepartureTime,
+                                Reason = "step",
+                                FocusItem = item
+                            };
+                        }
+                        else
+                        {
+                            yield return new UpdateRequirement()
+                            {
+                                Time = preferredRoute.ArrivalTime,
+                                Reason = "arrival",
+                                FocusItem = item
+                            };
+                        }
+                    }
+                }
+            }
+        }
+
+        private async Task<DateTimeOffset?> RequestLocationForItems(string userId, FocusManageResult manageResult, DateTimeOffset now, DateTimeOffset locationTimeStamp)
+        {
+            var candidates = manageResult.ActiveItems.Where(
+                v => null != v.DirectionsMetadata
+                && null != v.Directions
+                && v.DirectionsMetadata.TravelStatus != TravelStatus.Finished);
+            var requirement = UpdateTimes(candidates, now, locationTimeStamp).OrderBy(v => v.Time).FirstOrDefault();
             if (null != requirement)
             {
-                await logger.Log(userId, $"Location update required for {requirement.Type} {requirement.Departure.CalendarEvent?.Subject} at {requirement.Time:s}");
+                await logger.Log(userId, $"Location update for {requirement.Reason} {requirement.FocusItem.CalendarEvent?.Subject} at {requirement.Time:t}");
+                if (requirement.Time < now + FocusConstants.ShortestLocationUpdateTime)
+                {
+                    return now + FocusConstants.ShortestLocationUpdateTime;
+                }
                 return requirement.Time;
             }
             return null;
@@ -66,7 +120,7 @@ namespace DigitService.Impl
             //}
             var response = new LocationResponse()
             {
-                NextUpdateRequiredAt = await RequestLocationForDepartures(userId, focusManageResult, now, location.Timestamp),
+                NextUpdateRequiredAt = await RequestLocationForItems(userId, focusManageResult, now, location.Timestamp),
                 Geofences = await locationStore.GetActiveGeofenceRequests(userId, now)
             };
             if (response.NextUpdateRequiredAt.HasValue)

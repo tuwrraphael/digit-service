@@ -33,7 +33,8 @@ namespace DigitService.Test
                         Start = new DateTimeOffset(2019,5,17,0,0,0, TimeSpan.Zero).AddMinutes(-15),
                         Lat = 3,
                         Lng = 4,
-                        Radius = 30
+                        Radius = 50,
+                        Exit = true
                     },
                     new GeofenceRequest()
                     {
@@ -42,7 +43,7 @@ namespace DigitService.Test
                         Start = new DateTimeOffset(2019,5,17,0,0,0, TimeSpan.Zero).AddMinutes(-15),
                         Lat = 3,
                         Lng = 4,
-                        Radius = 30
+                        Radius = 150
                     }
                 }));
             var svc = new FocusGeofenceService(Mock.Of<IDigitLogger>(), locationStore.Object,

@@ -1,5 +1,6 @@
 ﻿using Digit.DeviceSynchronization.Models;
 using Digit.DeviceSynchronization.Service;
+using Digit.Focus.Service;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,16 +11,33 @@ namespace Digit.DeviceSynchronization.Impl
     {
         private readonly IPushSyncStore pushSyncStore;
         private readonly IDebouncedPushService _debouncedPushService;
+        private readonly IFocusStore _focusStore;
 
-        public PushSyncService(IPushSyncStore pushSyncStore, IDebouncedPushService debouncedPushService)
+        public PushSyncService(IPushSyncStore pushSyncStore, IDebouncedPushService debouncedPushService,
+            IFocusStore focusStore)
         {
             this.pushSyncStore = pushSyncStore;
             _debouncedPushService = debouncedPushService;
+            _focusStore = focusStore;
         }
 
         public async Task<SyncAction[]> GetPendingSyncActions(string userId, DateTimeOffset now)
         {
-            return await pushSyncStore.GetPendingSyncActions(userId);
+            var syncActions = (await pushSyncStore.GetPendingSyncActions(userId)).ToList();
+            if ((await _focusStore.GetActiveAsync(userId)).Any(v => null != v.DirectionsMetadata &&
+            v.DirectionsMetadata.TravelStatus != Focus.Models.TravelStatus.Finished))
+            {
+                var locationSyncRequest = new LocationPushSyncRequest(now);
+                if (!syncActions.Any(s => s.Id == locationSyncRequest.Id))
+                {
+                    syncActions.Add(new SyncAction()
+                    {
+                        Id = locationSyncRequest.Id,
+                        Deadline = now
+                    });
+                }
+            }
+            return syncActions.ToArray();
         }
 
         private async Task Push(string userId, ISyncRequest syncRequest)

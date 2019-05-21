@@ -3,6 +3,7 @@ using Digit.DeviceSynchronization;
 using Digit.DeviceSynchronization.Impl;
 using Digit.DeviceSynchronization.Models;
 using Digit.DeviceSynchronization.Service;
+using Digit.Focus.Service;
 using DigitPushService.Client;
 using Moq;
 using System;
@@ -44,7 +45,8 @@ namespace DigitService.Test
             [Fact]
             public async void NoPending_Requested()
             {
-                var service = new PushSyncService(MockPushSyncStore(new SyncAction[] { }).Object, MockDebouncedPushService());
+                var service = new PushSyncService(MockPushSyncStore(new SyncAction[] { }).Object, MockDebouncedPushService(),
+                    Mock.Of<IFocusStore>());
                 var res = await service.RequestSync(userId, new LocationPushSyncRequest(Now), Now);
                 Assert.True(res.SyncRequested);
                 Assert.False(res.SyncPendingFor.HasValue);
@@ -56,7 +58,8 @@ namespace DigitService.Test
                 var service = new PushSyncService(MockPushSyncStore(new[] { new SyncAction() {
                     Id = new LocationPushSyncRequest(Now).Id,
                     Deadline = Now.AddMinutes(30)
-                } }).Object, MockDebouncedPushService());
+                } }).Object, MockDebouncedPushService(),
+                    Mock.Of<IFocusStore>());
                 var res = await service.RequestSync(userId, new LocationPushSyncRequest(Now.AddMinutes(15)), Now);
                 Assert.True(res.SyncRequested);
                 Assert.Equal(Now.AddMinutes(30), res.SyncPendingFor);
@@ -68,7 +71,8 @@ namespace DigitService.Test
                 var service = new PushSyncService(MockPushSyncStore(new[] { new SyncAction() {
                     Id = new LocationPushSyncRequest(Now).Id,
                     Deadline = Now.AddMinutes(15)
-                } }).Object, MockDebouncedPushService());
+                } }).Object, MockDebouncedPushService(),
+                    Mock.Of<IFocusStore>());
                 var res = await service.RequestSync(userId, new LocationPushSyncRequest(Now.AddMinutes(30)), Now);
                 Assert.False(res.SyncRequested);
                 Assert.Equal(Now.AddMinutes(15), res.SyncPendingFor);
@@ -83,7 +87,8 @@ namespace DigitService.Test
                 },new SyncAction() {
                     Id = new DevicePushSyncRequest("deviceId", Now).Id,
                     Deadline = Now.AddMinutes(30)
-                } }).Object, MockDebouncedPushService());
+                } }).Object, MockDebouncedPushService(),
+                    Mock.Of<IFocusStore>());
                 var res = await service.RequestSync(userId, new DevicePushSyncRequest("deviceId", Now.AddMinutes(25)), Now);
                 Assert.False(res.SyncRequested);
                 Assert.Equal(Now.AddMinutes(15), res.SyncPendingFor);
@@ -118,7 +123,8 @@ namespace DigitService.Test
                 var service = new PushSyncService(MockPushSyncStore(new[] { new SyncAction() {
                     Id = "test",
                     Deadline = missedDeadline
-                }}).Object, MockDebouncedPushService());
+                }}).Object, MockDebouncedPushService(),
+                    Mock.Of<IFocusStore>());
 
                 var res = await service.RequestSync(userId, new TestPushSyncRequest(Now, new TimeSpan(0, 5, 0)), Now);
                 Assert.True(res.SyncRequested);
@@ -132,7 +138,8 @@ namespace DigitService.Test
                 var service = new PushSyncService(MockPushSyncStore(new[] { new SyncAction() {
                     Id = "test",
                     Deadline = missedDeadline
-                }}).Object, MockDebouncedPushService());
+                }}).Object, MockDebouncedPushService(),
+                    Mock.Of<IFocusStore>());
 
                 var res = await service.RequestSync(userId, new TestPushSyncRequest(Now, new TimeSpan(0, 11, 0)), Now);
                 Assert.False(res.SyncRequested);
@@ -149,7 +156,8 @@ namespace DigitService.Test
                     Id = new LocationPushSyncRequest(Now).Id,
                     Deadline = Now.AddMinutes(30)
                 } });
-                var service = new PushSyncService(mockPushSyncStore.Object, MockDebouncedPushService());
+                var service = new PushSyncService(mockPushSyncStore.Object, MockDebouncedPushService(),
+                    Mock.Of<IFocusStore>());
                 var syncRequest = new LocationPushSyncRequest(Now.AddMinutes(25));
                 await service.SetRequestedExternal(userId, syncRequest);
                 mockPushSyncStore.Verify(v => v.AddSyncAction(userId, syncRequest.Id, Now.AddMinutes(25)), Times.Once);
@@ -162,7 +170,8 @@ namespace DigitService.Test
                     Id = new DevicePushSyncRequest("deviceId", Now).Id,
                     Deadline = Now.AddMinutes(10)
                 } });
-                var service = new PushSyncService(mockPushSyncStore.Object, MockDebouncedPushService());
+                var service = new PushSyncService(mockPushSyncStore.Object, MockDebouncedPushService(),
+                    Mock.Of<IFocusStore>());
                 var syncRequest = new LocationPushSyncRequest(Now.AddMinutes(25));
                 await service.SetRequestedExternal(userId, syncRequest);
                 mockPushSyncStore.Verify(v => v.AddSyncAction(userId, syncRequest.Id, Now.AddMinutes(25)), Times.Once);
@@ -175,7 +184,8 @@ namespace DigitService.Test
                     Id = new LocationPushSyncRequest(Now.AddMinutes(10)).Id,
                     Deadline = Now.AddMinutes(10)
                 } });
-                var service = new PushSyncService(mockPushSyncStore.Object, MockDebouncedPushService());
+                var service = new PushSyncService(mockPushSyncStore.Object, MockDebouncedPushService(),
+                    Mock.Of<IFocusStore>());
                 await service.SetRequestedExternal(userId, new LocationPushSyncRequest(Now.AddMinutes(25)));
                 mockPushSyncStore.Verify(v => v.AddSyncAction(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>()), Times.Never);
             }

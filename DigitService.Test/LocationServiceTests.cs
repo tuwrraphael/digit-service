@@ -5,6 +5,7 @@ using Digit.DeviceSynchronization.Models;
 using Digit.DeviceSynchronization.Service;
 using Digit.Focus.Model;
 using Digit.Focus.Models;
+using Digit.Focus.Service;
 using DigitService.Impl;
 using DigitService.Models;
 using DigitService.Service;
@@ -35,7 +36,8 @@ namespace DigitService.Test
                 .Returns(Task.FromResult(syncActions));
             pushSyncStoreMock.Setup(v => v.AddSyncAction(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>()))
                 .Returns(Task.FromResult(syncActions));
-            return new PushSyncService(pushSyncStoreMock.Object, Mock.Of<IDebouncedPushService>());
+            return new PushSyncService(pushSyncStoreMock.Object, Mock.Of<IDebouncedPushService>(),
+                    Mock.Of<IFocusStore>());
         }
 
         public class RequestLocation
@@ -257,10 +259,10 @@ namespace DigitService.Test
                 {
                     ActiveItems = new List<FocusItemWithExternalData>()
                 {
-                       GetDeparture(now.AddMinutes(-2), now.AddMinutes(10)),
+                       GetDeparture(now.AddMinutes(-2), now.AddMinutes(16)),
                 }
                 });
-                Assert.Null(response.NextUpdateRequiredAt);
+                Assert.Equal(now.AddMinutes(7), response.NextUpdateRequiredAt);
             }
         }
     }
