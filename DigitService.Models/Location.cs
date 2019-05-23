@@ -25,8 +25,8 @@ namespace DigitService.Models
                 gf.Exit == Exit &&
                 gf.Id == Id &&
                 gf.FocusItemId == FocusItemId &&
-                gf.Lat == Lat &&
-                gf.Lng == Lng &&
+                Math.Abs(gf.Lat - Lat) < 0.01 &&
+                Math.Abs(gf.Lng - Lng) < 0.01 &&
                 gf.Start == Start;
         }
     }
