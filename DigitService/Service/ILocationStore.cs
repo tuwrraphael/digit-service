@@ -10,6 +10,7 @@ namespace DigitService.Service
         Task UpdateLocationAsync(string userId, Location location);
         Task<Location> GetLastLocationAsync(string userId);
         Task<GeofenceRequest[]> GetActiveGeofenceRequests(string userId, DateTimeOffset now);
+        Task<bool> Exists(string userId, GeofenceRequest gfr);
         Task AddGeofenceRequests(string userId, GeofenceRequest[] request);
         Task SetTriggered(string userId, GeofenceRequest[] request);
     }

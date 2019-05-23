@@ -4,11 +4,14 @@ using Digit.Focus.Model;
 using Digit.Focus.Models;
 using Digit.Focus.Service;
 using DigitService.Impl;
+using DigitService.Impl.EF;
 using DigitService.Models;
 using DigitService.Service;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using TravelService.Models.Directions;
 using Xunit;
@@ -23,34 +26,44 @@ namespace DigitService.Test
         public async Task GetGeofencesForActiveNavigations()
         {
 
-            var locationStore = new Mock<ILocationStore>(MockBehavior.Strict);
-            locationStore.Setup(v => v.GetActiveGeofenceRequests(userId, It.IsAny<DateTimeOffset>()))
-                .Returns(Task.FromResult(new[] {
-                    new GeofenceRequest()
+            var options = new DbContextOptionsBuilder<DigitServiceContext>()
+               .UseInMemoryDatabase(databaseName: "GetGeofencesForActiveNavigations")
+               .Options;
+
+            // Run the test against one instance of the context
+            using (var context = new DigitServiceContext(options))
+            {
+                context.FocusItems.Add(new StoredFocusItem()
+                {
+                    Id = "1",
+                    UserId = userId,
+                    Geofences = new List<StoredGeoFence> { new StoredGeoFence()
                     {
                         FocusItemId = "1",
                         Id = "start#1",
-                        Start = new DateTimeOffset(2019,5,17,0,0,0, TimeSpan.Zero).AddMinutes(-15),
+                        Start = new DateTimeOffset(2019,5,17,0,0,0, TimeSpan.Zero).AddMinutes(-15).UtcDateTime,
                         Lat = 3,
                         Lng = 4,
                         Radius = 50,
                         Exit = true
                     },
-                    new GeofenceRequest()
+                    new StoredGeoFence()
                     {
                         FocusItemId = "1",
                         Id = "step1#1",
-                        Start = new DateTimeOffset(2019,5,17,0,0,0, TimeSpan.Zero).AddMinutes(-15),
+                        Start = new DateTimeOffset(2019,5,17,0,0,0, TimeSpan.Zero).AddMinutes(-15).UtcDateTime,
                         Lat = 3,
                         Lng = 4,
                         Radius = 150
-                    }
-                }));
-            var svc = new FocusGeofenceService(Mock.Of<IDigitLogger>(), locationStore.Object,
-                Mock.Of<IFocusStore>());
-            var res = await svc.GetGeofencesForActiveNavigations(userId, new FocusManageResult()
-            {
-                ActiveItems = new List<FocusItemWithExternalData>()
+                    } }
+                });
+                await context.SaveChangesAsync();
+                var locationStore = new LocationStore(context, Mock.Of<IUserRepository>(), Mock.Of<IDigitLogger>());
+                var svc = new FocusGeofenceService(Mock.Of<IDigitLogger>(), locationStore,
+                    Mock.Of<IFocusStore>());
+                var res = await svc.GetNewGeofencesForActiveNavigations(userId, new FocusManageResult()
+                {
+                    ActiveItems = new List<FocusItemWithExternalData>()
                 {
                     new FocusItemWithExternalData()
                     {
@@ -85,9 +98,13 @@ namespace DigitService.Test
                         }
                     },
                 }
-            }, new DateTimeOffset(2019, 5, 17, 0, 0, 0, TimeSpan.Zero));
-            Assert.Collection(res, item => Assert.Equal("step0#1", item.Id),
-                item => Assert.Equal("end#1", item.Id));
+                }, new DateTimeOffset(2019, 5, 17, 0, 0, 0, TimeSpan.Zero));
+                Assert.Collection(res, item => Assert.Equal("step0#1", item.Id),
+                    item => Assert.Equal("end#1", item.Id));
+                var stepFence = res.Where(v => v.Id == "step0#1").Single();
+                Assert.Equal(7, stepFence.Lat);
+                Assert.Equal(8, stepFence.Lng);
+            }
         }
     }
 }

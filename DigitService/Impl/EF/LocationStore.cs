@@ -123,5 +123,21 @@ namespace DigitService.Impl.EF
             }
             await digitServiceContext.SaveChangesAsync();
         }
+
+        public async Task<bool> Exists(string userId, GeofenceRequest gfr)
+        {
+            return await digitServiceContext.FocusItems
+               .Include(v => v.Geofences)
+               .Where(v => v.UserId == userId)
+               .SelectMany(v => v.Geofences)
+               .Where(v => v.Id == gfr.Id
+                      && v.Start == gfr.Start.UtcDateTime
+                      && v.Exit == gfr.Exit
+                      && v.FocusItemId == gfr.FocusItemId
+                      && Math.Abs(v.Lat - gfr.Lat) < 0.01
+                      && Math.Abs(v.Lng - gfr.Lng) < 0.01
+                      && v.Radius == gfr.Radius)
+                .AnyAsync();
+        }
     }
 }

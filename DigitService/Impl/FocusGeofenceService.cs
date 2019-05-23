@@ -49,7 +49,7 @@ namespace DigitService.Impl
                     End = item.End,
                     Start = route.DepatureTime.AddMinutes(-15),
                     Lat = step.DepartureStop.Location.Lat,
-                    Lng = step.DepartureStop.Location.Lat,
+                    Lng = step.DepartureStop.Location.Lng,
                     Exit = false,
                     Radius = 150
                 };
@@ -67,22 +67,20 @@ namespace DigitService.Impl
             };
         }
 
-        public async Task<GeofenceRequest[]> GetGeofencesForActiveNavigations(string userId, FocusManageResult manageResult,
+        public async Task<GeofenceRequest[]> GetNewGeofencesForActiveNavigations(string userId, FocusManageResult manageResult,
             DateTimeOffset now)
         {
             var geofences = manageResult.ActiveItems.Where(v => null != v.DirectionsMetadata && null == v.DirectionsMetadata.Error)
                 .Where(v => v.Directions.Routes[v.DirectionsMetadata.PeferredRoute].DepatureTime - now < FocusConstants.DeparturePending)
                 .SelectMany(item => GetGeofences(item));
-            var gfs = await _locationStore.GetActiveGeofenceRequests(userId, now);
-            return geofences.Where(gfr =>
-               !gfs.Any(g => g.Same(gfr))
-            ).ToArray();
+            return (await Task.WhenAll(geofences.Select(async gfr => new { gfr, exists = await _locationStore.Exists(userId, gfr) })))
+                .Where(v => !v.exists).Select(v => v.gfr).ToArray();
         }
 
         public async Task RefreshGeofencesForActiveNavigations(string userId, FocusManageResult manageResult,
             DateTimeOffset now)
         {
-            var freshFences = await GetGeofencesForActiveNavigations(userId, manageResult, now);
+            var freshFences = await GetNewGeofencesForActiveNavigations(userId, manageResult, now);
             await _locationStore.AddGeofenceRequests(userId, freshFences);
         }
 
