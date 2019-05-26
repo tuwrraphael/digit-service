@@ -49,39 +49,42 @@ namespace DigitService.Impl
                     }
                     focusItemsList.Add(e);
                     var address = calendarItem.GetFormattedAddress();
-                    var directions = await _travelServiceClient.Users[userId]
-                        .Directions.Transit.Get(start, address, calendarItem.Start);
-                    var route = DirectionUtils.SelectRoute(directions);
-                    if (null == directions.NotFound)
+                    if (!string.IsNullOrEmpty(address))
                     {
-                        if (first)
+                        var directions = await _travelServiceClient.Users[userId]
+                            .Directions.Transit.Get(start, address, calendarItem.Start);
+                        var route = DirectionUtils.SelectRoute(directions);
+                        if (null == directions.NotFound)
                         {
-                            getup = route.DepatureTime - TimeSpan.FromHours(1);
+                            if (first)
+                            {
+                                getup = route.DepatureTime - TimeSpan.FromHours(1);
+                            }
+                            directionsList.Add(directions);
+                            await _focusStore.UpdateDirections(e.Id, directions, 0);
+                            await _focusStore.UpdateIndicateTime(e.Id, route.DepatureTime);
+                            e.IndicateTime = route.DepatureTime;
+                            e.DirectionsMetadata = new DirectionsMetadata()
+                            {
+                                Error = directions.NotFound?.Reason,
+                                Key = directions.CacheKey,
+                                PeferredRoute = 0,
+                                TravelStatus = TravelStatus.UnStarted
+                            };
                         }
-                        directionsList.Add(directions);
-                        await _focusStore.UpdateDirections(e.Id, directions, 0);
-                        await _focusStore.UpdateIndicateTime(e.Id, route.DepatureTime);
-                        e.IndicateTime = route.DepatureTime;
-                        e.DirectionsMetadata = new DirectionsMetadata()
+                        else
                         {
-                            Error = directions.NotFound?.Reason,
-                            Key = directions.CacheKey,
-                            PeferredRoute = 0,
-                            TravelStatus = TravelStatus.UnStarted
-                        };
+                            await _focusStore.UpdateDirections(e.Id, directions, null);
+                            e.DirectionsMetadata = new DirectionsMetadata()
+                            {
+                                Error = directions.NotFound?.Reason,
+                                Key = directions.CacheKey,
+                                PeferredRoute = 0,
+                                TravelStatus = TravelStatus.UnStarted
+                            };
+                        }
+                        start = address;
                     }
-                    else
-                    {
-                        await _focusStore.UpdateDirections(e.Id, directions, null);
-                        e.DirectionsMetadata = new DirectionsMetadata()
-                        {
-                            Error = directions.NotFound?.Reason,
-                            Key = directions.CacheKey,
-                            PeferredRoute = 0,
-                            TravelStatus = TravelStatus.UnStarted
-                        };
-                    }
-                    start = address;
                     first = false;
                 }
             }
