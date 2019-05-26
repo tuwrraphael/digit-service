@@ -52,7 +52,7 @@ namespace DigitService.Impl
                     var directions = await _travelServiceClient.Users[userId]
                         .Directions.Transit.Get(start, address, calendarItem.Start);
                     var route = DirectionUtils.SelectRoute(directions);
-                    if (null != directions.NotFound)
+                    if (null == directions.NotFound)
                     {
                         if (first)
                         {
