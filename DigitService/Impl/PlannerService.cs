@@ -72,7 +72,7 @@ namespace DigitService.Impl
                     }
                     else
                     {
-                        await _focusStore.UpdateDirections(e.Id, null, null);
+                        await _focusStore.UpdateDirections(e.Id, directions, null);
                         e.DirectionsMetadata = new DirectionsMetadata()
                         {
                             Error = directions.NotFound?.Reason,
