@@ -111,6 +111,10 @@ namespace DigitService.Impl
             {
                 return false;
             }
+            if (null == location)
+            {
+                return false;
+            }
             var traceMeasures = await travelServiceClient
                 .Directions[res.CacheKey]
                 .Itineraries[item.DirectionsMetadata.PeferredRoute]
@@ -171,7 +175,10 @@ namespace DigitService.Impl
 
         public async Task<FocusManageResult> Update(string userId, FocusUpdateRequest focusUpdateRequest)
         {
-            await _focusGeofenceService.UpdateFocusItems(userId, focusUpdateRequest.Location);
+            if (null != focusUpdateRequest.Location)
+            {
+                await _focusGeofenceService.UpdateFocusItems(userId, focusUpdateRequest.Location);
+            }
             var res = new FocusManageResult();
             var activeItems = await focusStore.GetActiveAsync(userId);
             var updatedItemIds = new HashSet<string>(focusUpdateRequest.ItemSyncResult != null ?
