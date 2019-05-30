@@ -67,10 +67,8 @@ namespace DigitService.Impl
                 ItemSyncResult = syncResult,
                 Location = lastLocation
             });
-            if (syncResult.AddedItems.Any() || syncResult.ChangedItems.Any())
-            {
-                await locationService.RequestLocationAsync(userId, DateTimeOffset.Now, res);
-            }
+            // for now request anyway, there item might be unchanged due to planner
+            await locationService.RequestLocationAsync(userId, DateTimeOffset.Now, res);
         }
 
         public async Task PatchAsync(string userId)
