@@ -5,6 +5,7 @@ using Digit.Focus;
 using Digit.Focus.Model;
 using Digit.Focus.Models;
 using Digit.Focus.Service;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -97,7 +98,8 @@ namespace DigitService.Impl
                 }
                 catch (TravelServiceException ex)
                 {
-                    await logger.Log(userId, $"Error while retrieving directions for {evt.Subject}: {ex.Message}", 3);
+                    await logger.LogForFocusItem(userId, item.Id, $"Error while retrieving directions for {evt.Subject}: {ex.Message}",
+                        logLevel: LogLevel.Error);
                 }
             }
             // TODO maybe clear directions with focusStore.UpdateDirections
@@ -128,9 +130,13 @@ namespace DigitService.Impl
                     Coordinate = new Coordinate(location.Latitude, location.Longitude),
                     Timestamp = location.Timestamp
                 });
-            await logger.Log(userId, $"Traced {Math.Round(traceMeasures.ConfidenceOnRoute * 100)}% on route at accuracy of " +
+            await logger.LogForFocusItem(userId, item.Id, $"Traced {Math.Round(traceMeasures.ConfidenceOnRoute * 100)}% on route at accuracy of " +
                 $"{location.Accuracy}, " +
-                $" with delay of {traceMeasures.PositionOnRoute.Delay}");
+                $" with delay of {traceMeasures.PositionOnRoute.Delay}", DigitTraceAction.TraceOnRoute,
+                new Dictionary<string, object>() {
+                    {"lng" , location.Longitude },
+                    {"lat" , location.Latitude }
+                });
             if (traceMeasures.ConfidenceOnRoute > 0.3)
             {
                 if (traceMeasures.PositionOnRoute.Delay < FocusConstants.MaxAllowedDelay &&
@@ -207,7 +213,7 @@ namespace DigitService.Impl
                 DateTimeOffset indicateTime;
                 if (null == directions)
                 {
-                    await logger.Log(userId, $"No departure time found, using {FocusConstants.DefaultTravelTime.TotalMinutes:0} minutes for {evt.Subject}");
+                    await logger.LogForFocusItem(userId, item.Id, $"No departure time found, using {FocusConstants.DefaultTravelTime.TotalMinutes:0} minutes for {evt.Subject}");
                     indicateTime = evt.Start - FocusConstants.DefaultTravelTime;
                 }
                 else

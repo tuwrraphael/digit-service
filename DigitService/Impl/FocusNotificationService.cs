@@ -6,6 +6,7 @@ using Digit.Focus.Models;
 using Digit.Focus.Service;
 using DigitPushService.Client;
 using DigitService.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
@@ -118,7 +119,7 @@ namespace DigitService.Impl
                         }
                         catch (Exception e)
                         {
-                            await _logger.Log(userId, $"Could notify user ({e.Message}).", 3);
+                            await _logger.LogForFocusItem(userId,item.Id, $"Could notify user ({e.Message}).", logLevel: LogLevel.Error);
                         }
                         await _focusStore.SetFocusItemNotifiedAsync(item.Id); // always set notified for now to prevent massive notification spam
                     }

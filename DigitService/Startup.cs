@@ -29,6 +29,12 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Digit.DeviceSynchronization.Impl;
 using Digit.Focus.Impl;
+using Microsoft.ApplicationInsights.AspNetCore;
+using Microsoft.ApplicationInsights.DependencyCollector;
+using System.Linq;
+using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector;
+using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse;
+using Microsoft.ApplicationInsights.WindowsServer;
 
 namespace DigitService
 {
@@ -131,6 +137,8 @@ namespace DigitService
             );
             services.AddTransient<IUserRepository, UserRepository>();
 
+            ConfigureApplicationInisghts(services);
+
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -173,6 +181,38 @@ namespace DigitService
                     builder.RequireClaim("scope", "digit.service");
                 });
             });
+        }
+
+        private void ConfigureApplicationInisghts(IServiceCollection services)
+        {
+            var aiOptions = new Microsoft.ApplicationInsights.AspNetCore.Extensions.ApplicationInsightsServiceOptions
+            {
+                EnableAuthenticationTrackingJavaScript = false,
+                EnableHeartbeat = false,
+                EnableAdaptiveSampling = false,
+                AddAutoCollectedMetricExtractor = false,
+                EnableQuickPulseMetricStream = false,
+            };
+            aiOptions.RequestCollectionOptions.EnableW3CDistributedTracing = true;
+            aiOptions.RequestCollectionOptions.TrackExceptions = true;
+            services.AddApplicationInsightsTelemetry(aiOptions);
+            services.ConfigureTelemetryModule<DependencyTrackingTelemetryModule>((module, o) =>
+            {
+                module.EnableW3CHeadersInjection = true;
+            });
+            foreach (var mod in new[] {
+                typeof(PerformanceCollectorModule),
+                typeof(QuickPulseTelemetryModule),
+                typeof(AppServicesHeartbeatTelemetryModule)
+            })
+            {
+                var modSvc = services.FirstOrDefault(t => t.ImplementationType == mod);
+                if (modSvc != null)
+                {
+                    services.Remove(modSvc);
+                }
+            }
+            services.AddApplicationInsightsTelemetryProcessor<RequestFilterTelemetryProcessor>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

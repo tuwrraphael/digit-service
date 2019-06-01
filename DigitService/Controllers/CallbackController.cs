@@ -51,7 +51,7 @@ namespace DigitService.Controllers
             }
             catch (CalendarServiceException)
             {
-                await digitLogger.Log(userId, $"Could not renew reminder.", 3);
+                await digitLogger.LogErrorForUser(userId, $"Could not renew reminder.");
             }
             return Ok();
         }

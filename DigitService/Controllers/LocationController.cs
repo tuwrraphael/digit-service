@@ -4,6 +4,7 @@ using DigitService.Models;
 using DigitService.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using TravelService.Models.Directions;
 
@@ -34,7 +35,7 @@ namespace DigitService.Controllers
         [HttpPut("me/location/error")]
         public async Task<IActionResult> Put([FromBody] LocationConfigurationError error)
         {
-            await logger.Log(User.GetId(), "Location configuration error", 3);
+            await logger.LogForUser(User.GetId(), "Location configuration error", logLevel: LogLevel.Error);
             return Ok();
         }
     }

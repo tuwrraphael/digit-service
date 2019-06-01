@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <UserSecretsId>2b3680f5-2225-4ef9-aa6e-17951e519092</UserSecretsId>
+    <ApplicationInsightsResourceId>/subscriptions/0b32447d-edbe-4af4-84b2-50d267eb02c6/resourcegroups/Default-ApplicationInsights-EastUS/providers/microsoft.insights/components/DigitService</ApplicationInsightsResourceId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +21,7 @@
     <PackageReference Include="DigitPushService.Client" Version="1.1.1" />
     <PackageReference Include="FileStore.tiscca-raphael" Version="1.0.0" />
     <PackageReference Include="Geolocation.NetStandard" Version="1.1.1" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.7.0" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.4" />
@@ -39,6 +41,11 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\App_Data\" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services" />
   </ItemGroup>
 
 </Project>

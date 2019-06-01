@@ -98,7 +98,7 @@ namespace DigitService.Impl
                    {
                        if (distance >= gf.Radius)
                        {
-                           await _logger.Log(userId, $"Geofence {gf.Id}/Exit triggered");
+                           await _logger.LogForFocusItem(userId, gf.FocusItemId, $"Geofence {gf.Id}/Exit triggered");
                            triggered = true;
                        }
                    }
@@ -106,7 +106,7 @@ namespace DigitService.Impl
                    {
                        if (distance <= gf.Radius)
                        {
-                           await _logger.Log(userId, $"Geofence {gf.Id}/Enter triggered");
+                           await _logger.LogForFocusItem(userId, gf.FocusItemId, $"Geofence {gf.Id}/Enter triggered");
                            triggered = true;
                        }
                    }

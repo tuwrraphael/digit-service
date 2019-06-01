@@ -100,7 +100,7 @@ namespace DigitService.Impl
             var requirement = UpdateTimes(candidates, now, locationTimeStamp).OrderBy(v => v.Time).FirstOrDefault();
             if (null != requirement)
             {
-                await logger.Log(userId, $"Location update for {requirement.Reason} {requirement.FocusItem.CalendarEvent?.Subject} at {requirement.Time:t}");
+                await logger.LogForFocusItem(userId, requirement.FocusItem.Id, $"Location update for {requirement.Reason} {requirement.FocusItem.CalendarEvent?.Subject} at {requirement.Time:t}");
                 if (requirement.Time < now + FocusConstants.ShortestLocationUpdateTime)
                 {
                     return now + FocusConstants.ShortestLocationUpdateTime;
@@ -158,7 +158,7 @@ namespace DigitService.Impl
             }
             else
             {
-                await logger.Log(userId, $"Not requesting location because cached location from {storedLocation.Timestamp:s} is used");
+                await logger.LogForUser(userId, $"Not requesting location because cached location from {storedLocation.Timestamp:s} is used");
                 return new LocationRequestResult()
                 {
                     LocationRequestSent = false,

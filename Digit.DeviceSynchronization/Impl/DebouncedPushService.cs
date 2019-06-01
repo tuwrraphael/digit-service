@@ -2,6 +2,7 @@
 using Digit.DeviceSynchronization.Models;
 using Digit.DeviceSynchronization.Service;
 using DigitPushService.Client;
+using Microsoft.Extensions.Logging;
 using PushServer.PushConfiguration.Abstractions.Models;
 using System;
 using System.Collections.Concurrent;
@@ -16,19 +17,24 @@ namespace Digit.DeviceSynchronization.Impl
     {
         private static readonly ConcurrentDictionary<string, DebouncedPushUserService> locationUserServices = new ConcurrentDictionary<string, DebouncedPushUserService>();
         private readonly IDigitPushServiceClient digitPushServiceClient;
-        private readonly IDigitLogger logger;
+        private readonly ILogger<DebouncedPushService> logger;
+        private readonly IDigitLogger digitLogger;
 
-        public DebouncedPushService(IDigitPushServiceClient digitPushServiceClient, IDigitLogger logger)
+        public DebouncedPushService(IDigitPushServiceClient digitPushServiceClient,
+            IDigitLogger digitLogger,
+            ILogger<DebouncedPushService> logger)
 
         {
             this.digitPushServiceClient = digitPushServiceClient;
+            this.digitLogger = digitLogger;
             this.logger = logger;
         }
 
         public async Task PushDebounced(string userId, ISyncRequest syncRequest)
         {
 
-            var locationUserService = locationUserServices.GetOrAdd(userId, new DebouncedPushUserService(userId, digitPushServiceClient, logger));
+            var locationUserService = locationUserServices.GetOrAdd(userId, 
+                new DebouncedPushUserService(userId, digitPushServiceClient, digitLogger, logger));
             await locationUserService.EnqueuePush(syncRequest);
         }
 
@@ -39,17 +45,20 @@ namespace Digit.DeviceSynchronization.Impl
 
             private readonly string userId;
             private readonly IDigitPushServiceClient digitPushServiceClient;
-            private readonly IDigitLogger logger;
+            private readonly IDigitLogger digitLogger;
+            private readonly ILogger<DebouncedPushService> logger;
             private Timer _timer;
             private static readonly TimeSpan DebounceTime = TimeSpan.FromSeconds(15);
 
             public DebouncedPushUserService(string userId,
                 IDigitPushServiceClient digitPushServiceClient,
-                IDigitLogger logger)
+                IDigitLogger digitLogger,
+                ILogger<DebouncedPushService> logger)
             {
 
                 this.userId = userId;
                 this.digitPushServiceClient = digitPushServiceClient;
+                this.digitLogger = digitLogger;
                 this.logger = logger;
             }
 
@@ -64,7 +73,7 @@ namespace Digit.DeviceSynchronization.Impl
                         try
                         {
                             var reqs = syncRequests.ToArray();
-                            await logger.Log(userId, $"Enqueued {reqs.Length}", 0);
+                            await digitLogger.LogForUser(userId, $"Enqueued {reqs.Length}");
                             if (reqs.Length > 0)
                             {
                                 var channels = await digitPushServiceClient.PushChannels[userId].GetAllAsync();
@@ -99,15 +108,16 @@ namespace Digit.DeviceSynchronization.Impl
                                             ChannelId = group.Key,
                                             Payload = "{\"action\" : \"digit.sync\"}"
                                         });
-                                        await logger.Log(userId, $"Pushed {string.Join(", ", group.Select(d => d.Id))}", 1);
+                                        await digitLogger.LogForUser(userId, $"Pushed {string.Join(", ", group.Select(d => d.Id))}", DigitTraceAction.RequestPush);
                                     }
                                     catch (PushChannelNotFoundException)
                                     {
-                                        await logger.Log(userId, $"Could not find channel {group.Key}", 3);
+                                        await digitLogger.LogForUser(userId, $"Could not find channel {group.Key}", logLevel: LogLevel.Error);
                                     }
                                     catch (Exception e)
                                     {
-                                        await logger.Log(userId, $"Could not push {string.Join(", ", group.Select(d => d.Id))}; Error: {e.Message}", 3);
+                                        logger.LogError(e, "push exception");
+                                        await digitLogger.LogErrorForUser(userId, $"Could not push {string.Join(", ", group.Select(d => d.Id))}; Error: {e.Message}");
                                     }
                                 }
                                 syncRequests.Clear();
@@ -121,7 +131,7 @@ namespace Digit.DeviceSynchronization.Impl
                     }, null, (int)DebounceTime.TotalMilliseconds, Timeout.Infinite);
                 }
                 syncRequests.Add(req);
-                await logger.Log(userId, $"Enqueued {req}", 0);
+                await digitLogger.LogForUser(userId, $"Enqueued {req}");
                 sem.Release();
             }
         }

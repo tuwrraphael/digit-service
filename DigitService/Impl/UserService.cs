@@ -7,6 +7,7 @@ using DigitPushService.Client;
 using DigitService.Controllers;
 using DigitService.Models;
 using DigitService.Service;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Concurrent;
@@ -22,6 +23,7 @@ namespace DigitService.Impl
         private readonly IButler butler;
         private readonly IDigitLogger digitLogger;
         private readonly IDigitPushServiceClient digitPushServiceClient;
+        private readonly ILogger<UserService> _logger;
         private readonly DigitServiceOptions options;
         private static ConcurrentDictionary<string, SemaphoreSlim> maintainanceSemaphores = new ConcurrentDictionary<string, SemaphoreSlim>();
 
@@ -30,13 +32,15 @@ namespace DigitService.Impl
             IButler butler,
             IOptions<DigitServiceOptions> optionsAccessor,
             IDigitLogger digitLogger,
-            IDigitPushServiceClient digitPushServiceClient)
+            IDigitPushServiceClient digitPushServiceClient,
+            ILogger<UserService> logger)
         {
             this.userRepository = userRepository;
             this.calendarService = calendarService;
             this.butler = butler;
             this.digitLogger = digitLogger;
             this.digitPushServiceClient = digitPushServiceClient;
+            _logger = logger;
             options = optionsAccessor.Value;
         }
 
@@ -47,7 +51,7 @@ namespace DigitService.Impl
                 throw new InvalidOperationException("User exists");
             }
             var user = await userRepository.CreateUser(userId);
-            await digitLogger.Log(userId, "Created account", 1);
+            await digitLogger.LogForUser(userId, "Created account", DigitTraceAction.CreatedAccount);
             return await MaintainAsync(userId);
         }
 
@@ -87,11 +91,12 @@ namespace DigitService.Impl
                             ClientState = userId,
                             NotificationUri = options.ReminderCallbackUri
                         });
-                        await digitLogger.Log(userId, "Registered reminder", 1);
+                        await digitLogger.LogForUser(userId, "Registered reminder");
                     }
-                    catch
+                    catch(Exception e)
                     {
-                        await digitLogger.Log(userId, "Could not register reminder", 3);
+                        _logger.LogError(e, "Could not register reminder");
+                        await digitLogger.LogErrorForUser(userId, "Could not register reminder");
                     }
                     if (null != registration)
                     {
@@ -118,7 +123,7 @@ namespace DigitService.Impl
         public async Task RenewReminder(string userId, RenewReminderRequest request)
         {
             var registration = await calendarService.Users[userId].Reminders[request.ReminderId].RenewAsync();
-            await digitLogger.Log(userId, "Renewed reminder", 1);
+            await digitLogger.LogForUser(userId, "Renewed reminder");
             await InstallButlerForReminderRenewal(registration);
         }
 

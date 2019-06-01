@@ -40,7 +40,7 @@ namespace DigitService.Impl
 
         public async Task<LocationResponse> LocationUpdateReceivedAsync(string userId, Location location)
         {
-            await logger.Log(userId, $"Received Location");
+            await logger.LogForUser(userId, $"Received Location");
             var manageResult = await focusUpdateService.Update(userId, new FocusUpdateRequest()
             {
                 ItemSyncResult = null,
@@ -53,11 +53,11 @@ namespace DigitService.Impl
         {
             if (!reminderDelivery.Removed)
             {
-                await logger.Log(userId, $"Received reminder for {reminderDelivery.Event.Subject}");
+                await logger.LogForUser(userId, $"Received reminder for {reminderDelivery.Event.Subject}");
             }
             else
             {
-                await logger.Log(userId, $"Received reminder removed");
+                await logger.LogForUser(userId, $"Received reminder removed");
             }
             var syncResult = await focusCalendarSyncService.SyncAsync(userId, DateTimeOffset.Now,
                 DateTimeOffset.Now + FocusConstants.FocusScanTime + FocusConstants.CalendarServiceInacurracy);
