@@ -192,6 +192,7 @@ namespace DigitService
                 EnableAdaptiveSampling = false,
                 AddAutoCollectedMetricExtractor = false,
                 EnableQuickPulseMetricStream = false,
+                InstrumentationKey = Configuration["ApplicationInsights:InstrumentationKey"]
             };
             aiOptions.RequestCollectionOptions.EnableW3CDistributedTracing = true;
             aiOptions.RequestCollectionOptions.TrackExceptions = true;
