@@ -14,27 +14,31 @@ namespace DigitService.Controllers
     {
         private readonly IDigitLogger digitLogger;
         private readonly IDeviceService deviceService;
-        private readonly ILogBackend logBackend;
+        private readonly ILogReader _logReader;
 
         public DeviceController(IDigitLogger digitLogger,
-            IDeviceService deviceService, ILogBackend logBackend)
+            IDeviceService deviceService, ILogReader logReader)
         {
             this.digitLogger = digitLogger;
             this.deviceService = deviceService;
-            this.logBackend = logBackend;
+            _logReader = logReader;
         }
 
 
+        [Obsolete]
+        [Authorize("User")]
         [HttpPost("{id}/log")]
-        public async void PostLog(string id, [FromBody]LogEntry entry)
+        public async void PostLog(string id, [FromBody]LegacyLogRequest entry)
         {
-            await digitLogger.Log(id, entry);
+            await digitLogger.Log(User.GetId(), entry);
         }
 
+        [Obsolete]
+        [Authorize("User")]
         [HttpGet("{id}/log")]
-        public async Task<LogEntry[]> GetLog(string id, int history = 20)
+        public async Task<LogEntry[]> GetLog(string id, [FromUri]TimeSpan? timespan)
         {
-            return await logBackend.GetLogAsync(id, history);
+            return await _logReader.GetUserLog(User.GetId(), timespan.GetValueOrDefault(TimeSpan.FromDays(1)));
         }
 
         [HttpPost("{id}/claim")]

@@ -8,7 +8,7 @@ namespace Digit.Abstractions.Service
 
     public interface IDigitLogger
     {
-        Task Log(string user, LogEntry entry);
+        Task Log(string user, LegacyLogRequest entry);
         Task LogForUser(string userId, string message,
             DigitTraceAction action = DigitTraceAction.Default,
             IDictionary<string, object> additionalData = null,
@@ -27,14 +27,6 @@ namespace Digit.Abstractions.Service
         {
             return digitLogger.LogForUser(userId, message, action, additionalData, LogLevel.Error);
         }
-    }
-
-    public enum DigitTraceAction
-    {
-        Default = 0,
-        CreatedAccount = 1,
-        RequestPush = 2,
-        TraceOnRoute = 3,
     }
 }
 

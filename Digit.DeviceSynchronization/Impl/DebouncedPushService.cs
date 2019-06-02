@@ -1,4 +1,5 @@
-﻿using Digit.Abstractions.Service;
+﻿using Digit.Abstractions.Models;
+using Digit.Abstractions.Service;
 using Digit.DeviceSynchronization.Models;
 using Digit.DeviceSynchronization.Service;
 using DigitPushService.Client;

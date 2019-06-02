@@ -6,14 +6,12 @@ using DigitService.Impl;
 using DigitService.Impl.EF;
 using DigitService.Models;
 using DigitService.Service;
-using FileStore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using CalendarService.Client;
 using System;
 using OAuthApiClient;
@@ -29,12 +27,12 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Digit.DeviceSynchronization.Impl;
 using Digit.Focus.Impl;
-using Microsoft.ApplicationInsights.AspNetCore;
 using Microsoft.ApplicationInsights.DependencyCollector;
 using System.Linq;
 using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector;
 using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse;
 using Microsoft.ApplicationInsights.WindowsServer;
+using DigitService.Impl.Logging;
 
 namespace DigitService
 {
@@ -60,13 +58,18 @@ namespace DigitService
             var connectionString = $"Data Source={HostingEnvironment.WebRootPath}\\App_Data\\digitService.db";
             var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
 
-            new FileStore.FileStore(null, path).InitializeAsync().Wait();
-            var provider = new PhysicalFileProvider(path);
-            var access = new FileStore.FileStore(provider, path);
-            services.AddSingleton<IFileProvider>(provider);
-            services.AddSingleton<IFileStore>(access);
-            services.AddTransient<ILogBackend, FileLogBackend>();
             services.AddTransient<IDigitLogger, DigitLogger>();
+            services.AddTransient<ILogReader, LogReader>();
+            services.AddHttpClient<ApplicationInsightsLogReader>().ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://api.applicationinsights.io");
+                c.DefaultRequestHeaders.Add("x-api-key", Configuration["ApplicationInsights:ApiKey"]);
+            });
+            services.Configure<ApplicationInsightsClientOptions>(c =>
+            {
+                c.ApplicationID = Configuration["ApplicationInsights:ApplicationID"];
+            }); services.AddTransient<IRealtimeLogSubscriber, LogReader>();
+            services.AddTransient<IRealtimeLogSubscriber, SignalRLogSubscriber>();
             services.AddTransient<IDeviceService, DeviceService>();
             services.AddTransient<IDeviceRepository, DeviceRepository>();
 

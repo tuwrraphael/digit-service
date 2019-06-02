@@ -1,6 +1,7 @@
 ﻿using ButlerClient;
 using CalendarService.Client;
 using CalendarService.Models;
+using Digit.Abstractions.Models;
 using Digit.Abstractions.Service;
 using Digit.Focus;
 using DigitPushService.Client;
