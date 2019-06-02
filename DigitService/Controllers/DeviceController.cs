@@ -5,6 +5,7 @@ using DigitService.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DigitService.Controllers
@@ -38,7 +39,7 @@ namespace DigitService.Controllers
         [HttpGet("{id}/log")]
         public async Task<LogEntry[]> GetLog(string id, [FromUri]TimeSpan? timespan)
         {
-            return await _logReader.GetUserLog(User.GetId(), timespan.GetValueOrDefault(TimeSpan.FromDays(1)));
+            return (await _logReader.GetUserLog(User.GetId(), timespan.GetValueOrDefault(TimeSpan.FromDays(1)))).Reverse().ToArray();
         }
 
         [HttpPost("{id}/claim")]
