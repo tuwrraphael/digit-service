@@ -54,7 +54,7 @@ namespace DigitService.Impl.Logging
             throw new NotImplementedException();
         }
 
-        public async Task<LogEntry[]> GetUserLog(string userId, TimeSpan history)
+        public async Task<LogEntry[]> GetUserLog(string userId)
         {
             var sem = _usersems.GetOrAdd(userId, new SemaphoreSlim(1));
             try
@@ -62,10 +62,10 @@ namespace DigitService.Impl.Logging
                 await sem.WaitAsync();
                 var hasCachedLog = _memoryCache.TryGetValue(UserLogKey(userId), out CachedLog cachedLog);
                 cachedLog = cachedLog ?? new CachedLog();
-                var since = DateTimeOffset.Now - history;
+                var since = DateTimeOffset.Now - TimeSpan.FromDays(1);
                 if (!hasCachedLog || !cachedLog.AILogSince.HasValue || cachedLog.AILogSince >= since)
                 {
-                    var userAiLog = await _applicationInsightsLogReader.GetUserAILog(_options.ApplicationID, userId, since);
+                    var userAiLog = await _applicationInsightsLogReader.GetUserAILog(_options.ApplicationID, userId);
                     cachedLog.Log = userAiLog.Union(cachedLog.Log.Where(v => !userAiLog.Any(aiEntry => aiEntry.Id == v.Id)))
                         .OrderByDescending(v => v.Timestamp).ToList();
                     cachedLog.AILogSince = since;

@@ -20,10 +20,10 @@ namespace DigitService.Impl.Logging
             _httpClient = client;
         }
 
-        public async Task<LogEntry[]> GetUserAILog(string applicationId, string userId, DateTimeOffset since)
+        public async Task<LogEntry[]> GetUserAILog(string applicationId, string userId)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
-            query["timespan"] = since.ToString("o");
+            query["timespan"] = "PT24H";
             query["query"] = $"traces | where user_Id  == '{userId}' | project " +
                 $"timestamp, message, customDimensions, cloud_RoleName, severityLevel";
             var response = await _httpClient.GetAsync($"v1/apps/{applicationId}/query?{query}");

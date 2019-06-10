@@ -6,7 +6,7 @@ namespace DigitService.Service
 {
     public interface ILogReader
     {
-        Task<LogEntry[]> GetUserLog(string userId, TimeSpan timespan);
+        Task<LogEntry[]> GetUserLog(string userId);
         Task<LogEntry[]> GetFocusItemLog(string userId, string focusItemId);
     }
 }

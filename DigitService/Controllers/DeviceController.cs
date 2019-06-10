@@ -37,9 +37,9 @@ namespace DigitService.Controllers
         [Obsolete]
         [Authorize("User")]
         [HttpGet("{id}/log")]
-        public async Task<LogEntry[]> GetLog(string id, [FromUri]TimeSpan? timespan)
+        public async Task<LogEntry[]> GetLog(string id)
         {
-            return (await _logReader.GetUserLog(User.GetId(), timespan.GetValueOrDefault(TimeSpan.FromDays(1)))).Reverse().ToArray();
+            return (await _logReader.GetUserLog(User.GetId())).Reverse().ToArray();
         }
 
         [HttpPost("{id}/claim")]
