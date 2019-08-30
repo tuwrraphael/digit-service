@@ -112,7 +112,7 @@ namespace DigitService.Impl
 
         public async Task<LocationResponse> LocationUpdateReceivedAsync(string userId, Location location, DateTimeOffset now, FocusManageResult focusManageResult)
         {
-            await pushSyncService.SetDone(userId, new LocationPushSyncRequest(now));
+            await pushSyncService.SetLocationRequestDone(userId);
             await locationStore.UpdateLocationAsync(userId, location);
             //if (location.RequestSupport.HasValue && !location.RequestSupport.Value)
             //{
@@ -125,7 +125,7 @@ namespace DigitService.Impl
             };
             if (response.NextUpdateRequiredAt.HasValue)
             {
-                await pushSyncService.SetRequestedExternal(userId, new LocationPushSyncRequest(response.NextUpdateRequiredAt.Value));
+                await pushSyncService.SetLocationRequestedExternal(userId, response.NextUpdateRequiredAt.Value);
             }
             return response;
         }
@@ -147,9 +147,7 @@ namespace DigitService.Impl
             }
             if (requestLocation)
             {
-                var res = await pushSyncService.RequestSync(userId,
-                    new LocationPushSyncRequest(requestTime.Add(FocusConstants.LocationRequestExpectedTime)),
-                    requestTime);
+                var res = await pushSyncService.RequestLocationSync(userId, requestTime, requestTime.Add(FocusConstants.LocationRequestExpectedTime));
                 return new LocationRequestResult()
                 {
                     LocationRequestSent = res.SyncRequested,

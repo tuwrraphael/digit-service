@@ -9,6 +9,7 @@ using PushServer.PushConfiguration.Abstractions.Models;
 using System.Threading.Tasks;
 using TravelService.Client;
 using Xunit;
+using DeviceSyncRequest = Digit.DeviceSynchronization.Models.DeviceSyncRequest;
 
 namespace DigitService.Test
 {
@@ -32,14 +33,14 @@ namespace DigitService.Test
                 deviceSyncStoreMock.Setup(v => v.CreateAsync(userId, deviceId))
                     .Returns(Task.CompletedTask);
                 deviceSyncStoreMock.Setup(v => v.DeviceClaimedByAsync(It.IsAny<string>())).Returns(Task.FromResult<string>(null));
-                digitPushServiceClientMock.Setup(v => v.PushChannels[userId].GetAllAsync()).Returns(Task.FromResult(new[] {
+                digitPushServiceClientMock.Setup(v => v[userId].PushChannels.GetAllAsync()).Returns(Task.FromResult(new[] {
                     new PushChannelConfiguration()
                     {
                         Id = channel1Id,
                         Options = new PushChannelOptions()
                     }
                 }));
-                digitPushServiceClientMock.Setup(v => v.PushChannels[userId][channel1Id].Options.PutAsync(It.IsAny<PushChannelOptions>()))
+                digitPushServiceClientMock.Setup(v => v[userId].PushChannels[channel1Id].Options.PutAsync(It.IsAny<PushChannelOptions>()))
                     .Returns(Task.CompletedTask)
                     .Verifiable();
 
@@ -49,7 +50,7 @@ namespace DigitService.Test
                 {
                     PushChannelId = channel1Id
                 });
-                digitPushServiceClientMock.Verify(v => v.PushChannels[userId][channel1Id].Options.PutAsync(It.Is<PushChannelOptions>(d => d.ContainsKey($"digit.sync.{deviceId}"))), Times.Once);
+                digitPushServiceClientMock.Verify(v => v[userId].PushChannels[channel1Id].Options.PutAsync(It.Is<PushChannelOptions>(d => d.ContainsKey($"digit.sync.{deviceId}"))), Times.Once);
                 deviceSyncStoreMock.Verify(v => v.CreateAsync(userId, deviceId));
             }
 
@@ -68,7 +69,7 @@ namespace DigitService.Test
                 deviceSyncStoreMock.Setup(v => v.CreateAsync(userId, deviceId))
                     .Returns(Task.CompletedTask);
                 deviceSyncStoreMock.Setup(v => v.DeviceClaimedByAsync(It.IsAny<string>())).Returns(Task.FromResult<string>(userId));
-                digitPushServiceClientMock.Setup(v => v.PushChannels[userId].GetAllAsync()).Returns(Task.FromResult(new[] {
+                digitPushServiceClientMock.Setup(v => v[userId].PushChannels.GetAllAsync()).Returns(Task.FromResult(new[] {
                     new PushChannelConfiguration()
                     {
                         Id = channel1Id,
@@ -83,10 +84,10 @@ namespace DigitService.Test
                         Options = new PushChannelOptions()
                     }
                 }));
-                digitPushServiceClientMock.Setup(v => v.PushChannels[userId][channel1Id].Options.PutAsync(It.IsAny<PushChannelOptions>()))
+                digitPushServiceClientMock.Setup(v => v[userId].PushChannels[channel1Id].Options.PutAsync(It.IsAny<PushChannelOptions>()))
                     .Returns(Task.CompletedTask)
                     .Verifiable();
-                digitPushServiceClientMock.Setup(v => v.PushChannels[userId][channel2Id].Options.PutAsync(It.IsAny<PushChannelOptions>()))
+                digitPushServiceClientMock.Setup(v => v[userId].PushChannels[channel2Id].Options.PutAsync(It.IsAny<PushChannelOptions>()))
                     .Returns(Task.CompletedTask)
                     .Verifiable();
 
@@ -95,7 +96,7 @@ namespace DigitService.Test
                 {
                     PushChannelId = channel1Id
                 });
-                digitPushServiceClientMock.Verify(v => v.PushChannels[userId][It.IsAny<string>()].Options.PutAsync(It.IsAny<PushChannelOptions>()), Times.Never);
+                digitPushServiceClientMock.Verify(v => v[userId].PushChannels[It.IsAny<string>()].Options.PutAsync(It.IsAny<PushChannelOptions>()), Times.Never);
             }
 
 
@@ -114,7 +115,7 @@ namespace DigitService.Test
                 deviceSyncStoreMock.Setup(v => v.CreateAsync(userId, deviceId))
                     .Returns(Task.CompletedTask);
                 deviceSyncStoreMock.Setup(v => v.DeviceClaimedByAsync(It.IsAny<string>())).Returns(Task.FromResult<string>(userId));
-                digitPushServiceClientMock.Setup(v => v.PushChannels[userId].GetAllAsync()).Returns(Task.FromResult(new[] {
+                digitPushServiceClientMock.Setup(v => v[userId].PushChannels.GetAllAsync()).Returns(Task.FromResult(new[] {
                     new PushChannelConfiguration()
                     {
                         Id = channel1Id,
@@ -132,10 +133,10 @@ namespace DigitService.Test
                         }
                     }
                 }));
-                digitPushServiceClientMock.Setup(v => v.PushChannels[userId][channel1Id].Options.PutAsync(It.IsAny<PushChannelOptions>()))
+                digitPushServiceClientMock.Setup(v => v[userId].PushChannels[channel1Id].Options.PutAsync(It.IsAny<PushChannelOptions>()))
                     .Returns(Task.CompletedTask)
                     .Verifiable();
-                digitPushServiceClientMock.Setup(v => v.PushChannels[userId][channel2Id].Options.PutAsync(It.IsAny<PushChannelOptions>()))
+                digitPushServiceClientMock.Setup(v => v[userId].PushChannels[channel2Id].Options.PutAsync(It.IsAny<PushChannelOptions>()))
                     .Returns(Task.CompletedTask)
                     .Verifiable();
                 var deviceSync = new DeviceSyncService(digitPushServiceClientMock.Object, deviceSyncStoreMock.Object);
@@ -143,10 +144,10 @@ namespace DigitService.Test
                 {
                     PushChannelId = channel2Id
                 });
-                digitPushServiceClientMock.Verify(v => v.PushChannels[userId][channel1Id].Options.PutAsync(
+                digitPushServiceClientMock.Verify(v => v[userId].PushChannels[channel1Id].Options.PutAsync(
                     It.Is<PushChannelOptions>(d => d.Count == 1 && d.ContainsKey("location"))
                     ), Times.Once);
-                digitPushServiceClientMock.Verify(v => v.PushChannels[userId][channel2Id].Options.PutAsync(
+                digitPushServiceClientMock.Verify(v => v[userId].PushChannels[channel2Id].Options.PutAsync(
                     It.Is<PushChannelOptions>(d => d.Count == 2 && d["location2"] == "test" && d.ContainsKey($"digit.sync.{deviceId}"))
                     ), Times.Once);
             }
@@ -164,7 +165,7 @@ namespace DigitService.Test
                 deviceSyncStoreMock.Setup(v => v.CreateAsync(userId, deviceId))
                     .Returns(Task.CompletedTask);
                 deviceSyncStoreMock.Setup(v => v.DeviceClaimedByAsync(It.IsAny<string>())).Returns(Task.FromResult("user2"));
-                digitPushServiceClientMock.Setup(v => v.PushChannels[userId].GetAllAsync())
+                digitPushServiceClientMock.Setup(v => v[userId].PushChannels.GetAllAsync())
                     .Returns(Task.FromResult(new[] { new PushChannelConfiguration() {
                         Id = "channel"
                     } }));
@@ -186,7 +187,7 @@ namespace DigitService.Test
                 var travelServiceMock = new Mock<ITravelServiceClient>(MockBehavior.Strict);
                 var focusStoreMock = new Mock<IFocusStore>(MockBehavior.Strict);
                 deviceSyncStoreMock.Setup(v => v.DeviceClaimedByAsync(deviceId)).Returns(Task.FromResult<string>(null));
-                digitPushServiceClientMock.Setup(v => v.PushChannels[userId].GetAllAsync())
+                digitPushServiceClientMock.Setup(v => v[userId].PushChannels.GetAllAsync())
                     .Returns(Task.FromResult(new PushChannelConfiguration[0]));
                 var deviceSync = new DeviceSyncService(digitPushServiceClientMock.Object, deviceSyncStoreMock.Object);
                 var ex = await Assert.ThrowsAsync<PushChannelNotFoundException>(async () => await deviceSync.RequestSynchronizationAsync(userId, deviceId, new DeviceSyncRequest()

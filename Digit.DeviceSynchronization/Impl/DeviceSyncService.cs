@@ -20,10 +20,10 @@ namespace Digit.DeviceSynchronization.Impl
             this.deviceSyncStore = deviceSyncStore;
         }
 
-        public async Task RequestSynchronizationAsync(string userId, string deviceId, DeviceSyncRequest request)
+        public async Task RequestSynchronizationAsync(string userId, string deviceId, Digit.DeviceSynchronization.Models.DeviceSyncRequest request)
         {
             var claimedBy = await deviceSyncStore.DeviceClaimedByAsync(deviceId);
-            var channels = await digitPushServiceClient.PushChannels[userId].GetAllAsync();
+            var channels = await digitPushServiceClient[userId].PushChannels.GetAllAsync();
             var syncChannel = channels.Where(v => v.Id == request.PushChannelId).SingleOrDefault();
             if (null == syncChannel)
             {
@@ -43,13 +43,13 @@ namespace Digit.DeviceSynchronization.Impl
                 && v.Options.ContainsKey(deviceSyncKey)))
             {
                 channel.Options.Remove(deviceSyncKey);
-                await digitPushServiceClient.PushChannels[userId][channel.Id].Options.PutAsync(channel.Options);
+                await digitPushServiceClient[userId].PushChannels[channel.Id].Options.PutAsync(channel.Options);
             }
             if (syncChannel.Options == null || !syncChannel.Options.ContainsKey(deviceSyncKey))
             {
                 var options = syncChannel.Options ?? new PushChannelOptions();
                 options.Add(deviceSyncKey, null);
-                await digitPushServiceClient.PushChannels[userId][syncChannel.Id].Options.PutAsync(options);
+                await digitPushServiceClient[userId].PushChannels[syncChannel.Id].Options.PutAsync(options);
             }
         }
     }

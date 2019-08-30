@@ -1,22 +1,26 @@
-﻿using Digit.DeviceSynchronization.Models;
+﻿using Digit.Abstractions.Service;
 using Digit.DeviceSynchronization.Service;
 using Digit.Focus.Model;
 using Digit.Focus.Models;
 using Digit.Focus.Service;
-using System;
+using DigitPushService.Client;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Digit.DeviceSynchronization.Impl
 {
     public class DeviceSyncFocusSubscriber : IFocusSubscriber
     {
-        private readonly IPushSyncService pushSyncService;
+        private readonly IDigitPushServiceClient _digitPushServiceClient;
         private readonly IDeviceSyncStore _deviceSyncStore;
+        private readonly IDigitLogger _digitLogger;
 
-        public DeviceSyncFocusSubscriber(IPushSyncService pushSyncService, IDeviceSyncStore deviceSyncStore)
+        public DeviceSyncFocusSubscriber(IDigitPushServiceClient digitPushServiceClient, IDeviceSyncStore deviceSyncStore,
+            IDigitLogger digitLogger)
         {
-            this.pushSyncService = pushSyncService;
+            _digitPushServiceClient = digitPushServiceClient;
             _deviceSyncStore = deviceSyncStore;
+            _digitLogger = digitLogger;
         }
 
         public async Task ActiveItemChanged(string userId, FocusItemWithExternalData currentItem)
@@ -24,7 +28,12 @@ namespace Digit.DeviceSynchronization.Impl
             var devices = await _deviceSyncStore.GetForUserAsync(userId);
             foreach (var device in devices)
             {
-                await pushSyncService.RequestSync(userId, new DevicePushSyncRequest(device.Id, DateTimeOffset.Now.AddMinutes(15)), DateTimeOffset.Now);
+                await _digitPushServiceClient[userId].DigitSync.Device(new DeviceSyncRequest()
+                {
+                    DeviceId = device.Id
+                });
+                await _digitLogger.LogForUser(userId, $"Requested device sync", Abstractions.Models.DigitTraceAction.RequestPush,
+                    new Dictionary<string, object>() { { "deviceId", device.Id } });
             }
         }
 

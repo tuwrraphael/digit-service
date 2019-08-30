@@ -6,6 +6,7 @@ using Digit.DeviceSynchronization.Service;
 using Digit.Focus.Model;
 using Digit.Focus.Models;
 using Digit.Focus.Service;
+using DigitPushService.Client;
 using DigitService.Impl;
 using DigitService.Models;
 using DigitService.Service;
@@ -28,15 +29,18 @@ namespace DigitService.Test
         {
             var syncActions = null == locationRequestTime ? new SyncAction[0] :
                 new[] { new SyncAction() {
-                    Id = new LocationPushSyncRequest(DateTimeOffset.Now).Id,
+                    Id = "locationSync",
                     Deadline = locationRequestTime
                 }  };
             var pushSyncStoreMock = new Mock<IPushSyncStore>(MockBehavior.Strict);
+            var digitPushServiceMock = new Mock<IDigitPushServiceClient>(MockBehavior.Strict);
+            digitPushServiceMock.Setup(v => v[It.IsAny<string>()].DigitSync.Location(It.IsAny<LocationSyncRequest>()))
+                .Returns(Task.CompletedTask);
             pushSyncStoreMock.Setup(v => v.GetPendingSyncActions(It.IsAny<string>()))
                 .Returns(Task.FromResult(syncActions));
             pushSyncStoreMock.Setup(v => v.AddSyncAction(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>()))
                 .Returns(Task.FromResult(syncActions));
-            return new PushSyncService(pushSyncStoreMock.Object, Mock.Of<IDebouncedPushService>(),
+            return new PushSyncService(pushSyncStoreMock.Object, digitPushServiceMock.Object,
                     Mock.Of<IFocusStore>());
         }
 
@@ -139,9 +143,9 @@ namespace DigitService.Test
                 locationStore = locationStoreMock.Object;
 
                 var pushSyncServiceMock = new Mock<IPushSyncService>(MockBehavior.Strict);
-                pushSyncServiceMock.Setup(v => v.SetRequestedExternal(It.IsAny<string>(), It.IsAny<ISyncRequest>()))
+                pushSyncServiceMock.Setup(v => v.SetLocationRequestedExternal(It.IsAny<string>(), It.IsAny<DateTimeOffset>()))
                     .Returns(Task.CompletedTask);
-                pushSyncServiceMock.Setup(v => v.SetDone(It.IsAny<string>(), It.IsAny<ISyncRequest>()))
+                pushSyncServiceMock.Setup(v => v.SetLocationRequestDone(It.IsAny<string>()))
                     .Returns(Task.CompletedTask);
                 pushSyncServiceMock.Setup(v => v.SetDone(It.IsAny<string>(), It.IsAny<string>()))
                     .Returns(Task.CompletedTask);

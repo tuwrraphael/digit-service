@@ -103,7 +103,7 @@ namespace DigitService.Impl
                     {
                         try
                         {
-                            await _digitPushServiceClient.Push[userId].Create(new DigitPushService.Models.PushRequest()
+                            await _digitPushServiceClient[userId].Push.Create(new DigitPushService.Models.PushRequest()
                             {
                                 ChannelOptions = new Dictionary<string, string>() { { "digit.notify", null } },
                                 Payload = JsonConvert.SerializeObject(new

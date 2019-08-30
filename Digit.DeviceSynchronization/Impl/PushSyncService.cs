@@ -1,6 +1,7 @@
 ﻿using Digit.DeviceSynchronization.Models;
 using Digit.DeviceSynchronization.Service;
 using Digit.Focus.Service;
+using DigitPushService.Client;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,14 +11,14 @@ namespace Digit.DeviceSynchronization.Impl
     public class PushSyncService : IPushSyncService
     {
         private readonly IPushSyncStore pushSyncStore;
-        private readonly IDebouncedPushService _debouncedPushService;
+        private readonly IDigitPushServiceClient _digitPushServiceClient;
         private readonly IFocusStore _focusStore;
 
-        public PushSyncService(IPushSyncStore pushSyncStore, IDebouncedPushService debouncedPushService,
+        public PushSyncService(IPushSyncStore pushSyncStore, IDigitPushServiceClient digitPushServiceClient,
             IFocusStore focusStore)
         {
             this.pushSyncStore = pushSyncStore;
-            _debouncedPushService = debouncedPushService;
+            _digitPushServiceClient = digitPushServiceClient;
             _focusStore = focusStore;
         }
 
@@ -27,12 +28,11 @@ namespace Digit.DeviceSynchronization.Impl
             if ((await _focusStore.GetActiveAsync(userId)).Any(v => null != v.DirectionsMetadata &&
             v.DirectionsMetadata.TravelStatus != Focus.Models.TravelStatus.Finished))
             {
-                var locationSyncRequest = new LocationPushSyncRequest(now);
-                if (!syncActions.Any(s => s.Id == locationSyncRequest.Id))
+                if (!syncActions.Any(s => s.Id == "locationSync"))
                 {
                     syncActions.Add(new SyncAction()
                     {
-                        Id = locationSyncRequest.Id,
+                        Id = "locationSync",
                         Deadline = now
                     });
                 }
@@ -40,20 +40,20 @@ namespace Digit.DeviceSynchronization.Impl
             return syncActions.ToArray();
         }
 
-        private async Task Push(string userId, ISyncRequest syncRequest)
+        private async Task Push(string userId)
         {
-            await _debouncedPushService.PushDebounced(userId, syncRequest);
+            await _digitPushServiceClient[userId].DigitSync.Location(new LocationSyncRequest());
         }
 
-        public async Task<SyncResult> RequestSync(string userId, ISyncRequest syncRequest, DateTimeOffset now)
+        public async Task<SyncResult> RequestLocationSync(string userId, DateTimeOffset now, DateTimeOffset deadline)
         {
             var all = await pushSyncStore.GetPendingSyncActions(userId);
-            await pushSyncStore.AddSyncAction(userId, syncRequest.Id, syncRequest.Deadline);
-            var pending = all.Where(d => now - d.Deadline <= syncRequest.AllowMissed).ToArray();
-            var pendingAction = pending.Where(v => v.Id == syncRequest.Id);
+            await pushSyncStore.AddSyncAction(userId, "locationSync", deadline);
+            var pending = all.Where(d => now - d.Deadline <= DeviceSyncConstants.PushMissed).ToArray();
+            var pendingAction = pending.Where(v => v.Id == "locationSync");
             if (!pending.Any())
             {
-                await Push(userId, syncRequest);
+                await Push(userId);
                 return new SyncResult()
                 {
                     SyncRequested = true,
@@ -61,9 +61,9 @@ namespace Digit.DeviceSynchronization.Impl
                 };
             }
             var nextPending = pending.OrderBy(v => v.Deadline).FirstOrDefault();
-            if (!pending.Where(v => v.Deadline <= syncRequest.Deadline).Any())
+            if (!pending.Where(v => v.Deadline <= deadline).Any())
             {
-                await Push(userId, syncRequest);
+                await Push(userId);
                 return new SyncResult()
                 {
                     SyncRequested = true,
@@ -77,24 +77,24 @@ namespace Digit.DeviceSynchronization.Impl
             };
         }
 
-        public async Task SetDone(string userId, ISyncRequest syncRequest)
-        {
-            await SetDone(userId, syncRequest.Id);
-        }
-
         public async Task SetDone(string userId, string id)
         {
             await pushSyncStore.SetDone(userId, id);
         }
 
-        public async Task SetRequestedExternal(string userId, ISyncRequest syncRequest)
+        public async Task SetLocationRequestedExternal(string userId, DateTimeOffset nextUpdateAt)
         {
             var actions = await pushSyncStore.GetPendingSyncActions(userId);
-            if (actions.Any(v => v.Id == syncRequest.Id && v.Deadline <= syncRequest.Deadline))
+            if (actions.Any(v => v.Id == "locationSync" && v.Deadline <= nextUpdateAt))
             {
                 return;
             }
-            await pushSyncStore.AddSyncAction(userId, syncRequest.Id, syncRequest.Deadline);
+            await pushSyncStore.AddSyncAction(userId, "locationSync", nextUpdateAt);
+        }
+
+        public async Task SetLocationRequestDone(string userId)
+        {
+            await SetDone(userId, "locationSync");
         }
     }
 }
