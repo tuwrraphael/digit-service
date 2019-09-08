@@ -224,6 +224,7 @@ namespace DigitService.Impl
                         null != focusUpdateRequest.ChangedDirections && focusUpdateRequest.ChangedDirections.Contains(
                             item.DirectionsMetadata.Key))
                     {
+                        await logger.LogForFocusItem(userId, item.Id, $"Received direction updates for {evt.Subject}", DigitTraceAction.DirectionsUpdate);
                         updatedItemIds.Add(item.Id);
                     }
                 }

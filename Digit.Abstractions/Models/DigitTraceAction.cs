@@ -6,6 +6,7 @@
         CreatedAccount = 1,
         RequestPush = 2,
         TraceOnRoute = 3,
+        DirectionsUpdate = 4,
     }
 
 }
