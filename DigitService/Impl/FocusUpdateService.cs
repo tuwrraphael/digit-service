@@ -100,7 +100,7 @@ namespace DigitService.Impl
                         Key = directionsResult.CacheKey,
                         PeferredRoute = preferredRoute
                     };
-                    if (null != directionsResult.NotFound)
+                    if (null == directionsResult.NotFound)
                     {
                         await travelServiceClient.Directions[directionsResult.CacheKey]
                             .Subscribe(new Uri(_options.DirectionsCallbackUri));
