@@ -22,5 +22,6 @@ namespace Digit.Focus.Service
         Task RemoveAsync(FocusItem evt);
         Task SetPlaceForItem(string userId, string itemId, Place place);
         Task SetTravelStatus(string userId, string itemId, TravelStatus travelStatus);
+        Task<string[]> GetUsersWithDirections(string directionsKey);
     }
 }

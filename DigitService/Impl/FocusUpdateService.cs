@@ -6,7 +6,9 @@ using Digit.Focus;
 using Digit.Focus.Model;
 using Digit.Focus.Models;
 using Digit.Focus.Service;
+using DigitService.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,13 +27,15 @@ namespace DigitService.Impl
         private readonly IDigitLogger logger;
         private readonly IEnumerable<IFocusSubscriber> focusSubscribers;
         private readonly IFocusGeofenceService _focusGeofenceService;
+        private readonly DigitServiceOptions _options;
 
         public FocusUpdateService(IFocusStore focusStore,
             ICalendarServiceClient calendarServiceClient,
             ITravelServiceClient travelServiceClient,
             IDigitLogger logger,
             IEnumerable<IFocusSubscriber> focusSubscribers,
-            IFocusGeofenceService focusGeofenceService)
+            IFocusGeofenceService focusGeofenceService,
+            IOptions<DigitServiceOptions> options)
         {
             this.focusStore = focusStore;
             this.calendarServiceClient = calendarServiceClient;
@@ -39,6 +43,7 @@ namespace DigitService.Impl
             this.logger = logger;
             this.focusSubscribers = focusSubscribers;
             _focusGeofenceService = focusGeofenceService;
+            _options = options.Value;
         }
 
 
@@ -95,6 +100,11 @@ namespace DigitService.Impl
                         Key = directionsResult.CacheKey,
                         PeferredRoute = preferredRoute
                     };
+                    if (null != directionsResult.NotFound)
+                    {
+                        await travelServiceClient.Directions[directionsResult.CacheKey]
+                            .Subscribe(new Uri(_options.DirectionsCallbackUri));
+                    }
                     return directionsResult.TransitDirections;
                 }
                 catch (TravelServiceException ex)
@@ -207,6 +217,12 @@ namespace DigitService.Impl
                     var directionsRes = await GetCachedDirectionsOrNew(userId, evt, item, focusUpdateRequest.Location);
                     directions = directionsRes.Directions;
                     if (directionsRes.IsNew)
+                    {
+                        updatedItemIds.Add(item.Id);
+                    }
+                    if (null != directions &&
+                        null != focusUpdateRequest.ChangedDirections && focusUpdateRequest.ChangedDirections.Contains(
+                            item.DirectionsMetadata.Key))
                     {
                         updatedItemIds.Add(item.Id);
                     }

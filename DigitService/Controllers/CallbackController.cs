@@ -7,6 +7,7 @@ using DigitService.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using TravelService.Models;
 using TravelService.Models.Directions;
 
 namespace DigitService.Controllers
@@ -61,6 +62,14 @@ namespace DigitService.Controllers
         public async Task<IActionResult> NotifyUserCallback([FromBody]NotifyUserRequest notifyUserRequest)
         {
             await focusService.NotifyCallbackAsync(notifyUserRequest);
+            return Ok();
+        }
+
+        [HttpPost("directions")]
+        [AllowAnonymous]
+        public async Task<IActionResult> DirectionsCallback([FromBody]DirectionsUpdate update)
+        {
+            await focusService.DirectionsCallbackAsync(update);
             return Ok();
         }
     }

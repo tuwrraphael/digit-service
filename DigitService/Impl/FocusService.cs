@@ -6,8 +6,8 @@ using Digit.Focus.Service;
 using DigitService.Models;
 using DigitService.Service;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
+using TravelService.Models;
 
 namespace DigitService.Impl
 {
@@ -18,18 +18,21 @@ namespace DigitService.Impl
         private readonly ILocationService locationService;
         private readonly IFocusUpdateService focusUpdateService;
         private readonly IFocusNotificationService _focusNotificationService;
+        private readonly IFocusStore _focusStore;
 
         public FocusService(IDigitLogger logger,
             IFocusCalendarSyncService focusCalendarSyncService,
             ILocationService locationService,
             IFocusUpdateService focusUpdateService,
-            IFocusNotificationService focusNotificationService)
+            IFocusNotificationService focusNotificationService,
+            IFocusStore focusStore)
         {
             this.logger = logger;
             this.focusCalendarSyncService = focusCalendarSyncService;
             this.locationService = locationService;
             this.focusUpdateService = focusUpdateService;
             _focusNotificationService = focusNotificationService;
+            _focusStore = focusStore;
         }
 
 
@@ -78,6 +81,19 @@ namespace DigitService.Impl
                 ItemSyncResult = null,
                 Location = await locationService.GetLastLocationAsync(userId)
             });
+        }
+
+        public async Task DirectionsCallbackAsync(DirectionsUpdate update)
+        {
+            foreach (var user in await _focusStore.GetUsersWithDirections(update.Id))
+            {
+                await focusUpdateService.Update(user, new FocusUpdateRequest()
+                {
+                    ItemSyncResult = null,
+                    Location = null,
+                    ChangedDirections = new[] { update.Id }
+                });
+            }
         }
     }
 }

@@ -80,6 +80,7 @@ namespace DigitService
                 var endpoint = Configuration["CallbackEndpoint"];
                 o.ReminderCallbackUri = $"{endpoint}/api/callback/reminder";
                 o.NotifyUserCallbackUri = $"{endpoint}/api/callback/notify-user";
+                o.DirectionsCallbackUri = $"{endpoint}/api/callback/directions";
                 o.ReminderMaintainanceCallbackUri = $"{endpoint}/api/callback/reminder-maintainance";
                 o.ServiceIdentityUrl = Configuration["ServiceIdentityUrl"];
             });

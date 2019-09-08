@@ -8,5 +8,7 @@ namespace Digit.Focus.Model
     {
         public Location Location { get; set; }
         public FocusItemSyncResult ItemSyncResult { get; set; }
+
+        public string[] ChangedDirections { get; set; }
     }
 }

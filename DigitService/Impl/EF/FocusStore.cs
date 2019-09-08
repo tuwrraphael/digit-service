@@ -94,6 +94,12 @@ namespace DigitService.Impl.EF
                 .Select(v => v.MapToFocusItem()).ToArray();
         }
 
+        public async Task<string[]> GetUsersWithDirections(string directionsKey)
+        {
+            return await digitServiceContext.FocusItems.Where(v => null != v.Directions && v.Directions.DirectionsKey == directionsKey)
+                .Select(v => v.UserId).Distinct().ToArrayAsync();
+        }
+
         public async Task RemoveAsync(FocusItem evt)
         {
             var item = await digitServiceContext.FocusItems.Where(v => v.Id == evt.Id).SingleOrDefaultAsync();

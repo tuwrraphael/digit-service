@@ -8,5 +8,6 @@
         public string ReminderMaintainanceCallbackUri { get; set; }
         public string ServiceIdentityUrl { get; set; }
         public string NotifyUserCallbackUri { get; set; }
+        public string DirectionsCallbackUri { get; set; }
     }
 }
