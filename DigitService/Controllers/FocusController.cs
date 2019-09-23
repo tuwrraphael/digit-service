@@ -29,6 +29,14 @@ namespace DigitService.Controllers
         }
 
         [Authorize("User")]
+        [HttpGet("me/focus/{id}")]
+        public async Task<IActionResult> Get(string id)
+        {
+            var item = await focusStore.Get(User.GetId(), id);
+            return Ok(item);
+        }
+
+        [Authorize("User")]
         [HttpPatch("me/focus")]
         public async Task<IActionResult> Patch()
         {
