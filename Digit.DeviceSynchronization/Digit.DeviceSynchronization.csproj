@@ -7,7 +7,7 @@
   <ItemGroup>
     <PackageReference Include="CalendarService.Client" Version="2.1.2" />
     <PackageReference Include="DigitPushService.Client" Version="1.2.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="2.2.6" />
     <PackageReference Include="System.Collections" Version="4.3.0" />
     <PackageReference Include="TravelService.Client" Version="2.8.0" />
