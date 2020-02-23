@@ -1,5 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.IO;
+﻿using System.IO;
 using ButlerClient;
 using DigitService.Hubs;
 using DigitService.Impl;
@@ -15,7 +14,6 @@ using Microsoft.Extensions.DependencyInjection;
 using CalendarService.Client;
 using System;
 using OAuthApiClient;
-using Microsoft.AspNetCore.Mvc;
 using TravelService.Client;
 using DigitService.Controllers;
 using DigitPushService.Client;
@@ -27,29 +25,30 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Digit.DeviceSynchronization.Impl;
 using Digit.Focus.Impl;
-using Microsoft.ApplicationInsights.DependencyCollector;
 using System.Linq;
 using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector;
 using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse;
 using Microsoft.ApplicationInsights.WindowsServer;
 using DigitService.Impl.Logging;
+using Microsoft.Extensions.Hosting;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace DigitService
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration, IHostingEnvironment hostingEnvironment)
+        public Startup(IConfiguration configuration, IWebHostEnvironment webHostEnvironment)
         {
-            if (string.IsNullOrWhiteSpace(hostingEnvironment.WebRootPath))
+            if (string.IsNullOrWhiteSpace(webHostEnvironment.WebRootPath))
             {
-                hostingEnvironment.WebRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                webHostEnvironment.WebRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
             }
             Configuration = configuration;
-            HostingEnvironment = hostingEnvironment;
+            HostingEnvironment = webHostEnvironment;
         }
 
         public IConfiguration Configuration { get; }
-        public IHostingEnvironment HostingEnvironment { get; }
+        public IWebHostEnvironment HostingEnvironment { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -104,6 +103,7 @@ namespace DigitService
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<ILocationStore, LocationStore>();
             services.AddTransient<IFocusService, FocusService>();
+            services.AddTransient<IFocusPatchService, FocusService>();
             services.AddTransient<IFocusUpdateService, FocusUpdateService>();
             services.AddTransient<IFocusSubscriber, SignalRFocusSubscriber>();
             services.AddTransient<IFocusSubscriber, DeviceSyncFocusSubscriber>();
@@ -119,10 +119,7 @@ namespace DigitService
             services.AddDeviceSynchronization(builder => builder.UseSqlite(connectionString,
                                 sql => sql.MigrationsAssembly(migrationsAssembly)));
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddJsonOptions(v =>
-            {
-                v.SerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Utc;
-            });
+            services.AddControllers();
             services.AddMemoryCache();
             services.AddSignalR();
             services.AddSingleton<IUserIdProvider, SubUserIdProvider>();
@@ -144,6 +141,7 @@ namespace DigitService
             ConfigureApplicationInisghts(services);
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
@@ -198,13 +196,8 @@ namespace DigitService
                 EnableQuickPulseMetricStream = false,
                 InstrumentationKey = Configuration["ApplicationInsights:InstrumentationKey"]
             };
-            aiOptions.RequestCollectionOptions.EnableW3CDistributedTracing = true;
             aiOptions.RequestCollectionOptions.TrackExceptions = true;
             services.AddApplicationInsightsTelemetry(aiOptions);
-            services.ConfigureTelemetryModule<DependencyTrackingTelemetryModule>((module, o) =>
-            {
-                module.EnableW3CHeadersInjection = true;
-            });
             foreach (var mod in new[] {
                 typeof(PerformanceCollectorModule),
                 typeof(QuickPulseTelemetryModule),
@@ -221,7 +214,7 @@ namespace DigitService
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
             {
@@ -244,16 +237,20 @@ namespace DigitService
             }
 
             app.UseHttpsRedirection();
-            app.UseAuthentication();
+
+            app.UseRouting();
 
             app.UseCors("CorsPolicy");
-            app.UseSignalR(routes =>
-            {
-                routes.MapHub<LogHub>("/hubs/log");
-                routes.MapHub<FocusHub>("/hubs/focus");
-            });
-            app.UseMvc();
 
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHub<LogHub>("/hubs/log");
+                endpoints.MapHub<FocusHub>("/hubs/focus");
+                endpoints.MapControllers();
+            });
         }
     }
 }
