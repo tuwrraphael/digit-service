@@ -19,7 +19,7 @@
     <PackageReference Include="CalendarService.Extensions" Version="1.1.0" />
     <PackageReference Include="DigitPushService.Client" Version="1.2.0" />
     <PackageReference Include="Geolocation.NetStandard" Version="1.1.1" />
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.13.1" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.15.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.2" />
